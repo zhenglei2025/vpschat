@@ -16,6 +16,10 @@
         button:hover { background: #0073e6; }
         .file-link { color: inherit; text-decoration: underline; font-weight: bold; }
         .sender-name { font-size: 0.75em; margin-bottom: 2px; color: #65676b; }
+        .chat-image { max-width: 300px; max-height: 300px; border-radius: 10px; cursor: pointer; margin-top: 5px; display: block; }
+        #paste-preview { display: none; padding: 8px 15px; background: #f0f2f5; align-items: center; gap: 10px; border-top: 1px solid #ddd; }
+        #paste-preview img { max-height: 60px; border-radius: 8px; }
+        #paste-preview .cancel-btn { background: none; border: none; cursor: pointer; font-size: 1.2em; color: #65676b; padding: 4px 8px; }
         .my-msg .sender-name { display: none; }
         #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 999; }
         #login-box { background: white; padding: 30px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); text-align: center; min-width: 300px; }
@@ -37,10 +41,16 @@
     </div>
     <div style="padding: 15px; background: #ffffff; color: #0084ff; text-align: center; font-weight: bold; border-bottom: 1px solid #ddd; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">VPS 中转聊天室</div>
     <div id="chat-window"></div>
+    <div id="paste-preview">
+        <img id="paste-thumb" src="">
+        <span id="paste-filename">clipboard_image.png</span>
+        <button class="cancel-btn" onclick="clearPastePreview()">✕</button>
+        <button onclick="sendPastedImage()" style="margin-left:auto;">发送图片</button>
+    </div>
     <div id="input-area">
         <input type="file" id="file-input" style="display:none">
         <button onclick="document.getElementById('file-input').click()" style="background: #e4e6eb; color: #050505;">📁</button>
-        <input type="text" id="message-input" placeholder="输入消息..." onkeypress="if(event.key==='Enter') sendMessage()">
+        <input type="text" id="message-input" placeholder="输入消息... (可粘贴图片)" onkeypress="if(event.key==='Enter') sendMessage()">
         <button onclick="sendMessage()">发送</button>
     </div>
 
@@ -98,7 +108,12 @@
             if (data.type === 'chat') {
                 div.innerHTML = `<div class="sender-name">${data.sender}</div>${data.content}`;
             } else if (data.type === 'file') {
-                div.innerHTML = `<div class="sender-name">${data.sender}</div>发送了一个文件: <br><a href="${data.url}" target="_blank" class="file-link">${data.filename}</a>`;
+                const isImage = /\.(png|jpg|jpeg|gif|webp|bmp|svg)$/i.test(data.filename);
+                if (isImage) {
+                    div.innerHTML = `<div class="sender-name">${data.sender}</div><img src="${data.url}" class="chat-image" onclick="window.open('${data.url}','_blank')">`;
+                } else {
+                    div.innerHTML = `<div class="sender-name">${data.sender}</div>发送了一个文件: <br><a href="${data.url}" target="_blank" class="file-link">${data.filename}</a>`;
+                }
             } else {
                 div.innerText = data.content;
             }
@@ -117,26 +132,63 @@
         document.getElementById('file-input').onchange = async (e) => {
             const file = e.target.files[0];
             if (!file) return;
-            
+            await uploadFile(file);
+            e.target.value = '';
+        };
+
+        async function uploadFile(file) {
             if (file.size > 100 * 1024 * 1024) {
                 alert("文件太大了，请上传 100MB 以下的文件。");
                 return;
             }
-
             const formData = new FormData();
             formData.append('file', file);
-            
             try {
-                const response = await fetch(`/upload?sender=${clientId}`, { 
-                    method: 'POST', 
-                    body: formData 
+                const response = await fetch(`/upload?sender=${clientId}`, {
+                    method: 'POST',
+                    body: formData
                 });
                 if (!response.ok) throw new Error("上传失败");
             } catch (err) {
                 alert("上传失败: " + err.message);
             }
-            e.target.value = ''; 
-        };
+        }
+
+        // ===== 剪贴板图片粘贴 =====
+        let pastedFile = null;
+
+        document.addEventListener('paste', (e) => {
+            const items = e.clipboardData && e.clipboardData.items;
+            if (!items) return;
+            for (const item of items) {
+                if (item.type.startsWith('image/')) {
+                    e.preventDefault();
+                    const blob = item.getAsFile();
+                    const ext = item.type.split('/')[1] || 'png';
+                    pastedFile = new File([blob], `clipboard_${Date.now()}.${ext}`, { type: item.type });
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        document.getElementById('paste-thumb').src = ev.target.result;
+                        document.getElementById('paste-filename').textContent = pastedFile.name;
+                        document.getElementById('paste-preview').style.display = 'flex';
+                    };
+                    reader.readAsDataURL(blob);
+                    break;
+                }
+            }
+        });
+
+        function clearPastePreview() {
+            pastedFile = null;
+            document.getElementById('paste-preview').style.display = 'none';
+            document.getElementById('paste-thumb').src = '';
+        }
+
+        async function sendPastedImage() {
+            if (!pastedFile) return;
+            await uploadFile(pastedFile);
+            clearPastePreview();
+        }
     </script>
 </body>
 </html>
