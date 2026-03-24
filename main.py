@@ -1,11 +1,39 @@
 import os
+import time
+import asyncio
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, File
 from fastapi.responses import HTMLResponse, FileResponse
 from typing import List
 import shutil
 import json
 
-app = FastAPI()
+CLEANUP_INTERVAL = 86400  # 每天检查一次（秒）
+FILE_MAX_AGE = 5 * 86400  # 文件最大保留 5 天（秒）
+
+async def cleanup_old_files():
+    """后台任务：定期删除超过 5 天的上传文件"""
+    while True:
+        await asyncio.sleep(CLEANUP_INTERVAL)
+        now = time.time()
+        if os.path.exists(UPLOAD_DIR):
+            for filename in os.listdir(UPLOAD_DIR):
+                filepath = os.path.join(UPLOAD_DIR, filename)
+                if os.path.isfile(filepath):
+                    file_age = now - os.path.getmtime(filepath)
+                    if file_age > FILE_MAX_AGE:
+                        os.remove(filepath)
+                        print(f"[清理] 已删除过期文件: {filename}")
+
+@asynccontextmanager
+async def lifespan(app):
+    # 启动时创建清理任务
+    task = asyncio.create_task(cleanup_old_files())
+    yield
+    # 关闭时取消任务
+    task.cancel()
+
+app = FastAPI(lifespan=lifespan)
 
 CHAT_PASSWORD = "3635363"
 
