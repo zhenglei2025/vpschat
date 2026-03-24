@@ -405,6 +405,8 @@ async def terminal_endpoint(websocket: WebSocket):
     # 创建 PTY 子进程
     child_pid, master_fd = pty.fork()
     if child_pid == 0:
+        os.environ["TERM"] = "xterm-256color"
+        os.environ["COLORTERM"] = "truecolor"
         os.execvp("/bin/bash", ["/bin/bash", "-l"])
 
     # 父进程：设置 master_fd 非阻塞
