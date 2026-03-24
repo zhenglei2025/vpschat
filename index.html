@@ -199,8 +199,8 @@
         #terminal-toggle-btn {
             padding: 6px 14px;
             background: linear-gradient(135deg, #1a1a2e, #16213e);
-            color: #0f0;
-            border: 1px solid #0f03;
+            color: #667eea;
+            border: 1px solid #667eea33;
             border-radius: 8px;
             cursor: pointer;
             font-size: 0.8em;
@@ -211,14 +211,14 @@
 
         #terminal-toggle-btn:hover {
             background: linear-gradient(135deg, #16213e, #0f3460);
-            border-color: #0f06;
-            box-shadow: 0 0 8px rgba(0, 255, 0, 0.15);
+            border-color: #667eea66;
+            box-shadow: 0 0 8px rgba(102, 126, 234, 0.15);
         }
 
         #terminal-toggle-btn.active {
-            background: #0f0;
-            color: #1a1a2e;
-            border-color: #0f0;
+            background: #667eea;
+            color: #ffffff;
+            border-color: #667eea;
         }
 
         #chat-window {
@@ -509,20 +509,20 @@
         #terminal-panel.open {
             width: 50%;
             min-width: 400px;
-            border-left: 2px solid #0f03;
+            border-left: 2px solid #667eea33;
         }
 
         #terminal-header {
             padding: 10px 16px;
             background: linear-gradient(135deg, #1a1a2e, #16213e);
-            color: #0f0;
+            color: #667eea;
             font-weight: bold;
             font-size: 0.9em;
             font-family: 'SF Mono', 'Fira Code', monospace;
             display: flex;
             align-items: center;
             gap: 8px;
-            border-bottom: 1px solid #0f03;
+            border-bottom: 1px solid #667eea33;
         }
 
         #terminal-header .term-title {
@@ -531,13 +531,13 @@
 
         #terminal-header .term-status {
             font-size: 0.75em;
-            color: #0f08;
+            color: #667eea88;
         }
 
         #terminal-header .term-close-btn {
             background: none;
-            border: 1px solid #0f03;
-            color: #0f0;
+            border: 1px solid #667eea33;
+            color: #667eea;
             cursor: pointer;
             padding: 2px 8px;
             border-radius: 4px;
@@ -546,8 +546,8 @@
         }
 
         #terminal-header .term-close-btn:hover {
-            background: #0f02;
-            border-color: #0f06;
+            background: #667eea22;
+            border-color: #667eea66;
         }
 
         #terminal-container {
@@ -842,7 +842,7 @@
                         if (msg.type === 'auth') {
                             if (msg.success) {
                                 statusEl.textContent = 'connected';
-                                statusEl.style.color = '#51cf6688';
+                                statusEl.style.color = '#667eea88';
                                 if (term) {
                                     termWs.send(JSON.stringify({
                                         type: 'resize', rows: term.rows, cols: term.cols
@@ -879,7 +879,7 @@
             if (term) { term.dispose(); term = null; }
             window.removeEventListener('resize', fitTerminal);
             document.getElementById('term-status').textContent = 'disconnected';
-            document.getElementById('term-status').style.color = '#0f08';
+            document.getElementById('term-status').style.color = '#667eea88';
         }
 
         // ===== Git Panel =====
