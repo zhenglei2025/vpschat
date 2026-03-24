@@ -7,6 +7,10 @@
     <!-- highlight.js for code formatting -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <!-- xterm.js for terminal -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css">
+    <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0.10.0/lib/addon-fit.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -61,7 +65,6 @@
             margin-bottom: 8px;
         }
 
-        /* 创建仓库 */
         .create-repo-row {
             display: flex;
             gap: 6px;
@@ -83,7 +86,6 @@
             background: #667eea;
         }
 
-        /* 仓库列表 */
         .repo-item {
             padding: 8px 10px;
             margin-bottom: 4px;
@@ -110,7 +112,6 @@
             margin-top: 2px;
         }
 
-        /* Patch 列表 */
         #patch-list {
             flex: 1;
             overflow-y: auto;
@@ -170,7 +171,7 @@
             padding: 20px 10px;
         }
 
-        /* ===== 右侧主聊天区 ===== */
+        /* ===== 中间主聊天区 ===== */
         #main-area {
             flex: 1;
             display: flex;
@@ -187,6 +188,39 @@
             font-weight: bold;
             border-bottom: 1px solid #ddd;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        #chat-header .header-title {
+            flex: 1;
+        }
+
+        #terminal-toggle-btn {
+            padding: 6px 14px;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: #0f0;
+            border: 1px solid #0f03;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.8em;
+            font-weight: 600;
+            font-family: 'SF Mono', monospace;
+            transition: all 0.2s;
+        }
+
+        #terminal-toggle-btn:hover {
+            background: linear-gradient(135deg, #16213e, #0f3460);
+            border-color: #0f06;
+            box-shadow: 0 0 8px rgba(0, 255, 0, 0.15);
+        }
+
+        #terminal-toggle-btn.active {
+            background: #0f0;
+            color: #1a1a2e;
+            border-color: #0f0;
         }
 
         #chat-window {
@@ -359,7 +393,6 @@
             display: none;
         }
 
-        /* Code block styling */
         .msg-content {
             white-space: pre-wrap;
             word-wrap: break-word;
@@ -462,12 +495,75 @@
             white-space: nowrap;
         }
 
-        /* 移动端：隐藏 Git 面板，显示切换按钮 */
+        /* ===== 右侧终端面板 ===== */
+        #terminal-panel {
+            width: 0;
+            min-width: 0;
+            background: #1a1a2e;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            transition: width 0.3s ease, min-width 0.3s ease;
+            border-left: none;
+        }
+
+        #terminal-panel.open {
+            width: 50%;
+            min-width: 400px;
+            border-left: 2px solid #0f03;
+        }
+
+        #terminal-header {
+            padding: 10px 16px;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: #0f0;
+            font-weight: bold;
+            font-size: 0.9em;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid #0f03;
+        }
+
+        #terminal-header .term-title {
+            flex: 1;
+        }
+
+        #terminal-header .term-status {
+            font-size: 0.75em;
+            color: #0f08;
+        }
+
+        #terminal-header .term-close-btn {
+            background: none;
+            border: 1px solid #0f03;
+            color: #0f0;
+            cursor: pointer;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-family: monospace;
+        }
+
+        #terminal-header .term-close-btn:hover {
+            background: #0f02;
+            border-color: #0f06;
+        }
+
+        #terminal-container {
+            flex: 1;
+            padding: 4px;
+            overflow: hidden;
+        }
+
+        /* 移动端 */
         #git-toggle-btn {
             display: none;
             position: fixed;
             bottom: 70px;
-            right: 15px;
+            left: 15px;
             z-index: 100;
             width: 44px;
             height: 44px;
@@ -483,7 +579,7 @@
             text-align: center;
         }
 
-        @media (max-width: 700px) {
+        @media (max-width: 900px) {
             #git-panel {
                 position: fixed;
                 left: -300px;
@@ -499,6 +595,15 @@
 
             #git-toggle-btn {
                 display: block;
+            }
+
+            #terminal-panel.open {
+                position: fixed;
+                right: 0;
+                top: 0;
+                width: 100%;
+                min-width: 0;
+                z-index: 500;
             }
         }
     </style>
@@ -543,9 +648,12 @@
         </div>
     </div>
 
-    <!-- 右侧主聊天区 -->
+    <!-- 中间主聊天区 -->
     <div id="main-area">
-        <div id="chat-header">VPS 中转聊天室</div>
+        <div id="chat-header">
+            <span class="header-title">VPS 中转聊天室</span>
+            <button id="terminal-toggle-btn" onclick="toggleTerminal()">🖥 终端</button>
+        </div>
         <div id="chat-window"></div>
         <div id="paste-preview">
             <img id="paste-thumb" src="">
@@ -563,6 +671,17 @@
         </div>
     </div>
 
+    <!-- 右侧终端面板 -->
+    <div id="terminal-panel">
+        <div id="terminal-header">
+            <span>🖥</span>
+            <span class="term-title">Terminal</span>
+            <span class="term-status" id="term-status">disconnected</span>
+            <button class="term-close-btn" onclick="toggleTerminal()">✕</button>
+        </div>
+        <div id="terminal-container"></div>
+    </div>
+
     <!-- 移动端切换按钮 -->
     <button id="git-toggle-btn" onclick="toggleGitPanel()">📦</button>
 
@@ -574,9 +693,14 @@
         }
 
         let ws;
+        let termWs = null;
+        let term = null;
+        let fitAddon = null;
+        let terminalOpen = false;
+        let chatPassword = '';
         const chatWindow = document.getElementById('chat-window');
 
-        // Textarea auto-resize & Enter/Shift+Enter handling
+        // Textarea auto-resize & Enter/Shift+Enter
         const msgInput = document.getElementById('message-input');
         msgInput.addEventListener('input', () => {
             msgInput.style.height = 'auto';
@@ -592,21 +716,19 @@
         function doLogin() {
             const pwd = document.getElementById('password-input').value;
             if (!pwd.trim()) return;
+            chatPassword = pwd;
             document.getElementById('login-error').style.display = 'none';
 
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             ws = new WebSocket(`${protocol}//${window.location.host}/ws/${clientId}`);
 
-            ws.onopen = () => {
-                ws.send(pwd);
-            };
+            ws.onopen = () => { ws.send(pwd); };
 
             ws.onmessage = (event) => {
                 const data = JSON.parse(event.data);
                 if (data.type === 'auth') {
                     if (data.success) {
                         document.getElementById('login-overlay').style.display = 'none';
-                        // 登录成功后加载仓库和 patch 列表
                         loadRepos();
                         loadPatches();
                     } else {
@@ -616,10 +738,7 @@
                     return;
                 }
                 appendMessage(data);
-                // 如果收到 git_push，刷新 patch 列表
-                if (data.type === 'git_push') {
-                    loadPatches();
-                }
+                if (data.type === 'git_push') loadPatches();
             };
 
             ws.onclose = () => {
@@ -629,7 +748,171 @@
             };
         }
 
-        // ===== Git 面板功能 =====
+        // ===== Terminal =====
+
+        function toggleTerminal() {
+            const panel = document.getElementById('terminal-panel');
+            const btn = document.getElementById('terminal-toggle-btn');
+
+            if (terminalOpen) {
+                // 关闭终端
+                panel.classList.remove('open');
+                btn.classList.remove('active');
+                terminalOpen = false;
+                disconnectTerminal();
+            } else {
+                // 打开终端
+                panel.classList.add('open');
+                btn.classList.add('active');
+                terminalOpen = true;
+                // 小延迟等 CSS transition 完成后再初始化
+                setTimeout(() => {
+                    initTerminal();
+                    connectTerminal();
+                }, 350);
+            }
+        }
+
+        function initTerminal() {
+            if (term) {
+                term.dispose();
+            }
+            term = new Terminal({
+                cursorBlink: true,
+                fontSize: 14,
+                fontFamily: "'SF Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace",
+                theme: {
+                    background: '#1a1a2e',
+                    foreground: '#e0e0e0',
+                    cursor: '#00ff00',
+                    cursorAccent: '#1a1a2e',
+                    selectionBackground: '#667eea44',
+                    black: '#1a1a2e',
+                    red: '#ff6b6b',
+                    green: '#51cf66',
+                    yellow: '#ffd43b',
+                    blue: '#667eea',
+                    magenta: '#cc5de8',
+                    cyan: '#22b8cf',
+                    white: '#e0e0e0',
+                    brightBlack: '#555',
+                    brightRed: '#ff8787',
+                    brightGreen: '#69db7c',
+                    brightYellow: '#ffe066',
+                    brightBlue: '#91a7ff',
+                    brightMagenta: '#e599f7',
+                    brightCyan: '#66d9e8',
+                    brightWhite: '#ffffff'
+                }
+            });
+
+            fitAddon = new FitAddon.FitAddon();
+            term.loadAddon(fitAddon);
+
+            const container = document.getElementById('terminal-container');
+            term.open(container);
+            fitAddon.fit();
+
+            // 输入发送到 WebSocket
+            term.onData((data) => {
+                if (termWs && termWs.readyState === WebSocket.OPEN) {
+                    termWs.send(data);
+                }
+            });
+
+            // 监听窗口 resize
+            window.addEventListener('resize', fitTerminal);
+        }
+
+        function fitTerminal() {
+            if (fitAddon && terminalOpen) {
+                fitAddon.fit();
+                if (termWs && termWs.readyState === WebSocket.OPEN && term) {
+                    termWs.send(JSON.stringify({
+                        type: 'resize',
+                        rows: term.rows,
+                        cols: term.cols
+                    }));
+                }
+            }
+        }
+
+        function connectTerminal() {
+            const statusEl = document.getElementById('term-status');
+            statusEl.textContent = 'connecting...';
+            statusEl.style.color = '#ffd43b88';
+
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            termWs = new WebSocket(`${protocol}//${window.location.host}/ws/terminal`);
+
+            termWs.binaryType = 'arraybuffer';
+
+            termWs.onopen = () => {
+                termWs.send(chatPassword);
+            };
+
+            termWs.onmessage = (event) => {
+                if (typeof event.data === 'string') {
+                    // 可能是 auth 响应
+                    try {
+                        const msg = JSON.parse(event.data);
+                        if (msg.type === 'auth') {
+                            if (msg.success) {
+                                statusEl.textContent = 'connected';
+                                statusEl.style.color = '#51cf6688';
+                                // 发送初始 resize
+                                if (term) {
+                                    termWs.send(JSON.stringify({
+                                        type: 'resize',
+                                        rows: term.rows,
+                                        cols: term.cols
+                                    }));
+                                }
+                            } else {
+                                statusEl.textContent = 'auth failed';
+                                statusEl.style.color = '#ff6b6b88';
+                                term.write('\r\n\x1b[31m认证失败\x1b[0m\r\n');
+                            }
+                            return;
+                        }
+                    } catch (e) { }
+                    // 普通文本输出
+                    term.write(event.data);
+                } else {
+                    // 二进制数据
+                    term.write(new Uint8Array(event.data));
+                }
+            };
+
+            termWs.onclose = () => {
+                statusEl.textContent = 'disconnected';
+                statusEl.style.color = '#ff6b6b88';
+                if (term && terminalOpen) {
+                    term.write('\r\n\x1b[33m连接已断开\x1b[0m\r\n');
+                }
+            };
+
+            termWs.onerror = () => {
+                statusEl.textContent = 'error';
+                statusEl.style.color = '#ff6b6b88';
+            };
+        }
+
+        function disconnectTerminal() {
+            if (termWs) {
+                termWs.close();
+                termWs = null;
+            }
+            if (term) {
+                term.dispose();
+                term = null;
+            }
+            window.removeEventListener('resize', fitTerminal);
+            document.getElementById('term-status').textContent = 'disconnected';
+            document.getElementById('term-status').style.color = '#0f08';
+        }
+
+        // ===== Git Panel =====
 
         function toggleGitPanel() {
             document.getElementById('git-panel').classList.toggle('open');
@@ -701,14 +984,12 @@
             return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
         }
 
-        // ===== Copy to clipboard (works on HTTP too) =====
+        // ===== Copy to clipboard =====
         function copyToClipboard(text, btn) {
             if (navigator.clipboard && window.isSecureContext) {
                 navigator.clipboard.writeText(text).then(() => {
                     showCopied(btn);
-                }).catch(() => {
-                    fallbackCopy(text, btn);
-                });
+                }).catch(() => { fallbackCopy(text, btn); });
             } else {
                 fallbackCopy(text, btn);
             }
@@ -723,33 +1004,26 @@
             document.body.appendChild(ta);
             ta.focus();
             ta.select();
-            try {
-                document.execCommand('copy');
-                showCopied(btn);
-            } catch (e) {
-                alert('复制失败');
-            }
+            try { document.execCommand('copy'); showCopied(btn); }
+            catch (e) { alert('复制失败'); }
             document.body.removeChild(ta);
         }
 
         function showCopied(btn) {
-            const original = btn.textContent || btn.innerText;
-            if (btn.querySelector) {
-                // 可能是 div，临时显示提示
-                const el = btn.querySelector('.repo-path');
-                if (el) {
-                    const orig = el.textContent;
-                    el.textContent = '✓ 已复制路径';
-                    el.style.color = '#667eea';
-                    setTimeout(() => { el.textContent = orig; el.style.color = ''; }, 1500);
-                    return;
-                }
+            const el = btn.querySelector && btn.querySelector('.repo-path');
+            if (el) {
+                const orig = el.textContent;
+                el.textContent = '✓ 已复制路径';
+                el.style.color = '#667eea';
+                setTimeout(() => { el.textContent = orig; el.style.color = ''; }, 1500);
+                return;
             }
+            const original = btn.textContent;
             btn.textContent = '✓ 已复制';
             setTimeout(() => { btn.textContent = original; }, 1500);
         }
 
-        // ===== Format message content with code blocks =====
+        // ===== Format content =====
         function formatContent(text) {
             const codeBlockRegex = /```(\w*)\n?([\s\S]*?)```/g;
             let lastIndex = 0;
@@ -758,9 +1032,7 @@
 
             while ((match = codeBlockRegex.exec(text)) !== null) {
                 const before = text.slice(lastIndex, match.index);
-                if (before) {
-                    result += escapeHtml(before).replace(/\n/g, '<br>');
-                }
+                if (before) result += escapeHtml(before).replace(/\n/g, '<br>');
                 const lang = match[1] || '';
                 const code = match[2].replace(/\n$/, '');
                 const escapedCode = escapeHtml(code);
@@ -771,18 +1043,12 @@
             }
 
             const remaining = text.slice(lastIndex);
-            if (remaining) {
-                result += escapeHtml(remaining).replace(/\n/g, '<br>');
-            }
-
+            if (remaining) result += escapeHtml(remaining).replace(/\n/g, '<br>');
             return result;
         }
 
         function escapeHtml(str) {
-            return str.replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;');
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
         }
 
         function copyCodeBlock(btn) {
@@ -790,7 +1056,7 @@
             copyToClipboard(code.textContent, btn);
         }
 
-        // ===== Append message to chat =====
+        // ===== Append message =====
         function appendMessage(data) {
             const div = document.createElement('div');
 
@@ -811,16 +1077,12 @@
 
             div.className = 'msg ' + (data.type === 'system' ? 'system' : 'chat');
 
-            if (data.type !== 'system' && data.sender === clientId) {
-                div.classList.add('my-msg');
-            }
+            if (data.type !== 'system' && data.sender === clientId) div.classList.add('my-msg');
 
             if (data.type === 'chat') {
                 const formatted = formatContent(data.content);
                 div.innerHTML = `<div class="sender-name">${data.sender}</div>${formatted}`;
-                div.querySelectorAll('pre code').forEach(block => {
-                    hljs.highlightElement(block);
-                });
+                div.querySelectorAll('pre code').forEach(block => hljs.highlightElement(block));
             } else if (data.type === 'file') {
                 const isImage = /\.(png|jpg|jpeg|gif|webp|bmp|svg)$/i.test(data.filename);
                 if (isImage) {
@@ -832,7 +1094,6 @@
                 div.innerText = data.content;
             }
 
-            // 给对方消息添加复制按钮
             if (data.type !== 'system' && data.sender !== clientId) {
                 const copyBtn = document.createElement('button');
                 copyBtn.className = 'copy-btn';
@@ -872,10 +1133,7 @@
             const formData = new FormData();
             formData.append('file', file);
             try {
-                const response = await fetch(`/upload?sender=${clientId}`, {
-                    method: 'POST',
-                    body: formData
-                });
+                const response = await fetch(`/upload?sender=${clientId}`, { method: 'POST', body: formData });
                 if (!response.ok) throw new Error("上传失败");
             } catch (err) {
                 alert("上传失败: " + err.message);

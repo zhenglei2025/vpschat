@@ -1,4 +1,8 @@
 import os
+import pty
+import fcntl
+import struct
+import signal
 import time
 import asyncio
 import subprocess
@@ -10,6 +14,7 @@ from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
 from typing import List
 import shutil
 import json
+import termios
 
 # ===== 配置 =====
 CHAT_PASSWORD = "3635363"
@@ -319,7 +324,94 @@ async def download_patch(filename: str):
     return FileResponse(path=filepath, filename=filename)
 
 
+# ===== 8. Web Terminal (PTY over WebSocket) =====
+
+@app.websocket("/ws/terminal")
+async def terminal_endpoint(websocket: WebSocket):
+    await websocket.accept()
+
+    # 验证密码
+    try:
+        password = await websocket.receive_text()
+    except WebSocketDisconnect:
+        return
+    if password != CHAT_PASSWORD:
+        await websocket.send_text(json.dumps({"type": "auth", "success": False}))
+        await websocket.close()
+        return
+    await websocket.send_text(json.dumps({"type": "auth", "success": True}))
+
+    # 使用 pty.fork() 创建 PTY 子进程
+    child_pid, master_fd = pty.fork()
+    if child_pid == 0:
+        # 子进程中执行 bash
+        os.execvp("/bin/bash", ["/bin/bash", "-l"])
+
+    # 父进程：设置 master_fd 非阻塞
+    fl = fcntl.fcntl(master_fd, fcntl.F_GETFL)
+    fcntl.fcntl(master_fd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
+
+    # 后台任务：读取 PTY 输出 → WebSocket
+    async def read_pty():
+        loop = asyncio.get_event_loop()
+        try:
+            while True:
+                await asyncio.sleep(0.01)
+                try:
+                    data = os.read(master_fd, 4096)
+                    if data:
+                        await websocket.send_bytes(data)
+                except OSError:
+                    # EAGAIN - 没有数据
+                    pass
+                except Exception:
+                    break
+        except asyncio.CancelledError:
+            pass
+
+    reader_task = asyncio.create_task(read_pty())
+
+    try:
+        while True:
+            msg = await websocket.receive()
+            if msg.get("type") == "websocket.disconnect":
+                break
+            if "text" in msg:
+                text_data = msg["text"]
+                # 检查是否为 resize 指令
+                try:
+                    cmd = json.loads(text_data)
+                    if cmd.get("type") == "resize":
+                        rows = cmd.get("rows", 24)
+                        cols = cmd.get("cols", 80)
+                        winsize = struct.pack("HHHH", rows, cols, 0, 0)
+                        fcntl.ioctl(master_fd, termios.TIOCSWINSZ, winsize)
+                        continue
+                except (json.JSONDecodeError, ValueError):
+                    pass
+                # 普通输入，写入 PTY
+                os.write(master_fd, text_data.encode("utf-8"))
+            elif "bytes" in msg:
+                os.write(master_fd, msg["bytes"])
+    except WebSocketDisconnect:
+        pass
+    except Exception:
+        pass
+    finally:
+        reader_task.cancel()
+        try:
+            os.close(master_fd)
+        except:
+            pass
+        try:
+            os.kill(child_pid, signal.SIGTERM)
+            os.waitpid(child_pid, os.WNOHANG)
+        except:
+            pass
+
+
 # ===== 启动 =====
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
