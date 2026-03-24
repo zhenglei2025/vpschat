@@ -30,7 +30,7 @@ async def cleanup_old_files():
     while True:
         await asyncio.sleep(CLEANUP_INTERVAL)
         now = time.time()
-        for dir_path in [UPLOAD_DIR, PATCHES_DIR]:
+        for dir_path in [UPLOAD_DIR]:
             if os.path.exists(dir_path):
                 for filename in os.listdir(dir_path):
                     filepath = os.path.join(dir_path, filename)
