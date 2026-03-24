@@ -843,7 +843,7 @@
             statusEl.style.color = '#ffd43b88';
 
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            termWs = new WebSocket(`${protocol}//${window.location.host}/ws/terminal`);
+            termWs = new WebSocket(`${protocol}//${window.location.host}/ws-terminal`);
 
             termWs.binaryType = 'arraybuffer';
 

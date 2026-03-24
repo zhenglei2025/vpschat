@@ -326,7 +326,7 @@ async def download_patch(filename: str):
 
 # ===== 8. Web Terminal (PTY over WebSocket) =====
 
-@app.websocket("/ws/terminal")
+@app.websocket("/ws-terminal")
 async def terminal_endpoint(websocket: WebSocket):
     await websocket.accept()
 
