@@ -7,11 +7,12 @@ import time
 import asyncio
 import subprocess
 import stat
+import secrets
 from datetime import datetime
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, File
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, File, Request, Header
 from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
-from typing import List
+from typing import List, Optional
 import shutil
 import json
 import termios
@@ -23,15 +24,56 @@ REPOS_DIR = "repos"
 PATCHES_DIR = "patches"
 CLEANUP_INTERVAL = 86400   # 每天检查一次（秒）
 FILE_MAX_AGE = 5 * 86400   # 文件最大保留 5 天（秒）
+TOKEN_MAX_AGE = 86400       # Token 有效期 24 小时
 
 # 确保目录存在
 for d in [UPLOAD_DIR, REPOS_DIR, PATCHES_DIR]:
     os.makedirs(d, exist_ok=True)
 
 
+# ===== Token 管理 =====
+# {token: expire_timestamp}
+active_tokens: dict[str, float] = {}
+
+
+def create_token() -> str:
+    """创建新 token"""
+    token = secrets.token_urlsafe(32)
+    active_tokens[token] = time.time() + TOKEN_MAX_AGE
+    return token
+
+
+def verify_token(token: str) -> bool:
+    """验证 token 是否有效"""
+    if not token:
+        return False
+    expire = active_tokens.get(token)
+    if expire is None:
+        return False
+    if time.time() > expire:
+        active_tokens.pop(token, None)
+        return False
+    return True
+
+
+def cleanup_expired_tokens():
+    """清理过期 token"""
+    now = time.time()
+    expired = [t for t, exp in active_tokens.items() if now > exp]
+    for t in expired:
+        active_tokens.pop(t, None)
+
+
+def get_token_from_header(authorization: Optional[str] = Header(None)) -> Optional[str]:
+    """从 Authorization header 提取 token"""
+    if authorization and authorization.startswith("Bearer "):
+        return authorization[7:]
+    return None
+
+
 # ===== 后台清理任务 =====
 async def cleanup_old_files():
-    """定期删除超过 5 天的上传文件和 patch 文件"""
+    """定期删除超过 5 天的上传文件 + 清理过期 token"""
     while True:
         await asyncio.sleep(CLEANUP_INTERVAL)
         now = time.time()
@@ -44,6 +86,7 @@ async def cleanup_old_files():
                         if file_age > FILE_MAX_AGE:
                             os.remove(filepath)
                             print(f"[清理] 已删除过期文件: {filepath}")
+        cleanup_expired_tokens()
 
 
 @asynccontextmanager
@@ -61,10 +104,6 @@ class ConnectionManager:
     def __init__(self):
         self.active_connections: List[WebSocket] = []
 
-    async def connect(self, websocket: WebSocket):
-        await websocket.accept()
-        self.active_connections.append(websocket)
-
     def disconnect(self, websocket: WebSocket):
         if websocket in self.active_connections:
             self.active_connections.remove(websocket)
@@ -79,22 +118,46 @@ class ConnectionManager:
 manager = ConnectionManager()
 
 
-# ===== 1. 首页 UI =====
+# ===== 认证中间件 =====
+def require_auth(authorization: Optional[str] = Header(None)):
+    """校验 HTTP 请求的 token"""
+    token = None
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization[7:]
+    if not verify_token(token):
+        return False
+    return True
+
+
+# ===== 1. 首页 UI（公开） =====
 @app.get("/")
 async def get():
     with open("index.html", "r", encoding="utf-8") as f:
         return HTMLResponse(content=f.read())
 
 
-# ===== 2. 聊天 WebSocket =====
+# ===== 2. 登录接口（公开） =====
+@app.post("/login")
+async def login(request: Request):
+    """验证密码，返回 token"""
+    body = await request.json()
+    password = body.get("password", "")
+    if password != CHAT_PASSWORD:
+        return JSONResponse(status_code=401, content={"error": "密码错误"})
+    token = create_token()
+    return {"token": token}
+
+
+# ===== 3. 聊天 WebSocket（需 token） =====
 @app.websocket("/ws/{client_id}")
 async def websocket_endpoint(websocket: WebSocket, client_id: str):
     await websocket.accept()
+    # 第一条消息必须是 token
     try:
-        password = await websocket.receive_text()
+        token = await websocket.receive_text()
     except WebSocketDisconnect:
         return
-    if password != CHAT_PASSWORD:
+    if not verify_token(token):
         await websocket.send_text(json.dumps({"type": "auth", "success": False}))
         await websocket.close()
         return
@@ -110,9 +173,15 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
         await manager.broadcast(json.dumps({"type": "system", "content": f"{client_id} 离开了聊天"}))
 
 
-# ===== 3. 文件上传 =====
+# ===== 4. 文件上传（需 token） =====
 @app.post("/upload")
-async def upload_file(file: UploadFile = File(...), sender: str = "Unknown"):
+async def upload_file(
+    file: UploadFile = File(...),
+    sender: str = "Unknown",
+    authorization: Optional[str] = Header(None)
+):
+    if not require_auth(authorization):
+        return JSONResponse(status_code=401, content={"error": "未授权"})
     file_path = os.path.join(UPLOAD_DIR, file.filename)
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
@@ -126,23 +195,26 @@ async def upload_file(file: UploadFile = File(...), sender: str = "Unknown"):
     return {"filename": file.filename}
 
 
-# ===== 4. 文件下载 =====
+# ===== 5. 文件下载（需 token，通过 query param） =====
 @app.get("/download/{filename}")
-async def download_file(filename: str):
+async def download_file(filename: str, token: str = ""):
+    if not verify_token(token):
+        return JSONResponse(status_code=401, content={"error": "未授权"})
     return FileResponse(path=os.path.join(UPLOAD_DIR, filename), filename=filename)
 
 
-# ===== 5. Git 仓库管理 =====
+# ===== 6. Git 仓库管理（需 token） =====
 
 @app.get("/repos")
-async def list_repos():
-    """列出所有 bare repo"""
+async def list_repos(authorization: Optional[str] = Header(None)):
+    if not require_auth(authorization):
+        return JSONResponse(status_code=401, content={"error": "未授权"})
     repos = []
     if os.path.exists(REPOS_DIR):
         for name in sorted(os.listdir(REPOS_DIR)):
             repo_path = os.path.join(REPOS_DIR, name)
             if os.path.isdir(repo_path) and name.endswith(".git"):
-                display_name = name[:-4]  # 去掉 .git 后缀
+                display_name = name[:-4]
                 repos.append({
                     "name": display_name,
                     "path": os.path.abspath(repo_path),
@@ -151,15 +223,16 @@ async def list_repos():
 
 
 @app.post("/repos/{name}")
-async def create_repo(name: str):
-    """创建新的 bare repo 并写入 post-receive hook"""
+async def create_repo(name: str, authorization: Optional[str] = Header(None)):
+    if not require_auth(authorization):
+        return JSONResponse(status_code=401, content={"error": "未授权"})
+
     repo_name = name if name.endswith(".git") else f"{name}.git"
     repo_path = os.path.join(REPOS_DIR, repo_name)
 
     if os.path.exists(repo_path):
         return JSONResponse(status_code=400, content={"error": "仓库已存在"})
 
-    # 创建 bare repo
     result = subprocess.run(
         ["git", "init", "--bare", repo_path],
         capture_output=True, text=True
@@ -167,7 +240,6 @@ async def create_repo(name: str):
     if result.returncode != 0:
         return JSONResponse(status_code=500, content={"error": result.stderr})
 
-    # 写入 post-receive hook
     hooks_dir = os.path.join(repo_path, "hooks")
     os.makedirs(hooks_dir, exist_ok=True)
     hook_path = os.path.join(hooks_dir, "post-receive")
@@ -182,7 +254,6 @@ done
 """
     with open(hook_path, "w") as f:
         f.write(hook_script)
-    # 添加执行权限
     st = os.stat(hook_path)
     os.chmod(hook_path, st.st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
 
@@ -197,13 +268,15 @@ done
     }
 
 
-# ===== 6. Git Hook 回调 =====
-
-from fastapi import Request
+# ===== 7. Git Hook 回调（仅 localhost，无需 token） =====
 
 @app.post("/hook/{repo_name}")
 async def git_hook(repo_name: str, request: Request):
-    """post-receive hook 回调：生成 patch 并广播"""
+    """post-receive hook 回调：仅允许 localhost 调用"""
+    client_host = request.client.host if request.client else ""
+    if client_host not in ("127.0.0.1", "::1", "localhost"):
+        return JSONResponse(status_code=403, content={"error": "仅限本机调用"})
+
     body = await request.json()
     oldrev = body.get("oldrev", "")
     newrev = body.get("newrev", "")
@@ -216,29 +289,20 @@ async def git_hook(repo_name: str, request: Request):
     if not os.path.exists(repo_path):
         return JSONResponse(status_code=404, content={"error": "仓库不存在"})
 
-    # 判断是否为新分支（oldrev 全为 0）
     is_new_branch = oldrev == "0" * 40
 
-    # 生成 patch 文件
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     patch_filename = f"{repo_name}_{branch}_{timestamp}.patch"
     patch_path = os.path.join(PATCHES_DIR, patch_filename)
 
     try:
         if is_new_branch:
-            # 新分支：导出所有 commit 的 diff
-            result = subprocess.run(
-                ["git", "--git-dir", repo_path, "diff", "--stat", newrev],
-                capture_output=True, text=True
-            )
-            # 对于新分支，用 format-patch 导出
             result = subprocess.run(
                 ["git", "--git-dir", repo_path, "format-patch",
-                 "--stdout", f"--root", newrev],
+                 "--stdout", "--root", newrev],
                 capture_output=True, text=True
             )
         else:
-            # 已有分支：生成两个 commit 之间的 patch
             result = subprocess.run(
                 ["git", "--git-dir", repo_path, "format-patch",
                  "--stdout", f"{oldrev}..{newrev}"],
@@ -249,7 +313,6 @@ async def git_hook(repo_name: str, request: Request):
             with open(patch_path, "w") as f:
                 f.write(result.stdout)
         else:
-            # fallback: 用 diff
             result = subprocess.run(
                 ["git", "--git-dir", repo_path, "diff", f"{oldrev}..{newrev}"],
                 capture_output=True, text=True
@@ -261,7 +324,6 @@ async def git_hook(repo_name: str, request: Request):
         with open(patch_path, "w") as f:
             f.write(f"# Error generating patch: {e}\n")
 
-    # 统计 commit 数
     commit_count = 0
     if not is_new_branch:
         try:
@@ -276,7 +338,6 @@ async def git_hook(repo_name: str, request: Request):
 
     patch_size = os.path.getsize(patch_path) if os.path.exists(patch_path) else 0
 
-    # 广播 push 事件
     await manager.broadcast(json.dumps({
         "type": "git_push",
         "repo": repo_name,
@@ -291,19 +352,17 @@ async def git_hook(repo_name: str, request: Request):
     return {"status": "ok", "patch": patch_filename}
 
 
-# ===== 7. Patch 列表和下载 =====
+# ===== 8. Patch 列表和下载（需 token） =====
 
 @app.get("/patches")
-async def list_patches():
-    """返回所有 patch 文件列表"""
+async def list_patches(authorization: Optional[str] = Header(None)):
+    if not require_auth(authorization):
+        return JSONResponse(status_code=401, content={"error": "未授权"})
     patches = []
     if os.path.exists(PATCHES_DIR):
         for filename in sorted(os.listdir(PATCHES_DIR), reverse=True):
             filepath = os.path.join(PATCHES_DIR, filename)
             if os.path.isfile(filepath) and filename.endswith(".patch"):
-                # 从文件名解析信息：repo_branch_timestamp.patch
-                parts = filename[:-6].rsplit("_", 2)  # 去掉 .patch
-                repo = parts[0] if len(parts) >= 3 else filename
                 patches.append({
                     "filename": filename,
                     "url": f"/patches/{filename}",
@@ -316,35 +375,36 @@ async def list_patches():
 
 
 @app.get("/patches/{filename}")
-async def download_patch(filename: str):
-    """下载 patch 文件"""
+async def download_patch(filename: str, token: str = ""):
+    """下载 patch 文件（通过 query param 传 token）"""
+    if not verify_token(token):
+        return JSONResponse(status_code=401, content={"error": "未授权"})
     filepath = os.path.join(PATCHES_DIR, filename)
     if not os.path.exists(filepath):
         return JSONResponse(status_code=404, content={"error": "文件不存在"})
     return FileResponse(path=filepath, filename=filename)
 
 
-# ===== 8. Web Terminal (PTY over WebSocket) =====
+# ===== 9. Web Terminal（需 token） =====
 
 @app.websocket("/ws-terminal")
 async def terminal_endpoint(websocket: WebSocket):
     await websocket.accept()
 
-    # 验证密码
+    # 第一条消息必须是 token
     try:
-        password = await websocket.receive_text()
+        token = await websocket.receive_text()
     except WebSocketDisconnect:
         return
-    if password != CHAT_PASSWORD:
+    if not verify_token(token):
         await websocket.send_text(json.dumps({"type": "auth", "success": False}))
         await websocket.close()
         return
     await websocket.send_text(json.dumps({"type": "auth", "success": True}))
 
-    # 使用 pty.fork() 创建 PTY 子进程
+    # 创建 PTY 子进程
     child_pid, master_fd = pty.fork()
     if child_pid == 0:
-        # 子进程中执行 bash
         os.execvp("/bin/bash", ["/bin/bash", "-l"])
 
     # 父进程：设置 master_fd 非阻塞
@@ -353,7 +413,6 @@ async def terminal_endpoint(websocket: WebSocket):
 
     # 后台任务：读取 PTY 输出 → WebSocket
     async def read_pty():
-        loop = asyncio.get_event_loop()
         try:
             while True:
                 await asyncio.sleep(0.01)
@@ -362,7 +421,6 @@ async def terminal_endpoint(websocket: WebSocket):
                     if data:
                         await websocket.send_bytes(data)
                 except OSError:
-                    # EAGAIN - 没有数据
                     pass
                 except Exception:
                     break
@@ -378,7 +436,6 @@ async def terminal_endpoint(websocket: WebSocket):
                 break
             if "text" in msg:
                 text_data = msg["text"]
-                # 检查是否为 resize 指令
                 try:
                     cmd = json.loads(text_data)
                     if cmd.get("type") == "resize":
@@ -389,7 +446,6 @@ async def terminal_endpoint(websocket: WebSocket):
                         continue
                 except (json.JSONDecodeError, ValueError):
                     pass
-                # 普通输入，写入 PTY
                 os.write(master_fd, text_data.encode("utf-8"))
             elif "bytes" in msg:
                 os.write(master_fd, msg["bytes"])
@@ -414,4 +470,3 @@ async def terminal_endpoint(websocket: WebSocket):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
-

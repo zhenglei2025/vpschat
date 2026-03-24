@@ -4,10 +4,8 @@
 <head>
     <title>VPS Relay Chat</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- highlight.js for code formatting -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <!-- xterm.js for terminal -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css">
     <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0.10.0/lib/addon-fit.js"></script>
@@ -558,7 +556,6 @@
             overflow: hidden;
         }
 
-        /* 移动端 */
         #git-toggle-btn {
             display: none;
             position: fixed;
@@ -623,9 +620,7 @@
 
     <!-- 左侧 Git 面板 -->
     <div id="git-panel">
-        <div id="git-panel-header">
-            <span>📦</span> Git 仓库
-        </div>
+        <div id="git-panel-header"><span>📦</span> Git 仓库</div>
         <div class="panel-section">
             <div class="panel-section-title">创建仓库</div>
             <div class="create-repo-row">
@@ -682,7 +677,6 @@
         <div id="terminal-container"></div>
     </div>
 
-    <!-- 移动端切换按钮 -->
     <button id="git-toggle-btn" onclick="toggleGitPanel()">📦</button>
 
     <script>
@@ -697,10 +691,9 @@
         let term = null;
         let fitAddon = null;
         let terminalOpen = false;
-        let chatPassword = '';
+        let authToken = '';   // 🔑 核心：登录后获取的 token
         const chatWindow = document.getElementById('chat-window');
 
-        // Textarea auto-resize & Enter/Shift+Enter
         const msgInput = document.getElementById('message-input');
         msgInput.addEventListener('input', () => {
             msgInput.style.height = 'auto';
@@ -713,39 +706,67 @@
             }
         });
 
-        function doLogin() {
+        // ===== 带 token 的 fetch 工具函数 =====
+        function authFetch(url, options = {}) {
+            if (!options.headers) options.headers = {};
+            options.headers['Authorization'] = `Bearer ${authToken}`;
+            return fetch(url, options);
+        }
+
+        // ===== 登录：先 POST /login 获取 token，再连 WebSocket =====
+        async function doLogin() {
             const pwd = document.getElementById('password-input').value;
             if (!pwd.trim()) return;
-            chatPassword = pwd;
             document.getElementById('login-error').style.display = 'none';
 
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            ws = new WebSocket(`${protocol}//${window.location.host}/ws/${clientId}`);
+            try {
+                // 1. POST /login 获取 token
+                const res = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: pwd })
+                });
 
-            ws.onopen = () => { ws.send(pwd); };
-
-            ws.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                if (data.type === 'auth') {
-                    if (data.success) {
-                        document.getElementById('login-overlay').style.display = 'none';
-                        loadRepos();
-                        loadPatches();
-                    } else {
-                        document.getElementById('login-error').style.display = 'block';
-                        ws.close();
-                    }
+                if (!res.ok) {
+                    document.getElementById('login-error').style.display = 'block';
                     return;
                 }
-                appendMessage(data);
-                if (data.type === 'git_push') loadPatches();
-            };
 
-            ws.onclose = () => {
-                if (document.getElementById('login-overlay').style.display === 'none') {
-                    appendMessage({ type: 'system', content: '连接已断开，请刷新页面。' });
-                }
-            };
+                const data = await res.json();
+                authToken = data.token;
+
+                // 2. 用 token 连接聊天 WebSocket
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                ws = new WebSocket(`${protocol}//${window.location.host}/ws/${clientId}`);
+
+                ws.onopen = () => { ws.send(authToken); };
+
+                ws.onmessage = (event) => {
+                    const msg = JSON.parse(event.data);
+                    if (msg.type === 'auth') {
+                        if (msg.success) {
+                            document.getElementById('login-overlay').style.display = 'none';
+                            loadRepos();
+                            loadPatches();
+                        } else {
+                            document.getElementById('login-error').style.display = 'block';
+                            ws.close();
+                        }
+                        return;
+                    }
+                    appendMessage(msg);
+                    if (msg.type === 'git_push') loadPatches();
+                };
+
+                ws.onclose = () => {
+                    if (document.getElementById('login-overlay').style.display === 'none') {
+                        appendMessage({ type: 'system', content: '连接已断开，请刷新页面。' });
+                    }
+                };
+
+            } catch (e) {
+                document.getElementById('login-error').style.display = 'block';
+            }
         }
 
         // ===== Terminal =====
@@ -753,74 +774,41 @@
         function toggleTerminal() {
             const panel = document.getElementById('terminal-panel');
             const btn = document.getElementById('terminal-toggle-btn');
-
             if (terminalOpen) {
-                // 关闭终端
                 panel.classList.remove('open');
                 btn.classList.remove('active');
                 terminalOpen = false;
                 disconnectTerminal();
             } else {
-                // 打开终端
                 panel.classList.add('open');
                 btn.classList.add('active');
                 terminalOpen = true;
-                // 小延迟等 CSS transition 完成后再初始化
-                setTimeout(() => {
-                    initTerminal();
-                    connectTerminal();
-                }, 350);
+                setTimeout(() => { initTerminal(); connectTerminal(); }, 350);
             }
         }
 
         function initTerminal() {
-            if (term) {
-                term.dispose();
-            }
+            if (term) term.dispose();
             term = new Terminal({
-                cursorBlink: true,
-                fontSize: 14,
+                cursorBlink: true, fontSize: 14,
                 fontFamily: "'SF Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace",
                 theme: {
-                    background: '#1a1a2e',
-                    foreground: '#e0e0e0',
-                    cursor: '#00ff00',
-                    cursorAccent: '#1a1a2e',
-                    selectionBackground: '#667eea44',
-                    black: '#1a1a2e',
-                    red: '#ff6b6b',
-                    green: '#51cf66',
-                    yellow: '#ffd43b',
-                    blue: '#667eea',
-                    magenta: '#cc5de8',
-                    cyan: '#22b8cf',
-                    white: '#e0e0e0',
-                    brightBlack: '#555',
-                    brightRed: '#ff8787',
-                    brightGreen: '#69db7c',
-                    brightYellow: '#ffe066',
-                    brightBlue: '#91a7ff',
-                    brightMagenta: '#e599f7',
-                    brightCyan: '#66d9e8',
-                    brightWhite: '#ffffff'
+                    background: '#1a1a2e', foreground: '#e0e0e0', cursor: '#00ff00',
+                    cursorAccent: '#1a1a2e', selectionBackground: '#667eea44',
+                    black: '#1a1a2e', red: '#ff6b6b', green: '#51cf66', yellow: '#ffd43b',
+                    blue: '#667eea', magenta: '#cc5de8', cyan: '#22b8cf', white: '#e0e0e0',
+                    brightBlack: '#555', brightRed: '#ff8787', brightGreen: '#69db7c',
+                    brightYellow: '#ffe066', brightBlue: '#91a7ff', brightMagenta: '#e599f7',
+                    brightCyan: '#66d9e8', brightWhite: '#ffffff'
                 }
             });
-
             fitAddon = new FitAddon.FitAddon();
             term.loadAddon(fitAddon);
-
-            const container = document.getElementById('terminal-container');
-            term.open(container);
+            term.open(document.getElementById('terminal-container'));
             fitAddon.fit();
-
-            // 输入发送到 WebSocket
             term.onData((data) => {
-                if (termWs && termWs.readyState === WebSocket.OPEN) {
-                    termWs.send(data);
-                }
+                if (termWs && termWs.readyState === WebSocket.OPEN) termWs.send(data);
             });
-
-            // 监听窗口 resize
             window.addEventListener('resize', fitTerminal);
         }
 
@@ -828,11 +816,7 @@
             if (fitAddon && terminalOpen) {
                 fitAddon.fit();
                 if (termWs && termWs.readyState === WebSocket.OPEN && term) {
-                    termWs.send(JSON.stringify({
-                        type: 'resize',
-                        rows: term.rows,
-                        cols: term.cols
-                    }));
+                    termWs.send(JSON.stringify({ type: 'resize', rows: term.rows, cols: term.cols }));
                 }
             }
         }
@@ -844,28 +828,24 @@
 
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             termWs = new WebSocket(`${protocol}//${window.location.host}/ws-terminal`);
-
             termWs.binaryType = 'arraybuffer';
 
             termWs.onopen = () => {
-                termWs.send(chatPassword);
+                // 发送 token 认证
+                termWs.send(authToken);
             };
 
             termWs.onmessage = (event) => {
                 if (typeof event.data === 'string') {
-                    // 可能是 auth 响应
                     try {
                         const msg = JSON.parse(event.data);
                         if (msg.type === 'auth') {
                             if (msg.success) {
                                 statusEl.textContent = 'connected';
                                 statusEl.style.color = '#51cf6688';
-                                // 发送初始 resize
                                 if (term) {
                                     termWs.send(JSON.stringify({
-                                        type: 'resize',
-                                        rows: term.rows,
-                                        cols: term.cols
+                                        type: 'resize', rows: term.rows, cols: term.cols
                                     }));
                                 }
                             } else {
@@ -876,10 +856,8 @@
                             return;
                         }
                     } catch (e) { }
-                    // 普通文本输出
                     term.write(event.data);
                 } else {
-                    // 二进制数据
                     term.write(new Uint8Array(event.data));
                 }
             };
@@ -887,9 +865,7 @@
             termWs.onclose = () => {
                 statusEl.textContent = 'disconnected';
                 statusEl.style.color = '#ff6b6b88';
-                if (term && terminalOpen) {
-                    term.write('\r\n\x1b[33m连接已断开\x1b[0m\r\n');
-                }
+                if (term && terminalOpen) term.write('\r\n\x1b[33m连接已断开\x1b[0m\r\n');
             };
 
             termWs.onerror = () => {
@@ -899,14 +875,8 @@
         }
 
         function disconnectTerminal() {
-            if (termWs) {
-                termWs.close();
-                termWs = null;
-            }
-            if (term) {
-                term.dispose();
-                term = null;
-            }
+            if (termWs) { termWs.close(); termWs = null; }
+            if (term) { term.dispose(); term = null; }
             window.removeEventListener('resize', fitTerminal);
             document.getElementById('term-status').textContent = 'disconnected';
             document.getElementById('term-status').style.color = '#0f08';
@@ -920,7 +890,7 @@
 
         async function loadRepos() {
             try {
-                const res = await fetch('/repos');
+                const res = await authFetch('/repos');
                 const repos = await res.json();
                 const container = document.getElementById('repo-list');
                 if (repos.length === 0) {
@@ -933,9 +903,7 @@
                         <div class="repo-path">${r.path}</div>
                     </div>
                 `).join('');
-            } catch (e) {
-                console.error('加载仓库列表失败', e);
-            }
+            } catch (e) { console.error('加载仓库列表失败', e); }
         }
 
         async function createRepo() {
@@ -943,22 +911,16 @@
             const name = input.value.trim();
             if (!name) return;
             try {
-                const res = await fetch(`/repos/${name}`, { method: 'POST' });
+                const res = await authFetch(`/repos/${name}`, { method: 'POST' });
                 const data = await res.json();
-                if (res.ok) {
-                    input.value = '';
-                    loadRepos();
-                } else {
-                    alert(data.error || '创建失败');
-                }
-            } catch (e) {
-                alert('创建失败: ' + e.message);
-            }
+                if (res.ok) { input.value = ''; loadRepos(); }
+                else alert(data.error || '创建失败');
+            } catch (e) { alert('创建失败: ' + e.message); }
         }
 
         async function loadPatches() {
             try {
-                const res = await fetch('/patches');
+                const res = await authFetch('/patches');
                 const patches = await res.json();
                 const container = document.getElementById('patch-list');
                 if (patches.length === 0) {
@@ -970,12 +932,10 @@
                         <div class="patch-repo">📄 ${p.filename}</div>
                         <div class="patch-time">🕐 ${p.time}</div>
                         <div class="patch-size">📦 ${formatSize(p.size)}</div>
-                        <a class="patch-download" href="${p.url}" download>⬇ 下载</a>
+                        <a class="patch-download" href="${p.url}?token=${authToken}" download>⬇ 下载</a>
                     </div>
                 `).join('');
-            } catch (e) {
-                console.error('加载 patch 列表失败', e);
-            }
+            } catch (e) { console.error('加载 patch 列表失败', e); }
         }
 
         function formatSize(bytes) {
@@ -984,28 +944,18 @@
             return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
         }
 
-        // ===== Copy to clipboard =====
+        // ===== Clipboard =====
         function copyToClipboard(text, btn) {
             if (navigator.clipboard && window.isSecureContext) {
-                navigator.clipboard.writeText(text).then(() => {
-                    showCopied(btn);
-                }).catch(() => { fallbackCopy(text, btn); });
-            } else {
-                fallbackCopy(text, btn);
-            }
+                navigator.clipboard.writeText(text).then(() => showCopied(btn)).catch(() => fallbackCopy(text, btn));
+            } else { fallbackCopy(text, btn); }
         }
 
         function fallbackCopy(text, btn) {
             const ta = document.createElement('textarea');
-            ta.value = text;
-            ta.style.position = 'fixed';
-            ta.style.left = '-9999px';
-            ta.style.top = '-9999px';
-            document.body.appendChild(ta);
-            ta.focus();
-            ta.select();
-            try { document.execCommand('copy'); showCopied(btn); }
-            catch (e) { alert('复制失败'); }
+            ta.value = text; ta.style.position = 'fixed'; ta.style.left = '-9999px';
+            document.body.appendChild(ta); ta.focus(); ta.select();
+            try { document.execCommand('copy'); showCopied(btn); } catch (e) { alert('复制失败'); }
             document.body.removeChild(ta);
         }
 
@@ -1013,8 +963,7 @@
             const el = btn.querySelector && btn.querySelector('.repo-path');
             if (el) {
                 const orig = el.textContent;
-                el.textContent = '✓ 已复制路径';
-                el.style.color = '#667eea';
+                el.textContent = '✓ 已复制路径'; el.style.color = '#667eea';
                 setTimeout(() => { el.textContent = orig; el.style.color = ''; }, 1500);
                 return;
             }
@@ -1026,22 +975,17 @@
         // ===== Format content =====
         function formatContent(text) {
             const codeBlockRegex = /```(\w*)\n?([\s\S]*?)```/g;
-            let lastIndex = 0;
-            let result = '';
-            let match;
-
+            let lastIndex = 0, result = '', match;
             while ((match = codeBlockRegex.exec(text)) !== null) {
                 const before = text.slice(lastIndex, match.index);
                 if (before) result += escapeHtml(before).replace(/\n/g, '<br>');
-                const lang = match[1] || '';
-                const code = match[2].replace(/\n$/, '');
+                const lang = match[1] || '', code = match[2].replace(/\n$/, '');
                 const escapedCode = escapeHtml(code);
                 const langClass = lang ? ` class="language-${lang}"` : '';
                 const langLabel = lang ? `<span style="position:absolute;top:4px;left:10px;font-size:0.65em;color:#888;">${lang}</span>` : '';
                 result += `<pre style="position:relative">${langLabel}<button class="code-copy-btn" onclick="copyCodeBlock(this)">📋 复制</button><code${langClass}>${escapedCode}</code></pre>`;
                 lastIndex = match.index + match[0].length;
             }
-
             const remaining = text.slice(lastIndex);
             if (remaining) result += escapeHtml(remaining).replace(/\n/g, '<br>');
             return result;
@@ -1052,8 +996,7 @@
         }
 
         function copyCodeBlock(btn) {
-            const code = btn.parentElement.querySelector('code');
-            copyToClipboard(code.textContent, btn);
+            copyToClipboard(btn.parentElement.querySelector('code').textContent, btn);
         }
 
         // ===== Append message =====
@@ -1068,7 +1011,7 @@
                     <div style="font-size:0.85em;color:#555;margin-top:4px;">
                         分支: <strong>${data.branch}</strong> · ${commitInfo} · ${data.time}
                     </div>
-                    <a class="patch-dl-btn" href="${data.patch_url}" download>⬇ 下载 Patch (${formatSize(data.patch_size)})</a>
+                    <a class="patch-dl-btn" href="${data.patch_url}?token=${authToken}" download>⬇ 下载 Patch (${formatSize(data.patch_size)})</a>
                 `;
                 chatWindow.appendChild(div);
                 chatWindow.scrollTop = chatWindow.scrollHeight;
@@ -1076,7 +1019,6 @@
             }
 
             div.className = 'msg ' + (data.type === 'system' ? 'system' : 'chat');
-
             if (data.type !== 'system' && data.sender === clientId) div.classList.add('my-msg');
 
             if (data.type === 'chat') {
@@ -1085,10 +1027,11 @@
                 div.querySelectorAll('pre code').forEach(block => hljs.highlightElement(block));
             } else if (data.type === 'file') {
                 const isImage = /\.(png|jpg|jpeg|gif|webp|bmp|svg)$/i.test(data.filename);
+                const dlUrl = `${data.url}?token=${authToken}`;
                 if (isImage) {
-                    div.innerHTML = `<div class="sender-name">${data.sender}</div><img src="${data.url}" class="chat-image" onclick="window.open('${data.url}','_blank')">`;
+                    div.innerHTML = `<div class="sender-name">${data.sender}</div><img src="${dlUrl}" class="chat-image" onclick="window.open('${dlUrl}','_blank')">`;
                 } else {
-                    div.innerHTML = `<div class="sender-name">${data.sender}</div>发送了一个文件: <br><a href="${data.url}" target="_blank" class="file-link">${data.filename}</a>`;
+                    div.innerHTML = `<div class="sender-name">${data.sender}</div>发送了一个文件: <br><a href="${dlUrl}" target="_blank" class="file-link">${data.filename}</a>`;
                 }
             } else {
                 div.innerText = data.content;
@@ -1099,8 +1042,7 @@
                 copyBtn.className = 'copy-btn';
                 copyBtn.textContent = '📋 复制';
                 copyBtn.onclick = () => {
-                    const textToCopy = data.type === 'chat' ? data.content : (data.filename || '');
-                    copyToClipboard(textToCopy, copyBtn);
+                    copyToClipboard(data.type === 'chat' ? data.content : (data.filename || ''), copyBtn);
                 };
                 div.appendChild(copyBtn);
             }
@@ -1126,18 +1068,15 @@
         };
 
         async function uploadFile(file) {
-            if (file.size > 100 * 1024 * 1024) {
-                alert("文件太大了，请上传 100MB 以下的文件。");
-                return;
-            }
+            if (file.size > 100 * 1024 * 1024) { alert("文件太大了，请上传 100MB 以下的文件。"); return; }
             const formData = new FormData();
             formData.append('file', file);
             try {
-                const response = await fetch(`/upload?sender=${clientId}`, { method: 'POST', body: formData });
+                const response = await authFetch(`/upload?sender=${clientId}`, {
+                    method: 'POST', body: formData
+                });
                 if (!response.ok) throw new Error("上传失败");
-            } catch (err) {
-                alert("上传失败: " + err.message);
-            }
+            } catch (err) { alert("上传失败: " + err.message); }
         }
 
         // ===== 剪贴板图片粘贴 =====
