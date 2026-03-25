@@ -394,7 +394,7 @@ async def list_patches(authorization: Optional[str] = Header(None)):
                         os.path.getmtime(filepath)
                     ).strftime("%Y-%m-%d %H:%M:%S"),
                 })
-    return patches
+    return patches[:10]
 
 
 @app.get("/patches/{filename}")
