@@ -781,15 +781,27 @@
             const panel = document.getElementById('terminal-panel');
             const btn = document.getElementById('terminal-toggle-btn');
             if (terminalOpen) {
+                // 仅隐藏面板，不断开连接
                 panel.classList.remove('open');
                 btn.classList.remove('active');
                 terminalOpen = false;
-                disconnectTerminal();
             } else {
                 panel.classList.add('open');
                 btn.classList.add('active');
                 terminalOpen = true;
-                setTimeout(() => { initTerminal(); connectTerminal(); }, 350);
+                if (!term) {
+                    // 首次打开：初始化终端并连接
+                    setTimeout(() => { initTerminal(); connectTerminal(); }, 350);
+                } else {
+                    // 再次打开：重新 fit 尺寸
+                    setTimeout(() => {
+                        fitTerminal();
+                        // 如果连接已断开，自动重连
+                        if (!termWs || termWs.readyState !== WebSocket.OPEN) {
+                            connectTerminal();
+                        }
+                    }, 350);
+                }
             }
         }
 
