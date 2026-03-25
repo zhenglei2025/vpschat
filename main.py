@@ -25,6 +25,8 @@ PATCHES_DIR = "patches"
 CLEANUP_INTERVAL = 86400   # 每天检查一次（秒）
 FILE_MAX_AGE = 5 * 86400   # 文件最大保留 5 天（秒）
 TOKEN_MAX_AGE = 86400       # Token 有效期 24 小时
+LOGIN_MAX_ATTEMPTS = 5      # 每分钟最多登录尝试次数
+LOGIN_WINDOW = 60           # 限流窗口（秒）
 
 # 确保目录存在
 for d in [UPLOAD_DIR, REPOS_DIR, PATCHES_DIR]:
@@ -34,6 +36,10 @@ for d in [UPLOAD_DIR, REPOS_DIR, PATCHES_DIR]:
 # ===== Token 管理 =====
 # {token: expire_timestamp}
 active_tokens: dict[str, float] = {}
+
+# ===== 登录限流 =====
+# {ip: [timestamp1, timestamp2, ...]}
+login_attempts: dict[str, list[float]] = {}
 
 
 def create_token() -> str:
@@ -139,11 +145,28 @@ async def get():
 # ===== 2. 登录接口（公开） =====
 @app.post("/login")
 async def login(request: Request):
-    """验证密码，返回 token"""
+    """验证密码，返回 token（带 IP 限流）"""
+    client_ip = request.client.host if request.client else "unknown"
+    now = time.time()
+
+    # 清理过期记录，只保留窗口内的尝试
+    attempts = login_attempts.get(client_ip, [])
+    attempts = [t for t in attempts if now - t < LOGIN_WINDOW]
+    login_attempts[client_ip] = attempts
+
+    # 检查是否超过限制
+    if len(attempts) >= LOGIN_MAX_ATTEMPTS:
+        return JSONResponse(status_code=429, content={"error": "尝试次数过多，请稍后再试"})
+
     body = await request.json()
     password = body.get("password", "")
     if password != CHAT_PASSWORD:
+        # 仅在密码错误时记录尝试
+        attempts.append(now)
+        login_attempts[client_ip] = attempts
         return JSONResponse(status_code=401, content={"error": "密码错误"})
+    # 登录成功，清除该 IP 的记录
+    login_attempts.pop(client_ip, None)
     token = create_token()
     return {"token": token}
 

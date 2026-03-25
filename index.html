@@ -728,7 +728,13 @@
                 });
 
                 if (!res.ok) {
-                    document.getElementById('login-error').style.display = 'block';
+                    const errEl = document.getElementById('login-error');
+                    if (res.status === 429) {
+                        errEl.textContent = '尝试次数过多，请稍后再试';
+                    } else {
+                        errEl.textContent = '密码错误，请重试';
+                    }
+                    errEl.style.display = 'block';
                     return;
                 }
 
