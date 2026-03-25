@@ -672,7 +672,8 @@
             <span>🖥</span>
             <span class="term-title">Terminal</span>
             <span class="term-status" id="term-status">disconnected</span>
-            <button class="term-close-btn" onclick="toggleTerminal()">✕</button>
+            <button class="term-close-btn" onclick="refreshTerminal()" title="重启终端">⟳</button>
+            <button class="term-close-btn" onclick="toggleTerminal()" title="关闭面板">✕</button>
         </div>
         <div id="terminal-container"></div>
     </div>
@@ -898,6 +899,11 @@
             window.removeEventListener('resize', fitTerminal);
             document.getElementById('term-status').textContent = 'disconnected';
             document.getElementById('term-status').style.color = '#667eea88';
+        }
+
+        function refreshTerminal() {
+            disconnectTerminal();
+            setTimeout(() => { initTerminal(); connectTerminal(); }, 300);
         }
 
         // ===== Git Panel =====
