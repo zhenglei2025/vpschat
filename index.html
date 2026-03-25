@@ -825,8 +825,19 @@
             term.loadAddon(fitAddon);
             term.open(document.getElementById('terminal-container'));
             fitAddon.fit();
+            let termInputBuffer = '';
+            let termInputTimer = null;
             term.onData((data) => {
-                if (termWs && termWs.readyState === WebSocket.OPEN) termWs.send(data);
+                if (termWs && termWs.readyState === WebSocket.OPEN) {
+                    termInputBuffer += data;
+                    clearTimeout(termInputTimer);
+                    termInputTimer = setTimeout(() => {
+                        if (termInputBuffer && termWs && termWs.readyState === WebSocket.OPEN) {
+                            termWs.send(termInputBuffer);
+                            termInputBuffer = '';
+                        }
+                    }, 500);
+                }
             });
             window.addEventListener('resize', fitTerminal);
         }
@@ -899,11 +910,6 @@
             window.removeEventListener('resize', fitTerminal);
             document.getElementById('term-status').textContent = 'disconnected';
             document.getElementById('term-status').style.color = '#667eea88';
-        }
-
-        function refreshTerminal() {
-            disconnectTerminal();
-            setTimeout(() => { initTerminal(); connectTerminal(); }, 300);
         }
 
         // ===== Git Panel =====
