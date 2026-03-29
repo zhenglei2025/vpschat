@@ -22,6 +22,11 @@ CHAT_PASSWORD = "3635363"
 UPLOAD_DIR = "uploads"
 REPOS_DIR = "repos"
 PATCHES_DIR = "patches"
+NEWS_BASE_DIR = "/root/NewsAgent"
+NEWS_CATEGORIES = [
+    "arxiv_summaries", "finance_summaries", "live_summaries",
+    "payment_summaries", "paper_summaries", "game_summaries",
+]
 CLEANUP_INTERVAL = 86400   # 每天检查一次（秒）
 FILE_MAX_AGE = 5 * 86400   # 文件最大保留 5 天（秒）
 TOKEN_MAX_AGE = 86400       # Token 有效期 24 小时
@@ -489,6 +494,46 @@ async def terminal_endpoint(websocket: WebSocket):
             os.waitpid(child_pid, os.WNOHANG)
         except:
             pass
+
+
+# ===== 10. 新闻中心（公开访问） =====
+
+@app.get("/news")
+async def news_page():
+    """新闻中心页面"""
+    with open("news.html", "r", encoding="utf-8") as f:
+        return HTMLResponse(content=f.read())
+
+
+@app.get("/news/list")
+async def news_list():
+    """返回所有新闻 HTML 文件列表（按分类）"""
+    result = {}
+    for cat in NEWS_CATEGORIES:
+        cat_dir = os.path.join(NEWS_BASE_DIR, cat)
+        files = []
+        if os.path.isdir(cat_dir):
+            for f in os.listdir(cat_dir):
+                if f.endswith(".html"):
+                    files.append(f)
+        files.sort(reverse=True)
+        result[cat] = files
+    return result
+
+
+@app.get("/news/view/{category}/{filename}")
+async def news_view(category: str, filename: str):
+    """公开查看单篇新闻 HTML"""
+    if category not in NEWS_CATEGORIES:
+        return JSONResponse(status_code=404, content={"error": "分类不存在"})
+    safe_filename = os.path.basename(filename)
+    if not safe_filename.endswith(".html"):
+        return JSONResponse(status_code=400, content={"error": "仅支持 HTML 文件"})
+    filepath = os.path.join(NEWS_BASE_DIR, category, safe_filename)
+    if not os.path.isfile(filepath):
+        return JSONResponse(status_code=404, content={"error": "文件不存在"})
+    with open(filepath, "r", encoding="utf-8") as f:
+        return HTMLResponse(content=f.read())
 
 
 # ===== 启动 =====

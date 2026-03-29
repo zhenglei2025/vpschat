@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>NewsAgent 新闻中心</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
+        }
+        .top-bar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px 30px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+        }
+        .top-bar h1 { font-size: 1.4em; }
+        .top-bar .back-btn {
+            padding: 8px 18px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+        .top-bar .back-btn:hover { background: rgba(255,255,255,0.35); }
+        .container { max-width: 1100px; margin: 0 auto; padding: 24px 16px; }
+        .category-section {
+            margin-bottom: 28px;
+        }
+        .category-header {
+            font-size: 1.15em;
+            font-weight: 700;
+            color: #333;
+            padding: 10px 16px;
+            background: white;
+            border-radius: 12px 12px 0 0;
+            border-bottom: 2px solid #667eea;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .news-list {
+            background: white;
+            border-radius: 0 0 12px 12px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+            overflow: hidden;
+        }
+        .news-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.15s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+        .news-item:last-child { border-bottom: none; }
+        .news-item:hover { background: #f8f0ff; }
+        .news-item-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            min-width: 0;
+        }
+        .news-date {
+            font-size: 0.85em;
+            color: #667eea;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .news-title {
+            font-size: 0.92em;
+            color: #333;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .news-badge {
+            font-size: 0.7em;
+            padding: 2px 8px;
+            border-radius: 10px;
+            background: #f0f0f0;
+            color: #666;
+            white-space: nowrap;
+        }
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+            font-size: 1.1em;
+        }
+        .error-msg {
+            text-align: center;
+            padding: 40px 20px;
+            color: #e74c3c;
+        }
+        .empty-msg {
+            text-align: center;
+            padding: 30px 20px;
+            color: #bbb;
+            font-size: 0.9em;
+        }
+        /* iframe viewer */
+        .viewer-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 200;
+        }
+        .viewer-overlay.open { display: flex; align-items: center; justify-content: center; }
+        .viewer-box {
+            width: 95%;
+            height: 92%;
+            max-width: 1000px;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.3);
+        }
+        .viewer-header {
+            padding: 10px 16px;
+            background: #667eea;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+        .viewer-header button {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        .viewer-header button:hover { background: rgba(255,255,255,0.35); }
+        .viewer-iframe {
+            flex: 1;
+            border: none;
+            width: 100%;
+        }
+        .pager {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background: white;
+            border-top: 1px solid #f0f0f0;
+            border-radius: 0 0 12px 12px;
+        }
+        .pager button {
+            padding: 5px 14px;
+            font-size: 0.8em;
+            border-radius: 8px;
+            background: #667eea;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .pager button:disabled {
+            background: #ddd;
+            color: #999;
+            cursor: default;
+        }
+        .pager button:not(:disabled):hover { background: #5a6fd6; }
+        .pager-info {
+            font-size: 0.78em;
+            color: #999;
+        }
+        @media (max-width: 600px) {
+            .top-bar { padding: 14px 16px; }
+            .top-bar h1 { font-size: 1.1em; }
+            .container { padding: 16px 10px; }
+            .viewer-box { width: 100%; height: 100%; border-radius: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <h1>📰 NewsAgent 新闻中心</h1>
+        <a class="back-btn" href="/">← 返回聊天</a>
+    </div>
+    <div class="container" id="content">
+        <div class="loading" id="loading">正在加载新闻列表...</div>
+    </div>
+
+    <div class="viewer-overlay" id="viewer">
+        <div class="viewer-box">
+            <div class="viewer-header">
+                <span id="viewer-title">新闻</span>
+                <div>
+                    <button onclick="openInNewTab()">↗ 新标签打开</button>
+                    <button onclick="closeViewer()">✕ 关闭</button>
+                </div>
+            </div>
+            <iframe class="viewer-iframe" id="viewer-iframe" sandbox="allow-same-origin allow-popups"></iframe>
+        </div>
+    </div>
+
+    <script>
+        const CATEGORIES = {
+            'arxiv_summaries': { icon: '🤖', label: 'AI 前沿技术', order: 1 },
+            'finance_summaries': { icon: '💰', label: '财经新闻', order: 2 },
+            'live_summaries': { icon: '🌍', label: '日常新闻汇总', order: 3 },
+            'payment_summaries': { icon: '💳', label: '支付行业', order: 4 },
+            'paper_summaries': { icon: '📄', label: '论文追踪', order: 5 },
+            'game_summaries': { icon: '🎮', label: '游戏新闻', order: 6 },
+        };
+
+        let currentViewUrl = '';
+
+        function openViewer(url, title) {
+            currentViewUrl = url;
+            document.getElementById('viewer-title').textContent = title;
+            document.getElementById('viewer-iframe').src = url;
+            document.getElementById('viewer').classList.add('open');
+        }
+
+        function closeViewer() {
+            document.getElementById('viewer').classList.remove('open');
+            document.getElementById('viewer-iframe').src = '';
+        }
+
+        function openInNewTab() {
+            if (currentViewUrl) window.open(currentViewUrl, '_blank');
+        }
+
+        document.getElementById('viewer').addEventListener('click', function(e) {
+            if (e.target === this) closeViewer();
+        });
+
+        function formatFilename(filename, category) {
+            const dateMatch = filename.match(/^(\d{4}-\d{2}-\d{2})/);
+            const date = dateMatch ? dateMatch[1] : '';
+            let desc = filename;
+            if (category === 'arxiv_summaries') desc = 'AI 前沿技术日报';
+            else if (category === 'finance_summaries') desc = '财经新闻日报';
+            else if (category === 'live_summaries') desc = '日常新闻汇总';
+            else if (category === 'payment_summaries') {
+                if (filename.includes('weekly')) desc = '支付行业周报';
+                else desc = '支付行业日报';
+            }
+            else if (category === 'paper_summaries') desc = '论文追踪';
+            else if (category === 'game_summaries') desc = '游戏新闻汇总';
+            return { date, desc };
+        }
+
+        const PAGE_SIZE = 5;
+        const pageState = {}; // { category: currentPage }
+
+        function renderCategoryPage(category, files, page) {
+            pageState[category] = page;
+            const totalPages = Math.ceil(files.length / PAGE_SIZE);
+            const start = page * PAGE_SIZE;
+            const end = Math.min(start + PAGE_SIZE, files.length);
+            const pageFiles = files.slice(start, end);
+
+            const listEl = document.getElementById('list-' + category);
+            const pagerEl = document.getElementById('pager-' + category);
+            if (!listEl) return;
+
+            listEl.innerHTML = '';
+            for (const file of pageFiles) {
+                const { date, desc } = formatFilename(file, category);
+                const url = '/news/view/' + category + '/' + encodeURIComponent(file);
+
+                const item = document.createElement('a');
+                item.className = 'news-item';
+                item.href = 'javascript:void(0)';
+                item.onclick = ((u, d) => () => openViewer(u, d))(url, date + ' ' + desc);
+                item.innerHTML =
+                    '<div class="news-item-left">' +
+                        '<span class="news-date">' + (date || '--') + '</span>' +
+                        '<span class="news-title">' + desc + '</span>' +
+                    '</div>' +
+                    '<span class="news-badge">' + file.replace(/\.html$/, '').replace(/^\d{4}-\d{2}-\d{2}_/, '') + '</span>';
+                listEl.appendChild(item);
+            }
+
+            if (totalPages > 1 && pagerEl) {
+                pagerEl.style.display = 'flex';
+                pagerEl.innerHTML =
+                    '<button ' + (page === 0 ? 'disabled' : '') + ' onclick="renderCategoryPage(\'' + category + '\', window._newsFiles[\'' + category + '\'], ' + (page - 1) + ')">‹ 上一页</button>' +
+                    '<span class="pager-info">' + (page + 1) + ' / ' + totalPages + '</span>' +
+                    '<button ' + (page >= totalPages - 1 ? 'disabled' : '') + ' onclick="renderCategoryPage(\'' + category + '\', window._newsFiles[\'' + category + '\'], ' + (page + 1) + ')">下一页 ›</button>';
+            } else if (pagerEl) {
+                pagerEl.style.display = 'none';
+            }
+        }
+
+        async function loadNews() {
+            try {
+                const resp = await fetch('/news/list');
+                if (!resp.ok) throw new Error('加载失败');
+                const data = await resp.json();
+
+                const container = document.getElementById('content');
+                container.innerHTML = '';
+
+                const sortedCategories = Object.entries(data)
+                    .filter(([_, files]) => files.length > 0)
+                    .sort((a, b) => {
+                        const oa = (CATEGORIES[a[0]] || {}).order || 99;
+                        const ob = (CATEGORIES[b[0]] || {}).order || 99;
+                        return oa - ob;
+                    });
+
+                if (sortedCategories.length === 0) {
+                    container.innerHTML = '<div class="empty-msg">暂无新闻</div>';
+                    return;
+                }
+
+                window._newsFiles = {};
+
+                for (const [category, files] of sortedCategories) {
+                    const cat = CATEGORIES[category] || { icon: '📁', label: category };
+                    const section = document.createElement('div');
+                    section.className = 'category-section';
+
+                    const header = document.createElement('div');
+                    header.className = 'category-header';
+                    header.innerHTML = cat.icon + ' ' + cat.label + ' <span style="font-size:0.75em;color:#999;font-weight:normal;margin-left:auto;">' + files.length + ' 篇</span>';
+                    section.appendChild(header);
+
+                    const list = document.createElement('div');
+                    list.className = 'news-list';
+                    list.id = 'list-' + category;
+
+                    // Sort files by date descending
+                    files.sort((a, b) => b.localeCompare(a));
+                    window._newsFiles[category] = files;
+
+                    section.appendChild(list);
+
+                    const pager = document.createElement('div');
+                    pager.className = 'pager';
+                    pager.id = 'pager-' + category;
+                    pager.style.display = 'none';
+                    section.appendChild(pager);
+
+                    container.appendChild(section);
+                    renderCategoryPage(category, files, 0);
+                }
+            } catch (e) {
+                document.getElementById('content').innerHTML = '<div class="error-msg">加载新闻失败: ' + e.message + '</div>';
+            }
+        }
+
+        loadNews();
+    </script>
+</body>
+</html>

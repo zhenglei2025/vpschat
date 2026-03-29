@@ -647,6 +647,7 @@
     <div id="main-area">
         <div id="chat-header">
             <span class="header-title">VPS 中转聊天室</span>
+            <a href="/news" target="_blank" style="padding:6px 14px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:0.8em;font-weight:600;text-decoration:none;transition:all 0.2s;">📰 新闻</a>
             <button id="terminal-toggle-btn" onclick="toggleTerminal()">🖥 终端</button>
         </div>
         <div id="chat-window"></div>
@@ -692,7 +693,7 @@
         let term = null;
         let fitAddon = null;
         let terminalOpen = false;
-        let authToken = '';   // 🔑 核心：登录后获取的 token
+        let authToken = localStorage.getItem('auth_token') || '';   // 🔑 核心：登录后获取的 token
         const chatWindow = document.getElementById('chat-window');
 
         const msgInput = document.getElementById('message-input');
@@ -741,6 +742,7 @@
 
                 const data = await res.json();
                 authToken = data.token;
+                localStorage.setItem('auth_token', authToken);
 
                 // 2. 用 token 连接聊天 WebSocket
                 const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
