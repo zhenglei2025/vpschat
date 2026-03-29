@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>古风戏腔唱歌教程</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #f7f1e8;
+            --paper: rgba(255, 251, 245, 0.92);
+            --panel: #fffaf3;
+            --line: rgba(120, 78, 52, 0.14);
+            --ink: #2d2018;
+            --muted: #7c6657;
+            --wine: #8f3044;
+            --wine-deep: #5f1828;
+            --gold: #b98542;
+            --gold-soft: rgba(185, 133, 66, 0.14);
+            --jade: #3e7568;
+            --shadow: 0 18px 44px rgba(78, 42, 25, 0.12);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            color: var(--ink);
+            font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background:
+                radial-gradient(circle at 10% 0%, rgba(143, 48, 68, 0.14), transparent 28%),
+                radial-gradient(circle at 92% 8%, rgba(185, 133, 66, 0.18), transparent 22%),
+                linear-gradient(180deg, #fbf7f1 0%, var(--bg) 100%);
+        }
+
+        a {
+            color: inherit;
+        }
+
+        .page {
+            max-width: 1240px;
+            margin: 0 auto;
+            padding: 24px 16px 56px;
+        }
+
+        .hero {
+            position: relative;
+            overflow: hidden;
+            padding: 32px;
+            border-radius: 30px;
+            color: #fff8f2;
+            background:
+                linear-gradient(135deg, rgba(57, 20, 29, 0.92), rgba(111, 28, 49, 0.9)),
+                linear-gradient(135deg, #5f1828, #8f3044);
+            box-shadow: 0 26px 56px rgba(95, 24, 40, 0.24);
+        }
+
+        .hero::after {
+            content: "";
+            position: absolute;
+            inset: auto -80px -120px auto;
+            width: 280px;
+            height: 280px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(245, 214, 173, 0.26), transparent 68%);
+            pointer-events: none;
+        }
+
+        .hero-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 18px;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 13px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.13);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            font-size: 0.9rem;
+            letter-spacing: 0.04em;
+        }
+
+        .hero h1 {
+            margin: 16px 0 12px;
+            font-size: clamp(2.1rem, 4vw, 3.4rem);
+            line-height: 1.08;
+        }
+
+        .hero p {
+            margin: 0;
+            max-width: 780px;
+            line-height: 1.82;
+            color: rgba(255, 248, 242, 0.9);
+        }
+
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .hero-actions a {
+            padding: 11px 15px;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff8f2;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .hero-actions a:hover {
+            background: rgba(255, 255, 255, 0.18);
+        }
+
+        .hero-meta,
+        .anchor-strip,
+        .card-grid,
+        .phase-grid,
+        .exercise-grid,
+        .song-grid,
+        .week-grid,
+        .mistake-grid,
+        .check-grid {
+            display: grid;
+            gap: 14px;
+        }
+
+        .hero-meta {
+            margin-top: 22px;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        .hero-pill,
+        .card,
+        .phase-card,
+        .exercise-card,
+        .song-card,
+        .week-card,
+        .mistake-card,
+        .check-card,
+        .panel {
+            background: var(--paper);
+            border: 1px solid var(--line);
+            border-radius: 22px;
+            box-shadow: var(--shadow);
+        }
+
+        .hero-pill {
+            padding: 16px 18px;
+            background: rgba(255, 249, 242, 0.12);
+            border-color: rgba(255, 255, 255, 0.12);
+            color: #fff8f2;
+            box-shadow: none;
+        }
+
+        .hero-pill .label {
+            font-size: 0.86rem;
+            color: rgba(255, 248, 242, 0.72);
+        }
+
+        .hero-pill .value {
+            margin-top: 7px;
+            font-size: 1.02rem;
+            font-weight: 700;
+        }
+
+        .warning {
+            margin-top: 18px;
+            padding: 16px 18px;
+            border-radius: 18px;
+            background: rgba(255, 233, 211, 0.14);
+            border: 1px solid rgba(255, 233, 211, 0.18);
+            color: #fff1e2;
+            line-height: 1.75;
+        }
+
+        .anchor-strip {
+            margin-top: 18px;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+        }
+
+        .anchor-strip a {
+            padding: 14px 16px;
+            border-radius: 18px;
+            background: var(--panel);
+            border: 1px solid var(--line);
+            text-decoration: none;
+            font-weight: 700;
+            color: var(--wine-deep);
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+
+        .anchor-strip a span {
+            display: block;
+            margin-top: 4px;
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: var(--muted);
+        }
+
+        .section {
+            margin-top: 20px;
+        }
+
+        .section-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+
+        .section-head h2 {
+            margin: 0;
+            font-size: 1.32rem;
+        }
+
+        .section-head p {
+            margin: 6px 0 0;
+            color: var(--muted);
+            line-height: 1.72;
+            max-width: 760px;
+        }
+
+        .section-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 11px;
+            border-radius: 999px;
+            background: var(--gold-soft);
+            color: var(--wine);
+            font-size: 0.84rem;
+            font-weight: 700;
+        }
+
+        .card-grid {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        .card,
+        .phase-card,
+        .exercise-card,
+        .song-card,
+        .week-card,
+        .mistake-card,
+        .check-card {
+            padding: 20px;
+        }
+
+        .stat-label,
+        .mini-title,
+        .phase-time,
+        .song-sub,
+        .week-tag {
+            color: var(--muted);
+        }
+
+        .stat-value {
+            margin-top: 10px;
+            font-size: 2.02rem;
+            font-weight: 800;
+            color: var(--wine-deep);
+        }
+
+        .mini-title {
+            font-size: 0.88rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .card h3,
+        .phase-card h3,
+        .exercise-card h3,
+        .song-card h3,
+        .week-card h3,
+        .mistake-card h3,
+        .check-card h3 {
+            margin: 10px 0 8px;
+            font-size: 1.08rem;
+        }
+
+        .card p,
+        .phase-card p,
+        .exercise-card p,
+        .song-card p,
+        .week-card p,
+        .mistake-card p,
+        .check-card p,
+        .panel p {
+            margin: 0;
+            line-height: 1.78;
+            color: var(--muted);
+        }
+
+        .list,
+        .flow,
+        .score-list {
+            margin: 14px 0 0;
+            padding-left: 18px;
+            color: var(--ink);
+            line-height: 1.8;
+        }
+
+        .list li,
+        .flow li,
+        .score-list li {
+            margin-bottom: 8px;
+        }
+
+        .phase-grid {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        .phase-card {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .phase-card::before {
+            content: "";
+            position: absolute;
+            inset: 0 auto 0 0;
+            width: 4px;
+            background: linear-gradient(180deg, var(--gold), var(--wine));
+        }
+
+        .phase-no {
+            display: inline-flex;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            align-items: center;
+            justify-content: center;
+            background: var(--gold-soft);
+            color: var(--wine);
+            font-weight: 800;
+        }
+
+        .phase-time {
+            margin-top: 12px;
+            font-size: 0.92rem;
+            font-weight: 700;
+        }
+
+        .panel {
+            padding: 22px;
+        }
+
+        .panel h3 {
+            margin: 0 0 10px;
+            font-size: 1.06rem;
+        }
+
+        .two-col {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 14px;
+        }
+
+        .exercise-grid,
+        .song-grid,
+        .mistake-grid,
+        .check-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .week-grid {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        .exercise-card .badge,
+        .song-card .badge,
+        .week-card .badge,
+        .mistake-card .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 5px 10px;
+            border-radius: 999px;
+            background: var(--gold-soft);
+            color: var(--wine);
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+
+        .song-card {
+            background:
+                linear-gradient(180deg, rgba(255, 250, 244, 0.96), rgba(255, 247, 238, 0.92));
+        }
+
+        .song-sub {
+            margin-top: 2px;
+            font-size: 0.92rem;
+        }
+
+        .song-score {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 14px;
+        }
+
+        .song-score span {
+            padding: 7px 10px;
+            border-radius: 12px;
+            background: rgba(143, 48, 68, 0.08);
+            color: var(--wine-deep);
+            font-size: 0.84rem;
+            font-weight: 700;
+        }
+
+        .daily-flow {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .flow-step {
+            padding: 18px 16px;
+            border-radius: 20px;
+            background: var(--paper);
+            border: 1px solid var(--line);
+            box-shadow: var(--shadow);
+        }
+
+        .flow-step .time {
+            color: var(--wine);
+            font-weight: 800;
+            font-size: 1rem;
+        }
+
+        .flow-step h3 {
+            margin: 8px 0 8px;
+            font-size: 1rem;
+        }
+
+        .flow-step p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.74;
+        }
+
+        .quote {
+            margin-top: 14px;
+            padding: 16px 18px;
+            border-radius: 18px;
+            background: rgba(62, 117, 104, 0.1);
+            border: 1px solid rgba(62, 117, 104, 0.14);
+            color: #325b52;
+            line-height: 1.78;
+        }
+
+        .footer-note {
+            margin-top: 22px;
+            padding: 18px;
+            border-radius: 18px;
+            background: rgba(95, 24, 40, 0.06);
+            color: var(--muted);
+            line-height: 1.78;
+        }
+
+        @media (max-width: 1100px) {
+            .hero-meta,
+            .card-grid,
+            .phase-grid,
+            .week-grid,
+            .daily-flow {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .anchor-strip {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 820px) {
+            .hero {
+                padding: 24px;
+                border-radius: 24px;
+            }
+
+            .hero-top,
+            .section-head,
+            .two-col {
+                display: block;
+            }
+
+            .hero-actions,
+            .section-head .section-kicker {
+                margin-top: 14px;
+            }
+
+            .exercise-grid,
+            .song-grid,
+            .mistake-grid,
+            .check-grid,
+            .daily-flow,
+            .anchor-strip,
+            .hero-meta,
+            .card-grid,
+            .phase-grid,
+            .week-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page">
+        <section class="hero">
+            <div class="hero-top">
+                <div>
+                    <div class="eyebrow">古风戏腔训练手册</div>
+                    <h1>从气息基础开始，练到能唱古风戏腔歌</h1>
+                    <p>
+                        这页不是“听起来厉害”的空话，而是按练歌顺序排好的路线。目标很明确：
+                        先把呼吸、支撑、音色、咬字、真假声衔接练稳，再逐步靠近《关山酒》《乱世书青衣》这类古风戏腔作品。
+                        如果你现在还会跑调、换气乱、唱高音紧，这正是最适合开始的版本。
+                    </p>
+                </div>
+                <div class="hero-actions">
+                    <a href="#roadmap">训练路线</a>
+                    <a href="#breath">气息基础</a>
+                    <a href="#opera">戏腔进阶</a>
+                    <a href="#songs">目标歌曲</a>
+                </div>
+            </div>
+
+            <div class="hero-meta">
+                <div class="hero-pill">
+                    <div class="label">适合起点</div>
+                    <div class="value">零基础到会唱流行歌</div>
+                </div>
+                <div class="hero-pill">
+                    <div class="label">建议周期</div>
+                    <div class="value">12 到 16 周打底</div>
+                </div>
+                <div class="hero-pill">
+                    <div class="label">每日练习</div>
+                    <div class="value">30 到 45 分钟</div>
+                </div>
+                <div class="hero-pill">
+                    <div class="label">最终目标</div>
+                    <div class="value">能降调完整唱目标曲</div>
+                </div>
+            </div>
+
+            <div class="warning">
+                戏腔不是“挤着嗓子喊高音”。如果你一唱高就喉咙顶、脖子紧、第二天沙哑，说明方法不对。
+                训练时以“稳定、轻、通、能重复”为第一原则；出现刺痛、失声、持续沙哑超过 48 小时，就先停练。
+            </div>
+        </section>
+
+        <section class="anchor-strip section">
+            <a href="#mindset">先建立概念<span>知道该练什么，不该硬冲什么</span></a>
+            <a href="#roadmap">四阶段路线<span>从呼吸到目标曲的顺序</span></a>
+            <a href="#breath">气息与支撑<span>古风长线条的地基</span></a>
+            <a href="#voice">发声与共鸣<span>高音、头声、混声的入口</span></a>
+            <a href="#opera">戏腔专项<span>亮度、挂靠、咬字和戏感</span></a>
+            <a href="#songs">拆歌落地<span>对着《关山酒》《乱世书青衣》准备</span></a>
+        </section>
+
+        <section class="section">
+            <div class="card-grid">
+                <article class="card">
+                    <div class="stat-label">核心能力</div>
+                    <div class="stat-value">5 项</div>
+                    <p>呼吸、支撑、音准、咬字、真假声衔接，缺哪一项，戏腔都会飘。</p>
+                </article>
+                <article class="card">
+                    <div class="stat-label">最常见卡点</div>
+                    <div class="stat-value">喉紧</div>
+                    <p>很多人不是唱不上去，而是身体提前紧了，所以声音先坏掉。</p>
+                </article>
+                <article class="card">
+                    <div class="stat-label">练习优先级</div>
+                    <div class="stat-value">先稳后高</div>
+                    <p>先把中低声区、长音、气息控制做好，再谈明亮高位和戏腔色彩。</p>
+                </article>
+                <article class="card">
+                    <div class="stat-label">目标策略</div>
+                    <div class="stat-value">先降调</div>
+                    <p>先唱出味道和完整句子，再慢慢接近原调，比硬顶有效太多。</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="section" id="mindset">
+            <div class="section-head">
+                <div>
+                    <div class="section-kicker">先建立概念</div>
+                    <h2>你真正要练的，不是“戏腔”两个字，而是戏腔背后的几个能力</h2>
+                    <p>古风戏腔听起来像风格，其实底层还是基础唱功。你会发现，能不能把一句线条拉稳、能不能亮而不挤、能不能字清又不断气，比“模仿某个腔调”更重要。</p>
+                </div>
+            </div>
+
+            <div class="two-col">
+                <div class="panel">
+                    <h3>先练什么</h3>
+                    <ul class="list">
+                        <li>静吸气和稳定呼气，学会肩膀不乱动，腰腹有参与感。</li>
+                        <li>中声区长音和哼鸣，让声音先通，不要一上来就冲高音。</li>
+                        <li>中文咬字和元音保持，尤其是拖长音时别把字拖散。</li>
+                        <li>真假声连接，让头声亮起来，但不虚不飘。</li>
+                        <li>戏腔感的表情和收放，建立“有挂靠的亮音”而不是“尖叫”。</li>
+                    </ul>
+                </div>
+                <div class="panel">
+                    <h3>先别急着做什么</h3>
+                    <ul class="list">
+                        <li>不要一开始就反复模仿原唱的高位情绪和爆发感。</li>
+                        <li>不要为了像戏腔，故意捏鼻音、挤喉咙、夹脖子。</li>
+                        <li>不要每次都唱整首歌，基础还没稳时，应该先拆成一句一句练。</li>
+                        <li>不要死守原调。降 2 到 4 个半音，是非常正常的训练方式。</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="roadmap">
+            <div class="section-head">
+                <div>
+                    <div class="section-kicker">四阶段路线</div>
+                    <h2>把学习顺序排对，进步会快很多</h2>
+                    <p>下面这条路线默认你每天练 30 到 45 分钟，每周至少练 5 天。每个阶段都可以和歌曲练习穿插，但主目标不要混乱。</p>
+                </div>
+            </div>
+
+            <div class="phase-grid">
+                <article class="phase-card">
+                    <div class="phase-no">1</div>
+                    <h3>气息打底</h3>
+                    <div class="phase-time">第 1 到 3 周</div>
+                    <p>修正站姿、学会静吸气、稳定呼气、长音不抖。先让身体知道什么叫“支撑”。</p>
+                </article>
+                <article class="phase-card">
+                    <div class="phase-no">2</div>
+                    <h3>发声通道</h3>
+                    <div class="phase-time">第 4 到 6 周</div>
+                    <p>用哼鸣、唇颤音、闭口转开口，把喉咙放松、共鸣提起来，开始接触头声和轻混。</p>
+                </article>
+                <article class="phase-card">
+                    <div class="phase-no">3</div>
+                    <h3>古风线条</h3>
+                    <div class="phase-time">第 7 到 10 周</div>
+                    <p>练中文咬字、连音、句尾收束和弱起强收，让声音有“书卷感”和延展性。</p>
+                </article>
+                <article class="phase-card">
+                    <div class="phase-no">4</div>
+                    <h3>戏腔专项</h3>
+                    <div class="phase-time">第 11 到 16 周</div>
+                    <p>训练亮头声、真假声衔接、装饰音和戏感表达，再开始拆《关山酒》《乱世书青衣》。</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="section" id="breath">
+            <div class="section-head">
+                <div>
+                    <div class="section-kicker">第一阶段</div>
+                    <h2>气息基础：你不是要“吸很多气”，而是要把气用得稳</h2>
+                    <p>古风歌最容易暴露气息问题，因为句子长、字多、线条细。你要追求的是“吸得安静、呼得匀、声音挂得住”。</p>
+                </div>
+            </div>
+
+            <div class="exercise-grid">
+                <article class="exercise-card">
+                    <div class="badge">姿态</div>
+                    <h3>站姿先调整</h3>
+                    <p>双脚与肩同宽，膝盖别锁死，胸口自然展开，下巴不前伸。吸气时肩膀不耸，肋骨和腰侧有轻微打开感。</p>
+                    <ul class="list">
+                        <li>对镜子站 1 分钟，先把耸肩和含胸拿掉。</li>
+                        <li>手放在下肋两侧，吸气时感觉两边略撑开。</li>
+                    </ul>
+                </article>
+                <article class="exercise-card">
+                    <div class="badge">呼吸</div>
+                    <h3>静吸气 4 组</h3>
+                    <p>嘴巴微张，像闻花一样吸气，不发出明显抽气声。吸 4 拍，停 1 拍，呼 8 拍，再慢慢延长到 10 到 12 拍。</p>
+                    <ul class="list">
+                        <li>要求是安静，不是拼命吸满。</li>
+                        <li>如果吸到胸口发硬，说明吸太猛了。</li>
+                    </ul>
+                </article>
+                <article class="exercise-card">
+                    <div class="badge">支撑</div>
+                    <h3>“嘶”声长呼气</h3>
+                    <p>吸气后用轻而稳的“ssss”往外送，保持音量均匀，不前重后轻。这个练习是支撑的入门版本。</p>
+                    <ul class="list">
+                        <li>起点先做 15 秒，逐渐拉到 20 到 25 秒。</li>
+                        <li>越到后面越要稳，别最后一截突然塌掉。</li>
+                    </ul>
+                </article>
+                <article class="exercise-card">
+                    <div class="badge">长音</div>
+                    <h3>单音保持</h3>
+                    <p>选舒服音高，用“啊”或“呜”保持 4 到 6 秒。你的目标不是唱大，而是声音别晃、别漏、别挤。</p>
+                    <ul class="list">
+                        <li>录音听尾音，看有没有抖、虚、跑音。</li>
+                        <li>先练中声区，不要急着抬高。</li>
+                    </ul>
+                </article>
+            </div>
+
+            <div class="quote">
+                判断你是不是在“真支撑”：吸气后肚子不是拼命鼓出去，而是在发声过程中，腰腹像在稳定地托住气流。你会觉得声音更容易挂住，而不是用脖子往上顶。
+            </div>
+        </section>
+
+        <section class="section" id="voice">
+            <div class="section-head">
+                <div>
+                    <div class="section-kicker">第二阶段</div>
+                    <h2>发声基础：先把声音唱通，再把声音唱亮</h2>
+                    <p>很多人一听戏腔就想追求尖、细、亮，但真正顺序应该是“通”在前，“亮”在后。先解决闷和挤，再谈风格。</p>
+                </div>
+            </div>
+
+            <div class="two-col">
+                <div class="panel">
+                    <h3>推荐练习顺序</h3>
+                    <ol class="flow">
+                        <li>闭口哼鸣 `m` 或 `ng`，感受鼻梁到面罩区域有轻微振动。</li>
+                        <li>唇颤音或舌颤音，从低到高滑音，减少喉部用力。</li>
+                        <li>`wu - yi` 连续滑音，让后部空间和前部亮度都打开。</li>
+                        <li>`mi - me - ma` 五声音阶，保持音准和统一音色。</li>
+                        <li>轻头声练习，先小音量，再逐渐加一点密度。</li>
+                    </ol>
+                </div>
+                <div class="panel">
+                    <h3>你要感受到什么</h3>
+                    <ul class="list">
+                        <li>喉咙不是死撑住的，声音像从上方“挂”起来。</li>
+                        <li>高一点的音不一定更大声，但会更集中、更明亮。</li>
+                        <li>元音越到高位越要稍微收一点，不能完全扁着喊。</li>
+                        <li>头声不是漏风的假音，而是轻、亮、细、还能控住的声音。</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="exercise-grid section">
+                <article class="exercise-card">
+                    <div class="badge">共鸣</div>
+                    <h3>哼鸣找位置</h3>
+                    <p>先闭口哼一个舒服音，再慢慢张成“啊”，尽量保留哼鸣时那种前面亮、后面松的感觉。</p>
+                </article>
+                <article class="exercise-card">
+                    <div class="badge">真假声</div>
+                    <h3>轻头声别发虚</h3>
+                    <p>用小音量唱高一点的“呜”或“衣”，不要刚到高处就漏风。目标是轻，但有芯。</p>
+                </article>
+                <article class="exercise-card">
+                    <div class="badge">混声</div>
+                    <h3>从说话感往上接</h3>
+                    <p>中声区用带一点说话感的声音上行，越往上越轻、越集中，不要突然换成另一种完全飘掉的音色。</p>
+                </article>
+                <article class="exercise-card">
+                    <div class="badge">音准</div>
+                    <h3>每次只练 3 到 5 个音</h3>
+                    <p>不要在发声没稳时乱唱大段旋律。先把小范围音阶唱准，听感会比硬唱整首歌提升更明显。</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="section-head">
+                <div>
+                    <div class="section-kicker">第三阶段</div>
+                    <h2>古风歌需要的，不只是音高，还有线条、字头和尾音</h2>
+                    <p>古风歌常常一行字很多、字音密、句尾还要留味道。如果你的字头太硬、尾音太散，听起来就会像念歌词，不像唱歌。</p>
+                </div>
+            </div>
+
+            <div class="card-grid">
+                <article class="card">
+                    <div class="mini-title">咬字</div>
+                    <h3>字头清，字腹长，字尾收</h3>
+                    <p>辅音不要过猛，元音才是拖长的主体。比如一句里真正承载旋律的，往往是中间那一截元音。</p>
+                </article>
+                <article class="card">
+                    <div class="mini-title">连音</div>
+                    <h3>句子像一笔写下来</h3>
+                    <p>别一个字一个字往外蹦。可以先用“la”或“na”唱整句，再回到歌词。</p>
+                </article>
+                <article class="card">
+                    <div class="mini-title">弱起</div>
+                    <h3>古风更怕开口太重</h3>
+                    <p>很多古风句子更适合从轻处起笔，再慢慢推情绪。开口就太重，会显得硬和俗。</p>
+                </article>
+                <article class="card">
+                    <div class="mini-title">尾音</div>
+                    <h3>别一松就塌</h3>
+                    <p>句尾收掉不等于泄气。最后那一点点气息和位置，决定整句有没有“余韵”。</p>
+                </article>
+            </div>
+
+            <div class="panel section">
+                <h3>一个很实用的练法</h3>
+                <p>
+                    先把要唱的那一句当成“朗诵”读顺，再按照原旋律用 `lu` 或 `na` 唱顺，最后带歌词唱。
+                    这样做能把节奏、字口和旋律拆开，避免你一上来就因为歌词复杂把气息和音准都带乱。
+                </p>
+            </div>
+        </section>
+
+        <section class="section" id="opera">
+            <div class="section-head">
+                <div>
+                    <div class="section-kicker">第四阶段</div>
+                    <h2>戏腔专项：亮、细、提、稳，但绝对不是挤</h2>
+                    <p>这里说的“戏腔”，更接近古风作品里常用的戏曲化音色处理，不是要求你直接唱专业戏曲行当。目标是做出接近的气质和听感。</p>
+                </div>
+            </div>
+
+            <div class="exercise-grid">
+                <article class="exercise-card">
+                    <div class="badge">亮度</div>
+                    <h3>先用轻头声找亮点</h3>
+                    <p>在舒服的高位用小音量“yi”“e”做滑音，像把声音往眉心前方送一点，但喉咙保持松。</p>
+                    <ul class="list">
+                        <li>有亮度，不代表要尖锐刺耳。</li>
+                        <li>一旦脖子硬了，立刻退回中低音区重新找感觉。</li>
+                    </ul>
+                </article>
+                <article class="exercise-card">
+                    <div class="badge">挂靠</div>
+                    <h3>声音要挂在上面</h3>
+                    <p>戏腔感常来自更高一点的声线挂靠。你会感觉声音集中在上方，而不是压在喉头。</p>
+                    <ul class="list">
+                        <li>可以先哼鸣，再张口唱同样的音型。</li>
+                        <li>挂上去后，气息反而要更稳，不是更冲。</li>
+                    </ul>
+                </article>
+                <article class="exercise-card">
+                    <div class="badge">转色</div>
+                    <h3>从主歌音色过渡到戏腔色彩</h3>
+                    <p>别把整首歌都唱成戏腔。一般是主歌更叙述，副歌或某些抬情绪的句子再提亮、提线条。</p>
+                    <ul class="list">
+                        <li>同一句先正常唱，再唱戏腔版，比较差别。</li>
+                        <li>过渡自然，才会高级。</li>
+                    </ul>
+                </article>
+                <article class="exercise-card">
+                    <div class="badge">装饰音</div>
+                    <h3>颤、倚、滑，少量点缀就够</h3>
+                    <p>古风戏腔里常见轻滑音、倚音、细微颤音，但一定要建立在音准稳定上。装饰多了反而俗。</p>
+                    <ul class="list">
+                        <li>先把主音唱准，再决定要不要加味道。</li>
+                        <li>每句最多点一两下，别句句都花。</li>
+                    </ul>
+                </article>
+            </div>
+
+            <div class="two-col section">
+                <div class="panel">
+                    <h3>戏腔训练的三个关键句</h3>
+                    <ul class="list">
+                        <li>先轻，再亮，再加一点密度，不要反过来。</li>
+                        <li>先有位置，再有情绪；没有位置的情绪只会变成喊。</li>
+                        <li>先做局部句子，再接回整段，不要一上来就整首冲。</li>
+                    </ul>
+                </div>
+                <div class="panel">
+                    <h3>什么时候说明你练对了</h3>
+                    <ul class="list">
+                        <li>唱完喉咙不痛，第二天还能正常说话。</li>
+                        <li>高处能保持一点亮度，但不会漏成一片气。</li>
+                        <li>录音回放时，字仍然清楚，不是只有尖音没有内容。</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="songs">
+            <div class="section-head">
+                <div>
+                    <div class="section-kicker">目标曲拆解</div>
+                    <h2>怎么一步步靠近《关山酒》《乱世书青衣》</h2>
+                    <p>这两类歌不适合直接整首硬唱。最有效的方法是先拆结构，再挑关键句反复练，最后再拼回整首。</p>
+                </div>
+            </div>
+
+            <div class="song-grid">
+                <article class="song-card">
+                    <div class="badge">目标一</div>
+                    <h3>《关山酒》路线</h3>
+                    <div class="song-sub">更考验气息线条、叙述感和副歌推进</div>
+                    <div class="song-score">
+                        <span>重点：长句不塌</span>
+                        <span>重点：咬字清楚</span>
+                        <span>重点：副歌顶住</span>
+                    </div>
+                    <ul class="score-list">
+                        <li>先把主歌当朗诵读顺，找出每一句换气点。</li>
+                        <li>主歌先用自然流行音色唱稳，别一开始就加戏腔。</li>
+                        <li>副歌先降调练，目标是句子完整、尾音不散。</li>
+                        <li>最后再挑需要提亮的句子，轻微加戏腔色彩。</li>
+                    </ul>
+                </article>
+                <article class="song-card">
+                    <div class="badge">目标二</div>
+                    <h3>《乱世书青衣》路线</h3>
+                    <div class="song-sub">更考验头声亮度、真假声衔接和戏剧张力</div>
+                    <div class="song-score">
+                        <span>重点：亮头声</span>
+                        <span>重点：真假声过渡</span>
+                        <span>重点：情绪收放</span>
+                    </div>
+                    <ul class="score-list">
+                        <li>先单独练高位关键句，不要整段硬冲。</li>
+                        <li>把“轻头声版”和“带密度版”各唱一遍，逐渐靠拢。</li>
+                        <li>每个高句都先确认元音位置，再决定情绪强度。</li>
+                        <li>会唱不等于能稳定复现，录音 3 次还能维持，才算真正掌握。</li>
+                    </ul>
+                </article>
+            </div>
+
+            <div class="panel section">
+                <h3>拆歌的标准流程</h3>
+                <ol class="flow">
+                    <li>先听原唱，标出最难的 3 到 5 个句子。</li>
+                    <li>给整首歌降调 2 到 4 个半音。</li>
+                    <li>主歌只练节奏和咬字，副歌只练气息和高位。</li>
+                    <li>先一句一句连，再两句一组连，最后整段拼起来。</li>
+                    <li>录音复盘：气息乱、字糊、喉紧，这三项优先修正。</li>
+                </ol>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="section-head">
+                <div>
+                    <div class="section-kicker">12 到 16 周安排</div>
+                    <h2>如果你想稳一点，可以照这个训练节奏走</h2>
+                    <p>这不是死课表，而是一条很适合自学者的参考路线。每一周都要保留录音，听得到自己的变化，进步会更快。</p>
+                </div>
+            </div>
+
+            <div class="week-grid">
+                <article class="week-card">
+                    <div class="badge">第 1 到 4 周</div>
+                    <h3>稳呼吸和长音</h3>
+                    <p>每天做静吸气、嘶声呼气、长音保持。目标是气息不乱、音准不晃、喉咙不顶。</p>
+                </article>
+                <article class="week-card">
+                    <div class="badge">第 5 到 8 周</div>
+                    <h3>建立头声和轻混</h3>
+                    <p>用哼鸣、唇颤音、滑音练共鸣和轻头声，开始把中高音唱得更轻更亮。</p>
+                </article>
+                <article class="week-card">
+                    <div class="badge">第 9 到 12 周</div>
+                    <h3>加入古风字感</h3>
+                    <p>练句子连线、字头字尾、换气设计，同时开始低强度拆《关山酒》主歌和副歌。</p>
+                </article>
+                <article class="week-card">
+                    <div class="badge">第 13 到 16 周</div>
+                    <h3>戏腔和目标句复现</h3>
+                    <p>集中练高位亮声和关键句转色，开始挑战《乱世书青衣》的代表句，先降调唱稳。</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="section-head">
+                <div>
+                    <div class="section-kicker">每日 35 分钟模板</div>
+                    <h2>别每次都乱练，一套固定流程最能积累手感</h2>
+                </div>
+            </div>
+
+            <div class="daily-flow">
+                <article class="flow-step">
+                    <div class="time">5 分钟</div>
+                    <h3>身体打开</h3>
+                    <p>肩颈放松、站姿调整、静吸气，先让身体别僵着开始。</p>
+                </article>
+                <article class="flow-step">
+                    <div class="time">8 分钟</div>
+                    <h3>气息训练</h3>
+                    <p>静吸气、嘶声呼气、轻长音，练稳定度而不是音量。</p>
+                </article>
+                <article class="flow-step">
+                    <div class="time">8 分钟</div>
+                    <h3>发声练习</h3>
+                    <p>哼鸣、唇颤音、滑音、轻头声，把通道唱顺。</p>
+                </article>
+                <article class="flow-step">
+                    <div class="time">9 分钟</div>
+                    <h3>句子训练</h3>
+                    <p>拿目标歌的 2 到 4 句练字、练线条、练换气，不唱整首。</p>
+                </article>
+                <article class="flow-step">
+                    <div class="time">5 分钟</div>
+                    <h3>录音复盘</h3>
+                    <p>回听一次，记下今天最明显的问题，只改一个重点就够。</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="section-head">
+                <div>
+                    <div class="section-kicker">常见误区</div>
+                    <h2>下面这些问题，会让你看起来很努力，但进步很慢</h2>
+                </div>
+            </div>
+
+            <div class="mistake-grid">
+                <article class="mistake-card">
+                    <div class="badge">误区 1</div>
+                    <h3>一难受就用力顶</h3>
+                    <p>真正的高位不是顶出来的，是更轻、更集中、更有支撑地“挂”上去的。</p>
+                </article>
+                <article class="mistake-card">
+                    <div class="badge">误区 2</div>
+                    <h3>每天都唱目标歌整首</h3>
+                    <p>基础没跟上时，整首反复唱只会反复巩固错误动作。拆句练更有效。</p>
+                </article>
+                <article class="mistake-card">
+                    <div class="badge">误区 3</div>
+                    <h3>把戏腔理解成鼻音</h3>
+                    <p>戏腔可以有前部亮度，但不是全程捏鼻子。鼻腔感太重会显得薄和尖。</p>
+                </article>
+                <article class="mistake-card">
+                    <div class="badge">误区 4</div>
+                    <h3>高音越高越大声</h3>
+                    <p>越往上通常越要集中和收束，不是越喊越有气势。稳比大更重要。</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="section-head">
+                <div>
+                    <div class="section-kicker">自检清单</div>
+                    <h2>满足这些，再去冲《关山酒》《乱世书青衣》会轻松很多</h2>
+                </div>
+            </div>
+
+            <div class="check-grid">
+                <article class="check-card">
+                    <h3>基础关</h3>
+                    <ul class="list">
+                        <li>能稳定做 20 秒以上的均匀呼气。</li>
+                        <li>中声区长音 4 到 6 秒不明显抖动。</li>
+                        <li>录音时喉音不过重，字能听清。</li>
+                    </ul>
+                </article>
+                <article class="check-card">
+                    <h3>进阶关</h3>
+                    <ul class="list">
+                        <li>轻头声不是纯漏气，能保持一点亮芯。</li>
+                        <li>能把一句古风歌词先用 `la` 唱顺，再换歌词唱顺。</li>
+                        <li>关键高句降调后能连续稳定唱 3 次。</li>
+                    </ul>
+                </article>
+            </div>
+
+            <div class="footer-note">
+                真正会唱一首古风戏腔歌，不是某天突然“开窍”一下，而是你把一连串基础动作慢慢练顺了。
+                只要顺序对、每天有录音、有复盘，你会非常明显地感觉到：气更稳了，字更清了，高处没那么怕了，戏腔也开始像样了。
+                到那时候，再去碰《关山酒》《乱世书青衣》，就不是赌状态，而是靠能力。
+            </div>
+        </section>
+    </div>
+</body>
+
+</html>

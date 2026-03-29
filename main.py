@@ -124,6 +124,8 @@ RESPONSIVE_NEWS_STYLE = """
 </style>
 """.strip()
 JLPT_N2_PLAN_HTML = "jlpt_n2_plan.html"
+AGENTIC_RL_GUIDE_HTML = "agentic_rl_guide.html"
+GUFENG_XIQIANG_TUTORIAL_HTML = "gufeng_xiqiang_tutorial.html"
 BEGINNER_STATIC_CACHE = "processed_beginner_materials.json"
 INTERMEDIATE_STATIC_CACHE = "processed_intermediate_materials.json"
 
@@ -270,7 +272,7 @@ def classify_source(request: Request, referer: str) -> str:
 
 def tracked_page_path(path: str) -> bool:
     return (
-        path in {"/", "/news", "/chat", "/visitor-stats", "/ccf-deadlines", "/jlpt-n2-plan"}
+        path in {"/", "/news", "/chat", "/visitor-stats", "/ccf-deadlines", "/jlpt-n2-plan", "/gufeng-xiqiang-tutorial"}
         or path.startswith("/news/view/")
         or path.startswith("/jlpt-n2-plan/day/")
     )
@@ -949,6 +951,20 @@ async def jlpt_n2_plan_day_page(day: int):
     if day < 1 or day > 99:
         return HTMLResponse(content="未找到对应学习计划页面", status_code=404)
     return HTMLResponse(content=render_jlpt_n2_plan_html())
+
+
+@app.get("/agentic-rl-guide")
+async def agentic_rl_guide_page():
+    """Agentic RL 学习教材页面"""
+    with open(AGENTIC_RL_GUIDE_HTML, "r", encoding="utf-8") as f:
+        return HTMLResponse(content=f.read())
+
+
+@app.get("/gufeng-xiqiang-tutorial")
+async def gufeng_xiqiang_tutorial_page():
+    """古风戏腔唱歌教程页面"""
+    with open(GUFENG_XIQIANG_TUTORIAL_HTML, "r", encoding="utf-8") as f:
+        return HTMLResponse(content=f.read())
 
 
 @app.get("/jlpt-materials/day/{day}")

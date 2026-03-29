@@ -122,7 +122,6 @@
             color: #bbb;
             font-size: 0.9em;
         }
-        /* iframe viewer */
         .viewer-overlay {
             display: none;
             position: fixed;
@@ -221,6 +220,8 @@
             <a class="nav-btn" href="/chat">进入聊天</a>
             <a class="nav-btn" href="/ccf-deadlines">顶会 DDL</a>
             <a class="nav-btn" href="/jlpt-n2-plan">日语学习</a>
+            <a class="nav-btn" href="/gufeng-xiqiang-tutorial">古风戏腔教程</a>
+            <a class="nav-btn" href="/agentic-rl-guide">Agentic RL 教材</a>
         </div>
     </div>
     <div class="container" id="content">
@@ -291,7 +292,7 @@
         }
 
         const PAGE_SIZE = 5;
-        const pageState = {}; // { category: currentPage }
+        const pageState = {};
 
         function renderCategoryPage(category, files, page) {
             pageState[category] = page;
@@ -375,7 +376,6 @@
                     list.className = 'news-list';
                     list.id = 'list-' + category;
 
-                    // Sort files by date descending
                     files.sort((a, b) => b.localeCompare(a));
                     window._newsFiles[category] = files;
 
