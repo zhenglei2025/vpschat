@@ -288,6 +288,13 @@
             return { date, desc };
         }
 
+        function filterVisibleFiles(category, files) {
+            if (category === 'payment_summaries') {
+                return files.filter(file => /weekly/i.test(file));
+            }
+            return files;
+        }
+
         const PAGE_SIZE = 5;
         const pageState = {}; // { category: currentPage }
 
@@ -340,7 +347,11 @@
                 const container = document.getElementById('content');
                 container.innerHTML = '';
 
-                const sortedCategories = Object.entries(data)
+                const visibleData = Object.fromEntries(
+                    Object.entries(data).map(([category, files]) => [category, filterVisibleFiles(category, files)])
+                );
+
+                const sortedCategories = Object.entries(visibleData)
                     .filter(([_, files]) => files.length > 0)
                     .sort((a, b) => {
                         const oa = (CATEGORIES[a[0]] || {}).order || 99;
