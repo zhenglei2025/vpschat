@@ -62,15 +62,21 @@ RESPONSIVE_NEWS_STYLE = """
         word-break: break-word;
         overflow-wrap: anywhere;
     }
-    body > table:first-of-type,
-    body > table:first-of-type > tbody > tr > td > table:first-of-type {
+    body > table:first-of-type {
         width: 100% !important;
-        max-width: 800px !important;
     }
     body > table:first-of-type > tbody > tr > td {
-        padding: 12px 0 !important;
+        padding: 20px 16px !important;
+        text-align: center !important;
     }
-    body > table:first-of-type > tbody > tr > td > table:first-of-type td {
+    .responsive-news-shell {
+        width: min(100%, 800px) !important;
+        max-width: 800px !important;
+        margin: 0 auto !important;
+        background-color: #ffffff !important;
+        text-align: left !important;
+    }
+    .responsive-news-shell td {
         max-width: 100% !important;
     }
     img, table, iframe, video {
@@ -84,30 +90,33 @@ RESPONSIVE_NEWS_STYLE = """
         white-space: pre-wrap !important;
     }
     @media (max-width: 768px) {
-        body > table:first-of-type > tbody > tr > td > table:first-of-type {
+        body > table:first-of-type > tbody > tr > td {
+            padding: 12px 0 !important;
+        }
+        .responsive-news-shell {
             border-left: none !important;
             border-right: none !important;
         }
-        body > table:first-of-type > tbody > tr > td > table:first-of-type td[style] {
+        .responsive-news-shell td[style] {
             padding-left: 16px !important;
             padding-right: 16px !important;
         }
-        body > table:first-of-type > tbody > tr > td > table:first-of-type h1[style] {
+        .responsive-news-shell h1[style] {
             font-size: 20px !important;
             line-height: 1.35 !important;
         }
-        body > table:first-of-type > tbody > tr > td > table:first-of-type h2[style] {
+        .responsive-news-shell h2[style] {
             font-size: 18px !important;
             line-height: 1.45 !important;
         }
-        body > table:first-of-type > tbody > tr > td > table:first-of-type h3[style] {
+        .responsive-news-shell h3[style] {
             font-size: 16px !important;
             line-height: 1.45 !important;
         }
-        body > table:first-of-type > tbody > tr > td > table:first-of-type p,
-        body > table:first-of-type > tbody > tr > td > table:first-of-type li,
-        body > table:first-of-type > tbody > tr > td > table:first-of-type td,
-        body > table:first-of-type > tbody > tr > td > table:first-of-type blockquote {
+        .responsive-news-shell p,
+        .responsive-news-shell li,
+        .responsive-news-shell td,
+        .responsive-news-shell blockquote {
             font-size: 15px !important;
             line-height: 1.8 !important;
         }
@@ -276,7 +285,7 @@ def sanitize_news_html(category: str, content: str) -> str:
 
 
 def make_news_html_responsive(content: str) -> str:
-    updated = EMAIL_LAYOUT_WIDTH_RE.sub(r'\1 width="100%"', content, count=1)
+    updated = EMAIL_LAYOUT_WIDTH_RE.sub(r'\1 class="responsive-news-shell" width="100%"', content, count=1)
     if 'name="viewport"' not in updated.lower():
         if "</head>" in updated:
             updated = updated.replace("</head>", f"{RESPONSIVE_NEWS_STYLE}\n</head>", 1)
