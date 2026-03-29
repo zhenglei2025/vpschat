@@ -196,6 +196,23 @@
             flex: 1;
         }
 
+        .header-link-btn {
+            padding: 6px 14px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.8em;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .header-link-btn:hover {
+            filter: brightness(1.05);
+        }
+
         #terminal-toggle-btn {
             padding: 6px 14px;
             background: linear-gradient(135deg, #1a1a2e, #16213e);
@@ -647,7 +664,9 @@
     <div id="main-area">
         <div id="chat-header">
             <span class="header-title">VPS 中转聊天室</span>
-            <a href="/news" target="_blank" style="padding:6px 14px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:0.8em;font-weight:600;text-decoration:none;transition:all 0.2s;">📰 新闻</a>
+            <a href="/news" target="_blank" class="header-link-btn">📰 新闻</a>
+            <a href="/ccf-deadlines" target="_blank" class="header-link-btn">🎓 顶会 DDL</a>
+            <a href="/visitor-stats" target="_blank" class="header-link-btn">📊 访客统计</a>
             <button id="terminal-toggle-btn" onclick="toggleTerminal()">🖥 终端</button>
         </div>
         <div id="chat-window"></div>

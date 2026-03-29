@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>访客统计</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(180deg, #f4f7fb 0%, #eef2f9 100%);
+            color: #172033;
+        }
+
+        .page {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 24px 16px 40px;
+        }
+
+        .hero {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 20px;
+            padding: 20px 22px;
+            border-radius: 22px;
+            background: linear-gradient(135deg, #1f3a5f 0%, #355c8c 55%, #5d87bd 100%);
+            color: #fff;
+            box-shadow: 0 18px 40px rgba(31, 58, 95, 0.18);
+        }
+
+        .hero h1 {
+            margin: 0 0 8px;
+            font-size: 1.9rem;
+        }
+
+        .hero p {
+            margin: 0;
+            color: rgba(255, 255, 255, 0.82);
+            line-height: 1.6;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .hero-actions a,
+        .hero-actions button {
+            padding: 10px 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+            text-decoration: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.92rem;
+        }
+
+        .hero-actions button:hover,
+        .hero-actions a:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .updated-at {
+            margin: 0 0 18px;
+            color: #5c6880;
+            font-size: 0.92rem;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+
+        .card,
+        .panel {
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 12px 28px rgba(19, 36, 63, 0.08);
+        }
+
+        .card {
+            padding: 18px;
+        }
+
+        .card-label {
+            color: #617089;
+            font-size: 0.88rem;
+            margin-bottom: 8px;
+        }
+
+        .card-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #18304f;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .panel {
+            padding: 18px;
+            overflow: hidden;
+        }
+
+        .panel h2 {
+            margin: 0 0 14px;
+            font-size: 1.05rem;
+            color: #1e3354;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.93rem;
+        }
+
+        th,
+        td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #e8edf5;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            color: #627087;
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        tbody tr:hover {
+            background: #f8fbff;
+        }
+
+        .muted {
+            color: #6e7b90;
+        }
+
+        .empty {
+            padding: 18px 8px;
+            color: #8390a5;
+            text-align: center;
+        }
+
+        .pill-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .pill {
+            padding: 10px 12px;
+            border-radius: 999px;
+            background: #f2f6fc;
+            color: #26466f;
+            font-size: 0.9rem;
+        }
+
+        .full-width {
+            margin-top: 16px;
+        }
+
+        .error-box {
+            display: none;
+            margin-bottom: 16px;
+            padding: 14px 16px;
+            border-radius: 14px;
+            background: #fff3f0;
+            color: #b3412d;
+            border: 1px solid #ffd3ca;
+        }
+
+        @media (max-width: 960px) {
+            .cards,
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero {
+                flex-direction: column;
+            }
+
+            .hero-actions {
+                justify-content: flex-start;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page">
+        <div class="hero">
+            <div>
+                <h1>访客统计</h1>
+                <p>查看聊天页、新闻页和访客统计页的访问情况，包括独立访客、来源类型、来源页、浏览器设备分布以及最近访问记录。</p>
+            </div>
+            <div class="hero-actions">
+                <a href="/" target="_blank">返回聊天</a>
+                <a href="/news" target="_blank">打开新闻</a>
+                <button onclick="loadStats()">刷新数据</button>
+            </div>
+        </div>
+
+        <div id="error-box" class="error-box"></div>
+        <p class="updated-at">最近更新时间：<span id="updated-at">加载中...</span></p>
+
+        <div class="cards">
+            <div class="card">
+                <div class="card-label">总访问量</div>
+                <div class="card-value" id="total-page-views">0</div>
+            </div>
+            <div class="card">
+                <div class="card-label">独立访客</div>
+                <div class="card-value" id="unique-visitors">0</div>
+            </div>
+            <div class="card">
+                <div class="card-label">今日访问</div>
+                <div class="card-value" id="today-views">0</div>
+            </div>
+            <div class="card">
+                <div class="card-label">已统计页面</div>
+                <div class="card-value" id="tracked-pages">0</div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <section class="panel">
+                <h2>来源类型</h2>
+                <div id="source-pills" class="pill-list"></div>
+            </section>
+
+            <section class="panel">
+                <h2>浏览器 / 设备</h2>
+                <div id="browser-pills" class="pill-list" style="margin-bottom: 12px;"></div>
+                <div id="device-pills" class="pill-list"></div>
+            </section>
+
+            <section class="panel">
+                <h2>页面访问排行</h2>
+                <div id="pages-table"></div>
+            </section>
+
+            <section class="panel">
+                <h2>来源页排行</h2>
+                <div id="referers-table"></div>
+            </section>
+        </div>
+
+        <section class="panel full-width">
+            <h2>高频访客</h2>
+            <div id="visitors-table"></div>
+        </section>
+
+        <section class="panel full-width">
+            <h2>最近访问记录</h2>
+            <div id="recent-visits-table"></div>
+        </section>
+    </div>
+
+    <script>
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#39;');
+        }
+
+        function renderPills(containerId, items, labelKey) {
+            const el = document.getElementById(containerId);
+            if (!items || !items.length) {
+                el.innerHTML = '<div class="empty">暂无数据</div>';
+                return;
+            }
+            el.innerHTML = items.map(item =>
+                `<div class="pill">${escapeHtml(item[labelKey])} <strong>${item.count}</strong></div>`
+            ).join('');
+        }
+
+        function renderTable(containerId, columns, rows, emptyText = '暂无数据') {
+            const el = document.getElementById(containerId);
+            if (!rows || !rows.length) {
+                el.innerHTML = `<div class="empty">${escapeHtml(emptyText)}</div>`;
+                return;
+            }
+
+            const head = columns.map(col => `<th>${escapeHtml(col.title)}</th>`).join('');
+            const body = rows.map(row => {
+                return `<tr>${columns.map(col => `<td>${col.render(row)}</td>`).join('')}</tr>`;
+            }).join('');
+
+            el.innerHTML = `
+                <table>
+                    <thead><tr>${head}</tr></thead>
+                    <tbody>${body}</tbody>
+                </table>
+            `;
+        }
+
+        function showError(message) {
+            const el = document.getElementById('error-box');
+            el.style.display = 'block';
+            el.textContent = message;
+        }
+
+        function hideError() {
+            const el = document.getElementById('error-box');
+            el.style.display = 'none';
+            el.textContent = '';
+        }
+
+        async function loadStats() {
+            const token = localStorage.getItem('auth_token') || '';
+            if (!token) {
+                showError('未检测到登录态，请先回到聊天页登录，再打开访客统计。');
+                return;
+            }
+
+            try {
+                const res = await fetch('/visitor-stats/data', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (res.status === 401) {
+                    showError('登录态已失效，请回到聊天页重新登录。');
+                    return;
+                }
+
+                if (!res.ok) {
+                    throw new Error(`HTTP ${res.status}`);
+                }
+
+                hideError();
+                const data = await res.json();
+                renderStats(data);
+            } catch (err) {
+                showError(`加载访客统计失败：${err.message}`);
+            }
+        }
+
+        function renderStats(data) {
+            const summary = data.summary || {};
+            document.getElementById('updated-at').textContent = data.updated_at || '-';
+            document.getElementById('total-page-views').textContent = summary.total_page_views || 0;
+            document.getElementById('unique-visitors').textContent = summary.unique_visitors || 0;
+            document.getElementById('today-views').textContent = summary.today_views || 0;
+            document.getElementById('tracked-pages').textContent = summary.tracked_pages || 0;
+
+            renderPills('source-pills', data.sources || [], 'source');
+            renderPills('browser-pills', data.browsers || [], 'browser');
+            renderPills('device-pills', data.devices || [], 'device');
+
+            renderTable('pages-table', [
+                { title: '页面', render: row => `<code>${escapeHtml(row.path)}</code>` },
+                { title: '访问次数', render: row => `<strong>${row.count}</strong>` }
+            ], data.pages || []);
+
+            renderTable('referers-table', [
+                { title: '来源页', render: row => `<span>${escapeHtml(row.referer)}</span>` },
+                { title: '次数', render: row => `<strong>${row.count}</strong>` }
+            ], data.referers || [], '暂无来源页数据');
+
+            renderTable('visitors-table', [
+                { title: '访客 IP', render: row => `<code>${escapeHtml(row.ip)}</code>` },
+                { title: '访问次数', render: row => `<strong>${row.visits}</strong>` },
+                { title: '首次访问', render: row => `<span class="muted">${escapeHtml(row.first_seen)}</span>` },
+                { title: '最近访问', render: row => `<span class="muted">${escapeHtml(row.last_seen)}</span>` },
+                {
+                    title: '常访问页面',
+                    render: row => {
+                        const pages = (row.pages || []).map(page =>
+                            `<div><code>${escapeHtml(page.path)}</code> (${page.count})</div>`
+                        ).join('');
+                        return pages || '<span class="muted">-</span>';
+                    }
+                }
+            ], data.visitors || [], '暂无访客数据');
+
+            renderTable('recent-visits-table', [
+                { title: '时间', render: row => `<span class="muted">${escapeHtml(row.time)}</span>` },
+                { title: 'IP', render: row => `<code>${escapeHtml(row.ip)}</code>` },
+                { title: '页面', render: row => `<code>${escapeHtml(row.path)}</code>` },
+                { title: '来源类型', render: row => escapeHtml(row.source_type) },
+                { title: '来源页', render: row => escapeHtml(row.referer) },
+                { title: '浏览器', render: row => escapeHtml(row.browser) },
+                { title: '设备', render: row => escapeHtml(row.device) }
+            ], data.recent_visits || [], '暂无最近访问记录');
+        }
+
+        loadStats();
+        setInterval(loadStats, 30000);
+    </script>
+</body>
+
+</html>
