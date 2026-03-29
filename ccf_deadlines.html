@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 顶会 DDL</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #f3f6fb;
+            --panel: #ffffff;
+            --line: #e4eaf3;
+            --text: #1c2740;
+            --muted: #66748c;
+            --brand: #284b7a;
+            --brand-2: #4f7db6;
+            --good: #0f8a5f;
+            --warn: #b7791f;
+            --bad: #b14343;
+        }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background:
+                radial-gradient(circle at top right, rgba(79, 125, 182, 0.18), transparent 28%),
+                linear-gradient(180deg, #f7f9fc 0%, var(--bg) 100%);
+            color: var(--text);
+        }
+
+        .page {
+            max-width: 1380px;
+            margin: 0 auto;
+            padding: 24px 16px 40px;
+        }
+
+        .hero {
+            padding: 24px;
+            border-radius: 24px;
+            background: linear-gradient(135deg, #1b3659 0%, #284b7a 48%, #5a84bc 100%);
+            color: #fff;
+            box-shadow: 0 18px 48px rgba(40, 75, 122, 0.18);
+        }
+
+        .hero-top {
+            display: flex;
+            justify-content: space-between;
+            gap: 18px;
+            align-items: flex-start;
+        }
+
+        .hero h1 {
+            margin: 0 0 10px;
+            font-size: 2rem;
+        }
+
+        .hero p {
+            margin: 0;
+            color: rgba(255, 255, 255, 0.84);
+            line-height: 1.7;
+            max-width: 860px;
+        }
+
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .hero-actions a,
+        .hero-actions button {
+            padding: 10px 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+            text-decoration: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.92rem;
+        }
+
+        .hero-actions a:hover,
+        .hero-actions button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .hero-meta {
+            margin-top: 16px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.92rem;
+        }
+
+        .cards {
+            margin: 18px 0;
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .card,
+        .panel {
+            background: var(--panel);
+            border-radius: 18px;
+            box-shadow: 0 12px 32px rgba(19, 36, 63, 0.08);
+        }
+
+        .card {
+            padding: 18px;
+        }
+
+        .card-label {
+            color: var(--muted);
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+
+        .card-value {
+            font-size: 1.95rem;
+            font-weight: 700;
+            color: var(--brand);
+        }
+
+        .panel {
+            padding: 18px;
+            margin-top: 16px;
+        }
+
+        .panel h2 {
+            margin: 0 0 14px;
+            font-size: 1.06rem;
+        }
+
+        .source-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px 16px;
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+
+        .source-list a {
+            color: var(--brand-2);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .source-list a:hover {
+            text-decoration: underline;
+        }
+
+        .error-box {
+            display: none;
+            margin-top: 16px;
+            padding: 14px 16px;
+            border-radius: 14px;
+            background: #fff1ee;
+            border: 1px solid #ffd0c6;
+            color: #b14343;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.94rem;
+        }
+
+        th,
+        td {
+            border-bottom: 1px solid var(--line);
+            padding: 12px 10px;
+            vertical-align: top;
+            text-align: left;
+        }
+
+        th {
+            color: var(--muted);
+            text-transform: uppercase;
+            font-size: 0.78rem;
+            letter-spacing: 0.04em;
+        }
+
+        tbody tr:hover {
+            background: #f8fbff;
+        }
+
+        .conf-name {
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--brand);
+            margin-bottom: 6px;
+        }
+
+        .muted {
+            color: var(--muted);
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .badge.upcoming {
+            background: rgba(15, 138, 95, 0.12);
+            color: var(--good);
+        }
+
+        .badge.passed {
+            background: rgba(177, 67, 67, 0.12);
+            color: var(--bad);
+        }
+
+        .badge.tba,
+        .badge.unknown,
+        .badge.unparsed,
+        .badge.missing {
+            background: rgba(183, 121, 31, 0.14);
+            color: var(--warn);
+        }
+
+        .stack {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .links a {
+            color: var(--brand-2);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .links a:hover {
+            text-decoration: underline;
+        }
+
+        .empty {
+            padding: 20px;
+            text-align: center;
+            color: var(--muted);
+        }
+
+        @media (max-width: 980px) {
+            .cards {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .hero-top {
+                flex-direction: column;
+            }
+
+            .table-wrap {
+                overflow-x: auto;
+            }
+
+            table {
+                min-width: 980px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .cards {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page">
+        <section class="hero">
+            <div class="hero-top">
+                <div>
+                    <h1>AI 顶会 DDL</h1>
+                    <p>面向 AI 方向博士生常用的会议列表，包含 CCF 人工智能 A 类会议，并补充 ICLR、EMNLP、NAACL。页面优先显示下一轮会议；如果下一轮还没正式公布 ddl，会直接标记 TBA，并附上一轮已知 ddl 供你参考。</p>
+                </div>
+                <div class="hero-actions">
+                    <a href="/" target="_blank">返回聊天</a>
+                    <a href="/news" target="_blank">打开新闻</a>
+                    <button onclick="loadData()">刷新数据</button>
+                </div>
+            </div>
+            <div class="hero-meta">
+                <span>更新频率：每天 1 次</span>
+                <span>服务器时区：Asia/Shanghai</span>
+                <span id="updated-at">最近更新：加载中...</span>
+            </div>
+        </section>
+
+        <div id="error-box" class="error-box"></div>
+
+        <section class="cards">
+            <div class="card">
+                <div class="card-label">会议数量</div>
+                <div id="card-count" class="card-value">0</div>
+            </div>
+            <div class="card">
+                <div class="card-label">已过截止</div>
+                <div id="card-passed" class="card-value">0</div>
+            </div>
+            <div class="card">
+                <div class="card-label">即将截止</div>
+                <div id="card-upcoming" class="card-value">0</div>
+            </div>
+            <div class="card">
+                <div class="card-label">TBA / 待公布</div>
+                <div id="card-tba" class="card-value">0</div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <h2>数据来源</h2>
+            <div id="source-list" class="source-list"></div>
+        </section>
+
+        <section class="panel">
+            <h2>会议列表</h2>
+            <div class="table-wrap" id="table-wrap">
+                <div class="empty">加载中...</div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <h2>ACL / ARR 轮次</h2>
+            <div class="muted" style="margin-bottom: 14px;" id="arr-summary">加载中...</div>
+            <div class="table-wrap" id="arr-table-wrap">
+                <div class="empty">加载中...</div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <h2>抓取说明</h2>
+            <div class="stack muted">
+                <div>1. 会议名单包含 CCF 人工智能 A 类会议 AAAI、NeurIPS、ACL、CVPR、ICCV、ICML、IJCAI，并补充 ICLR、EMNLP、NAACL。</div>
+                <div>2. DDL 从公开 AI Deadlines 页面抓取最新公开轮次，再回到对应条目的详情页取标准截止时间与时区。</div>
+                <div>3. ACL 的 ARR 轮次单独从 ACL Rolling Review 官方时间表抓取。</div>
+                <div>4. 页面显示的是换算到北京时间后的时间；如果最新轮次还是 TBA，会同时展示上一轮已知 ddl 作为参考。</div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#39;');
+        }
+
+        function statusLabel(status) {
+            const mapping = {
+                upcoming: '即将截止',
+                passed: '已截止',
+                tba: 'TBA',
+                unknown: '待确认',
+                unparsed: '待解析',
+                missing: '缺失'
+            };
+            return mapping[status] || status || '未知';
+        }
+
+        function showError(message) {
+            const box = document.getElementById('error-box');
+            box.style.display = 'block';
+            box.textContent = message;
+        }
+
+        function hideError() {
+            const box = document.getElementById('error-box');
+            box.style.display = 'none';
+            box.textContent = '';
+        }
+
+        function renderSources(meta) {
+            const el = document.getElementById('source-list');
+            const sources = (meta.sources || []).map(source =>
+                `<span>${escapeHtml(source.name)}：<a href="${escapeHtml(source.url)}" target="_blank">${escapeHtml(source.url)}</a></span>`
+            );
+            el.innerHTML = sources.join('');
+        }
+
+        function renderCards(conferences) {
+            const statuses = conferences.reduce((acc, item) => {
+                acc[item.status] = (acc[item.status] || 0) + 1;
+                return acc;
+            }, {});
+            document.getElementById('card-count').textContent = conferences.length;
+            document.getElementById('card-passed').textContent = statuses.passed || 0;
+            document.getElementById('card-upcoming').textContent = statuses.upcoming || 0;
+            document.getElementById('card-tba').textContent =
+                (statuses.tba || 0) + (statuses.unknown || 0) + (statuses.unparsed || 0) + (statuses.missing || 0);
+        }
+
+        function renderTable(conferences) {
+            const wrap = document.getElementById('table-wrap');
+            if (!conferences.length) {
+                wrap.innerHTML = '<div class="empty">暂无会议数据</div>';
+                return;
+            }
+
+            const rows = conferences.map(item => {
+                const deadlineMain = item.deadline_local || item.deadline_raw || 'TBA';
+                const daysInfo = item.days_until === null || item.days_until === undefined
+                    ? ''
+                    : item.days_until >= 0
+                        ? `距离截止 ${item.days_until} 天`
+                        : `已过去 ${Math.abs(item.days_until)} 天`;
+                const previousCycleInfo = item.previous_concrete_cycle_title
+                    ? `<div class="muted" style="margin-top:8px;">上一轮参考：${escapeHtml(item.previous_concrete_cycle_title)} / ${escapeHtml(item.previous_concrete_deadline_local || item.previous_concrete_deadline_raw || item.previous_concrete_status || '-')}</div>`
+                    : '';
+                const arrInfo = item.arr_policy_summary
+                    ? `
+                        <div style="margin-top:8px;">
+                            <strong>ARR：</strong>${escapeHtml(item.arr_policy_summary)}
+                            ${item.arr_policy_source_url ? `<a href="${escapeHtml(item.arr_policy_source_url)}" target="_blank" style="margin-left:6px;">来源</a>` : ''}
+                        </div>
+                    `
+                    : '';
+
+                return `
+                    <tr>
+                        <td>
+                            <div class="conf-name">${escapeHtml(item.short_name)}</div>
+                            <div class="muted">${escapeHtml(item.ccf_full_name)}</div>
+                        </td>
+                        <td>
+                            <div>${escapeHtml(item.source_title || '')}</div>
+                            <div class="muted">${escapeHtml(item.ccf_level || '')}</div>
+                            ${previousCycleInfo}
+                        </td>
+                        <td>
+                            <div>${escapeHtml(deadlineMain)}</div>
+                            <div class="muted">${escapeHtml(item.deadline_timezone || '')}</div>
+                        </td>
+                        <td>
+                            <span class="badge ${escapeHtml(item.status || 'unknown')}">${escapeHtml(statusLabel(item.status))}</span>
+                            <div class="muted" style="margin-top: 8px;">${escapeHtml(daysInfo)}</div>
+                        </td>
+                        <td>
+                            <div>${escapeHtml(item.conference_date || '-')}</div>
+                            <div class="muted">${escapeHtml(item.conference_place || '-')}</div>
+                        </td>
+                        <td class="muted">${escapeHtml(item.note || '-')}${arrInfo}</td>
+                        <td>
+                            <div class="links">
+                                <a href="${escapeHtml(item.official_url || '#')}" target="_blank">官网</a>
+                                <a href="${escapeHtml(item.detail_url || '#')}" target="_blank">抓取源详情</a>
+                                <a href="${escapeHtml(item.ccf_source_url || '#')}" target="_blank">CCF</a>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            wrap.innerHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>会议</th>
+                            <th>公开轮次</th>
+                            <th>DDL（北京时间）</th>
+                            <th>状态</th>
+                            <th>会议时间 / 地点</th>
+                            <th>备注</th>
+                            <th>链接</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            `;
+        }
+
+        function renderArrTable(arrData) {
+            const summaryEl = document.getElementById('arr-summary');
+            const wrap = document.getElementById('arr-table-wrap');
+            if (!arrData || !arrData.cycles || !arrData.cycles.length) {
+                summaryEl.textContent = '暂无 ARR 轮次数据';
+                wrap.innerHTML = '<div class="empty">暂无 ARR 数据</div>';
+                return;
+            }
+
+            const accepted = arrData.accepted_cycles_for_acl || [];
+            summaryEl.innerHTML = `
+                <span>官方来源：<a href="${escapeHtml(arrData.source_url || '#')}" target="_blank">ARR 时间表</a></span>
+                <span style="margin-left:12px;">ACL 2026 官方说明：<a href="${escapeHtml(arrData.acl_call_url || '#')}" target="_blank">Call for Papers</a></span>
+                <span style="margin-left:12px;">ACL 2026 明确接受的 ARR 轮次：${escapeHtml(accepted.join('，') || '未解析到')}</span>
+            `;
+
+            const rows = arrData.cycles.map(item => `
+                <tr>
+                    <td>${escapeHtml(item.cycle)}</td>
+                    <td>
+                        <div>${escapeHtml(item.submission || '-')}</div>
+                        <div class="muted">${escapeHtml(item.submission_local || '')}</div>
+                    </td>
+                    <td><span class="badge ${escapeHtml(item.status || 'unknown')}">${escapeHtml(statusLabel(item.status))}</span></td>
+                    <td>${escapeHtml(item.reviewer_registration || '-')}</td>
+                    <td>${escapeHtml(item.reviews_due || '-')}</td>
+                    <td>${escapeHtml(item.author_response || '-')}</td>
+                    <td>${escapeHtml(item.meta_reviews_release || '-')}</td>
+                    <td>${escapeHtml(item.cycle_end || '-')}</td>
+                </tr>
+            `).join('');
+
+            wrap.innerHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ARR 轮次</th>
+                            <th>Submission</th>
+                            <th>状态</th>
+                            <th>Reviewer Registration</th>
+                            <th>Reviews Due</th>
+                            <th>Author Response</th>
+                            <th>Meta-reviews Release</th>
+                            <th>Cycle End</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            `;
+        }
+
+        async function loadData() {
+            try {
+                const res = await fetch('/ccf-deadlines/data');
+                if (!res.ok) {
+                    const text = await res.text();
+                    throw new Error(text || `HTTP ${res.status}`);
+                }
+
+                hideError();
+                const data = await res.json();
+                const meta = data.meta || {};
+                const conferences = data.conferences || [];
+
+                document.getElementById('updated-at').textContent = `最近更新：${meta.updated_at || '-'}`;
+                renderSources(meta);
+                renderCards(conferences);
+                renderTable(conferences);
+                renderArrTable(data.acl_arr_cycles || {});
+
+                if (meta.errors && meta.errors.length) {
+                    showError(`部分会议抓取有告警：${meta.errors.join('；')}`);
+                }
+            } catch (err) {
+                showError(`加载失败：${err.message}`);
+            }
+        }
+
+        loadData();
+    </script>
+</body>
+
+</html>

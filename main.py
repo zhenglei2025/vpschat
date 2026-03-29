@@ -16,6 +16,8 @@ from typing import List, Optional
 import shutil
 import json
 import termios
+from threading import Lock
+from urllib.parse import urlparse
 
 # ===== 配置 =====
 CHAT_PASSWORD = "3635363"
@@ -32,6 +34,19 @@ FILE_MAX_AGE = 5 * 86400   # 文件最大保留 5 天（秒）
 TOKEN_MAX_AGE = 86400       # Token 有效期 24 小时
 LOGIN_MAX_ATTEMPTS = 5      # 每分钟最多登录尝试次数
 LOGIN_WINDOW = 60           # 限流窗口（秒）
+VISITOR_STATS_FILE = "visitor_stats.json"
+CCF_DEADLINES_FILE = "ccf_ai_deadlines.json"
+MAX_RECENT_VISITS = 200
+
+
+def get_server_port() -> int:
+    try:
+        return int(os.getenv("PORT", "8000"))
+    except (TypeError, ValueError):
+        return 8000
+
+
+APP_PORT = get_server_port()
 
 # 确保目录存在
 for d in [UPLOAD_DIR, REPOS_DIR, PATCHES_DIR]:
@@ -45,6 +60,226 @@ active_tokens: dict[str, float] = {}
 # ===== 登录限流 =====
 # {ip: [timestamp1, timestamp2, ...]}
 login_attempts: dict[str, list[float]] = {}
+
+# ===== 访客统计 =====
+visitor_stats_lock = Lock()
+
+
+def default_visitor_stats() -> dict:
+    return {
+        "total_page_views": 0,
+        "daily_views": {},
+        "page_views": {},
+        "source_types": {},
+        "referers": {},
+        "browsers": {},
+        "devices": {},
+        "visitors": {},
+        "recent_visits": [],
+    }
+
+
+def load_visitor_stats() -> dict:
+    stats = default_visitor_stats()
+    if not os.path.exists(VISITOR_STATS_FILE):
+        return stats
+    try:
+        with open(VISITOR_STATS_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        if isinstance(data, dict):
+            for key, value in data.items():
+                if key in stats and isinstance(value, type(stats[key])):
+                    stats[key] = value
+    except Exception:
+        pass
+    return stats
+
+
+visitor_stats = load_visitor_stats()
+
+
+def save_visitor_stats_locked():
+    temp_file = f"{VISITOR_STATS_FILE}.tmp"
+    with open(temp_file, "w", encoding="utf-8") as f:
+        json.dump(visitor_stats, f, ensure_ascii=False, indent=2)
+    os.replace(temp_file, VISITOR_STATS_FILE)
+
+
+def bump_counter(counter: dict, key: str, value: int = 1):
+    if not key:
+        return
+    counter[key] = counter.get(key, 0) + value
+
+
+def get_client_ip(request: Request) -> str:
+    for header_name in ("x-forwarded-for", "x-real-ip"):
+        header_value = request.headers.get(header_name, "").strip()
+        if header_value:
+            return header_value.split(",")[0].strip()
+    if request.client and request.client.host:
+        return request.client.host
+    return "unknown"
+
+
+def mask_ip(ip: str) -> str:
+    if "." in ip:
+        parts = ip.split(".")
+        if len(parts) == 4:
+            return f"{parts[0]}.{parts[1]}.*.*"
+    if ":" in ip:
+        parts = [part for part in ip.split(":") if part]
+        if len(parts) >= 3:
+            return ":".join(parts[:3]) + ":*"
+    return ip
+
+
+def shorten_text(value: str, limit: int = 80) -> str:
+    if not value:
+        return ""
+    return value if len(value) <= limit else value[:limit - 3] + "..."
+
+
+def detect_browser(user_agent: str) -> str:
+    ua = (user_agent or "").lower()
+    if not ua:
+        return "未知"
+    if "micromessenger" in ua:
+        return "微信"
+    if "edg/" in ua:
+        return "Edge"
+    if "chrome/" in ua and "edg/" not in ua:
+        return "Chrome"
+    if "safari/" in ua and "chrome/" not in ua:
+        return "Safari"
+    if "firefox/" in ua:
+        return "Firefox"
+    if "curl/" in ua:
+        return "curl"
+    return "其他"
+
+
+def detect_device(user_agent: str) -> str:
+    ua = (user_agent or "").lower()
+    if any(flag in ua for flag in ("bot", "spider", "crawler", "curl/")):
+        return "Bot/脚本"
+    if any(flag in ua for flag in ("mobile", "iphone", "android")):
+        return "移动端"
+    if any(flag in ua for flag in ("ipad", "tablet")):
+        return "平板"
+    return "桌面端"
+
+
+def classify_source(request: Request, referer: str) -> str:
+    if not referer:
+        return "直接访问"
+    referer_host = (urlparse(referer).netloc or "").lower()
+    current_host = (request.headers.get("host") or "").lower()
+    if referer_host and current_host and referer_host == current_host:
+        return "站内跳转"
+    return "外部来源"
+
+
+def tracked_page_path(path: str) -> bool:
+    return (
+        path in {"/", "/news", "/visitor-stats", "/jlpt-n2-plan"}
+        or path.startswith("/news/view/")
+        or path.startswith("/jlpt-n2-plan/day/")
+    )
+
+
+def record_visit(request: Request):
+    path = request.url.path
+    if request.method != "GET" or not tracked_page_path(path):
+        return
+
+    ip = get_client_ip(request)
+    now = datetime.now()
+    now_str = now.strftime("%Y-%m-%d %H:%M:%S")
+    day_key = now.strftime("%Y-%m-%d")
+    referer = request.headers.get("referer", "").strip()
+    source_type = classify_source(request, referer)
+    referer_label = urlparse(referer).netloc or shorten_text(referer, 60) if referer else "直接访问"
+    user_agent = request.headers.get("user-agent", "").strip()
+    browser = detect_browser(user_agent)
+    device = detect_device(user_agent)
+
+    with visitor_stats_lock:
+        bump_counter(visitor_stats["daily_views"], day_key)
+        bump_counter(visitor_stats["page_views"], path)
+        bump_counter(visitor_stats["source_types"], source_type)
+        bump_counter(visitor_stats["browsers"], browser)
+        bump_counter(visitor_stats["devices"], device)
+        visitor_stats["total_page_views"] += 1
+
+        if referer:
+            bump_counter(visitor_stats["referers"], referer_label)
+
+        visitor = visitor_stats["visitors"].get(ip)
+        if not visitor:
+            visitor = {
+                "first_seen": now_str,
+                "last_seen": now_str,
+                "visits": 0,
+                "pages": {},
+            }
+            visitor_stats["visitors"][ip] = visitor
+
+        visitor["last_seen"] = now_str
+        visitor["visits"] += 1
+        bump_counter(visitor["pages"], path)
+
+        visitor_stats["recent_visits"].insert(0, {
+            "time": now_str,
+            "ip": mask_ip(ip),
+            "path": path,
+            "referer": referer_label,
+            "source_type": source_type,
+            "browser": browser,
+            "device": device,
+        })
+        visitor_stats["recent_visits"] = visitor_stats["recent_visits"][:MAX_RECENT_VISITS]
+        save_visitor_stats_locked()
+
+
+def top_items(counter: dict, limit: int = 10, label_key: str = "label") -> list[dict]:
+    return [
+        {label_key: key, "count": value}
+        for key, value in sorted(counter.items(), key=lambda item: (-item[1], item[0]))[:limit]
+    ]
+
+
+def build_visitor_stats_payload() -> dict:
+    today_key = datetime.now().strftime("%Y-%m-%d")
+    with visitor_stats_lock:
+        top_visitors = []
+        for ip, info in sorted(
+            visitor_stats["visitors"].items(),
+            key=lambda item: (-item[1].get("visits", 0), item[0])
+        )[:20]:
+            top_visitors.append({
+                "ip": mask_ip(ip),
+                "visits": info.get("visits", 0),
+                "first_seen": info.get("first_seen", ""),
+                "last_seen": info.get("last_seen", ""),
+                "pages": top_items(info.get("pages", {}), limit=3, label_key="path"),
+            })
+
+        return {
+            "summary": {
+                "total_page_views": visitor_stats["total_page_views"],
+                "unique_visitors": len(visitor_stats["visitors"]),
+                "today_views": visitor_stats["daily_views"].get(today_key, 0),
+                "tracked_pages": len(visitor_stats["page_views"]),
+            },
+            "pages": top_items(visitor_stats["page_views"], limit=20, label_key="path"),
+            "sources": top_items(visitor_stats["source_types"], limit=10, label_key="source"),
+            "referers": top_items(visitor_stats["referers"], limit=15, label_key="referer"),
+            "browsers": top_items(visitor_stats["browsers"], limit=10, label_key="browser"),
+            "devices": top_items(visitor_stats["devices"], limit=10, label_key="device"),
+            "visitors": top_visitors,
+            "recent_visits": visitor_stats["recent_visits"][:50],
+            "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        }
 
 
 def create_token() -> str:
@@ -108,6 +343,17 @@ async def lifespan(app):
 
 
 app = FastAPI(lifespan=lifespan)
+
+
+@app.middleware("http")
+async def visitor_stats_middleware(request: Request, call_next):
+    response = await call_next(request)
+    try:
+        if response.status_code < 400:
+            record_visit(request)
+    except Exception:
+        pass
+    return response
 
 
 # ===== WebSocket 连接管理 =====
@@ -275,7 +521,7 @@ async def create_repo(name: str, authorization: Optional[str] = Header(None)):
     display_name = name.replace(".git", "")
     hook_script = f"""#!/bin/bash
 while read oldrev newrev refname; do
-  curl -s -X POST "http://127.0.0.1:8000/hook/{display_name}" \\
+  curl -s -X POST "http://127.0.0.1:{APP_PORT}/hook/{display_name}" \\
     -H "Content-Type: application/json" \\
     -d '{{"oldrev":"'$oldrev'","newrev":"'$newrev'","ref":"'$refname'"}}'
 done
@@ -505,6 +751,57 @@ async def news_page():
         return HTMLResponse(content=f.read())
 
 
+@app.get("/visitor-stats")
+async def visitor_stats_page():
+    """访客统计页面"""
+    with open("visitor_stats.html", "r", encoding="utf-8") as f:
+        return HTMLResponse(content=f.read())
+
+
+@app.get("/visitor-stats/data")
+async def visitor_stats_data(authorization: Optional[str] = Header(None)):
+    if not require_auth(authorization):
+        return JSONResponse(status_code=401, content={"error": "未授权"})
+    return build_visitor_stats_payload()
+
+
+@app.get("/ccf-deadlines")
+async def ccf_deadlines_page():
+    """CCF AI 顶会 ddl 页面"""
+    with open("ccf_deadlines.html", "r", encoding="utf-8") as f:
+        return HTMLResponse(content=f.read())
+
+
+@app.get("/ccf-deadlines/data")
+async def ccf_deadlines_data():
+    if not os.path.exists(CCF_DEADLINES_FILE):
+        return JSONResponse(
+            status_code=404,
+            content={"error": "DDL 数据尚未生成，请先运行更新脚本"},
+        )
+    try:
+        with open(CCF_DEADLINES_FILE, "r", encoding="utf-8") as f:
+            return JSONResponse(content=json.load(f))
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": f"读取 DDL 数据失败: {e}"})
+
+
+@app.get("/jlpt-n2-plan")
+async def jlpt_n2_plan_page():
+    """JLPT N2 学习计划页面"""
+    with open("jlpt_n2_plan.html", "r", encoding="utf-8") as f:
+        return HTMLResponse(content=f.read())
+
+
+@app.get("/jlpt-n2-plan/day/{day}")
+async def jlpt_n2_plan_day_page(day: int):
+    """JLPT N2 单日计划页面"""
+    if day < 1 or day > 99:
+        return HTMLResponse(content="未找到对应学习计划页面", status_code=404)
+    with open("jlpt_n2_plan.html", "r", encoding="utf-8") as f:
+        return HTMLResponse(content=f.read())
+
+
 @app.get("/news/list")
 async def news_list():
     """返回所有新闻 HTML 文件列表（按分类）"""
@@ -539,4 +836,4 @@ async def news_view(category: str, filename: str):
 # ===== 启动 =====
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=APP_PORT)

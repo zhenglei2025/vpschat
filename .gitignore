@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+*.log
+
+uploads/
+repos/
+patches/
+
+visitor_stats.json
+visitor_stats.json.tmp
+ccf_deadlines_update.log
