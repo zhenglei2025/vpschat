@@ -6,8 +6,15 @@ import tempfile
 from functools import lru_cache
 from typing import Any, Optional
 
-import fitz
-from pypdf import PdfReader
+try:
+    import fitz
+except ModuleNotFoundError:
+    fitz = None
+
+try:
+    from pypdf import PdfReader
+except ModuleNotFoundError:
+    PdfReader = None
 
 
 JP_DIR = "/Users/leizheng/code/jp"
@@ -92,6 +99,25 @@ INTERMEDIATE_BOOK_LABELS = {
     "upper": "标日中级上",
     "lower": "标日中级下",
 }
+
+
+def _local_materials_runtime_ready() -> bool:
+    return os.path.isdir(JP_DIR) and fitz is not None and PdfReader is not None
+
+
+def _unavailable_payload(reason: str) -> dict[str, Any]:
+    return {
+        "mode": "unavailable",
+        "title": "本地教材暂不可用",
+        "summary": reason,
+        "blocks": [
+            {
+                "title": "当前状态",
+                "text": reason,
+            }
+        ],
+        "resources": [],
+    }
 
 
 def _ensure_cache_dirs() -> None:
@@ -727,6 +753,12 @@ def _intermediate_schedule(day: int) -> Optional[dict[str, Any]]:
 def get_local_material_for_day(day: int) -> dict[str, Any]:
     if day < 1 or day > 99:
         raise ValueError("day out of range")
+
+    if not os.path.isdir(JP_DIR):
+        return _unavailable_payload("当前服务器没有挂载本地日语资料目录，因此只能展示计划本身，无法读取本地教材摘录。")
+
+    if fitz is None or PdfReader is None:
+        return _unavailable_payload("当前服务器缺少本地教材解析依赖，因此无法读取本地教材摘录。")
 
     if day <= 56:
         if day % 7 == 0:
