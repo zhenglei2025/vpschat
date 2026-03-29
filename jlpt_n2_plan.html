@@ -775,6 +775,7 @@
         const EXAM_DATE = new Date(2026, 6, 5);
         const TOTAL_DAYS = 99;
         const WEEKDAY_NAMES = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+        const EMBEDDED_INTERMEDIATE_MATERIALS = "__EMBEDDED_INTERMEDIATE_MATERIALS__";
 
         const PHASES = [
             {
@@ -1420,6 +1421,69 @@
             if (offset === 8) return { book: 'lower', review: true, lessons: [17, 18, 19, 20, 21, 22, 23, 24] };
             if (offset === 17) return { book: 'lower', review: true, lessons: [25, 26, 27, 28, 29, 30, 31, 32] };
             return { book: 'lower', review: false, lessonNumber: 17 + offset - (offset > 8 ? 1 : 0) };
+        }
+
+        function truncateEmbeddedText(text, limit = 2200) {
+            const normalized = String(text || '').trim();
+            if (normalized.length <= limit) return normalized;
+            return `${normalized.slice(0, limit - 1).trimEnd()}…`;
+        }
+
+        function sectionExcerpt(label, text, limit = 700) {
+            const normalized = truncateEmbeddedText(text, limit);
+            return normalized ? `【${label}】\n${normalized}` : '';
+        }
+
+        function getEmbeddedIntermediateMaterial(dayNumber) {
+            const slot = getIntermediateSlot(dayNumber);
+            if (!slot) return null;
+
+            const bookPayload = EMBEDDED_INTERMEDIATE_MATERIALS?.[slot.book];
+            const book = INTERMEDIATE_BOOKS[slot.book];
+            if (!bookPayload || !book) return null;
+
+            if (!slot.review) {
+                const lessonPayload = bookPayload[String(slot.lessonNumber)] || {};
+                const blocks = [];
+
+                if (lessonPayload.conversation) {
+                    blocks.push({ title: '本地会话高置信摘录', text: truncateEmbeddedText(lessonPayload.conversation, 2600) });
+                }
+                if (lessonPayload.reading) {
+                    blocks.push({ title: '本地课文高置信摘录', text: truncateEmbeddedText(lessonPayload.reading, 2600) });
+                }
+                if (lessonPayload.vocab) {
+                    blocks.push({ title: '本地单词表摘录', text: truncateEmbeddedText(lessonPayload.vocab, 1800) });
+                }
+
+                return {
+                    mode: blocks.length ? 'full-text' : 'preview-plus-vocab',
+                    source: 'embedded-html',
+                    title: `${book.label} 第 ${slot.lessonNumber} 课`,
+                    summary: '这部分中级教材 OCR 内容已直接内嵌到当前 HTML 页面里，打开页面时就能直接读取，不依赖服务器挂载本地教材目录。',
+                    blocks,
+                    resources: []
+                };
+            }
+
+            const excerpts = slot.lessons.map((lessonNumber) => {
+                const lessonPayload = bookPayload[String(lessonNumber)] || {};
+                const parts = [
+                    sectionExcerpt('会话', lessonPayload.conversation, 700),
+                    sectionExcerpt('课文', lessonPayload.reading, 700),
+                    sectionExcerpt('单词', lessonPayload.vocab, 420)
+                ].filter(Boolean);
+                return parts.length ? `【第 ${lessonNumber} 课】\n${parts.join('\n\n')}` : '';
+            }).filter(Boolean);
+
+            return {
+                mode: 'full-text',
+                source: 'embedded-html',
+                title: `${book.label} 第 ${slot.lessons[0]}-${slot.lessons[slot.lessons.length - 1]} 课复盘`,
+                summary: '这部分中级复盘材料已直接内嵌到当前 HTML 页面里，不依赖服务器挂载本地教材目录。',
+                blocks: excerpts.length ? [{ title: '本地复盘摘录', text: excerpts.join('\n\n') }] : [],
+                resources: []
+            };
         }
 
         function getFoundationLessonNumber(dayNumber) {
@@ -2263,11 +2327,20 @@
             if (!panel) return;
 
             try {
-                const response = await fetch(`/jlpt-materials/day/${dayNumber}`);
-                if (!response.ok) throw new Error('failed');
-                const data = await response.json();
+                let data = getEmbeddedIntermediateMaterial(dayNumber);
+                if (!data) {
+                    const response = await fetch(`/jlpt-materials/day/${dayNumber}`);
+                    if (!response.ok) throw new Error('failed');
+                    data = await response.json();
+                }
                 const badgeClass = data.mode === 'full-text' ? 'done' : 'pending';
-                const badgeText = data.mode === 'full-text' ? '已抽取本地内容' : data.mode === 'preview-plus-vocab' ? '词汇可读 / 正文直达' : '本地复盘建议';
+                const badgeText = data.source === 'embedded-html'
+                    ? '已内嵌到页面'
+                    : data.mode === 'full-text'
+                        ? '已抽取本地内容'
+                        : data.mode === 'preview-plus-vocab'
+                            ? '词汇可读 / 正文直达'
+                            : '本地复盘建议';
                 const blocks = (data.blocks || []).map((item) => `
                     <div class="local-material-block">
                         <h4>${escapeHtml(item.title || '本地内容')}</h4>
@@ -2541,7 +2614,7 @@
                         <div class="study-grid">
                             <article class="study-card note-card local-material-card" id="local-material-panel">
                                 <h3>本地教材内容</h3>
-                                <div class="study-desc">正在从 ~/code/jp 加载今天对应的教材内容...</div>
+                                <div class="study-desc">正在加载今天对应的教材内容。中级 OCR 内容会优先直接从当前 HTML 页面读取。</div>
                             </article>
                             <article class="study-card note-card">
                                 <h3>今日单词</h3>

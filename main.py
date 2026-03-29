@@ -9,6 +9,7 @@ import subprocess
 import stat
 import secrets
 import mimetypes
+from functools import lru_cache
 from datetime import datetime
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, File, Request, Header
@@ -40,6 +41,8 @@ LOGIN_WINDOW = 60           # 限流窗口（秒）
 VISITOR_STATS_FILE = "visitor_stats.json"
 CCF_DEADLINES_FILE = "ccf_ai_deadlines.json"
 MAX_RECENT_VISITS = 200
+JLPT_N2_PLAN_HTML = "jlpt_n2_plan.html"
+INTERMEDIATE_STATIC_CACHE = "processed_intermediate_materials.json"
 
 
 def get_server_port() -> int:
@@ -188,6 +191,28 @@ def tracked_page_path(path: str) -> bool:
         or path.startswith("/news/view/")
         or path.startswith("/jlpt-n2-plan/day/")
     )
+
+
+@lru_cache(maxsize=1)
+def load_jlpt_n2_plan_template() -> str:
+    with open(JLPT_N2_PLAN_HTML, "r", encoding="utf-8") as f:
+        return f.read()
+
+
+@lru_cache(maxsize=1)
+def load_intermediate_materials_inline_json() -> str:
+    try:
+        with open(INTERMEDIATE_STATIC_CACHE, "r", encoding="utf-8") as f:
+            payload = json.load(f)
+    except FileNotFoundError:
+        payload = {}
+    return json.dumps(payload, ensure_ascii=False).replace("</", "<\\/")
+
+
+def render_jlpt_n2_plan_html() -> str:
+    template = load_jlpt_n2_plan_template()
+    inline_json = load_intermediate_materials_inline_json()
+    return template.replace('"__EMBEDDED_INTERMEDIATE_MATERIALS__"', inline_json, 1)
 
 
 def record_visit(request: Request):
@@ -792,8 +817,7 @@ async def ccf_deadlines_data():
 @app.get("/jlpt-n2-plan")
 async def jlpt_n2_plan_page():
     """JLPT N2 学习计划页面"""
-    with open("jlpt_n2_plan.html", "r", encoding="utf-8") as f:
-        return HTMLResponse(content=f.read())
+    return HTMLResponse(content=render_jlpt_n2_plan_html())
 
 
 @app.get("/jlpt-n2-plan/day/{day}")
@@ -801,8 +825,7 @@ async def jlpt_n2_plan_day_page(day: int):
     """JLPT N2 单日计划页面"""
     if day < 1 or day > 99:
         return HTMLResponse(content="未找到对应学习计划页面", status_code=404)
-    with open("jlpt_n2_plan.html", "r", encoding="utf-8") as f:
-        return HTMLResponse(content=f.read())
+    return HTMLResponse(content=render_jlpt_n2_plan_html())
 
 
 @app.get("/jlpt-materials/day/{day}")
