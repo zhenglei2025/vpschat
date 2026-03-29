@@ -42,6 +42,7 @@ VISITOR_STATS_FILE = "visitor_stats.json"
 CCF_DEADLINES_FILE = "ccf_ai_deadlines.json"
 MAX_RECENT_VISITS = 200
 JLPT_N2_PLAN_HTML = "jlpt_n2_plan.html"
+BEGINNER_STATIC_CACHE = "processed_beginner_materials.json"
 INTERMEDIATE_STATIC_CACHE = "processed_intermediate_materials.json"
 
 
@@ -200,6 +201,16 @@ def load_jlpt_n2_plan_template() -> str:
 
 
 @lru_cache(maxsize=1)
+def load_beginner_materials_inline_json() -> str:
+    try:
+        with open(BEGINNER_STATIC_CACHE, "r", encoding="utf-8") as f:
+            payload = json.load(f)
+    except FileNotFoundError:
+        payload = {}
+    return json.dumps(payload, ensure_ascii=False).replace("</", "<\\/")
+
+
+@lru_cache(maxsize=1)
 def load_intermediate_materials_inline_json() -> str:
     try:
         with open(INTERMEDIATE_STATIC_CACHE, "r", encoding="utf-8") as f:
@@ -211,8 +222,10 @@ def load_intermediate_materials_inline_json() -> str:
 
 def render_jlpt_n2_plan_html() -> str:
     template = load_jlpt_n2_plan_template()
-    inline_json = load_intermediate_materials_inline_json()
-    return template.replace('"__EMBEDDED_INTERMEDIATE_MATERIALS__"', inline_json, 1)
+    beginner_inline_json = load_beginner_materials_inline_json()
+    intermediate_inline_json = load_intermediate_materials_inline_json()
+    rendered = template.replace('"__EMBEDDED_BEGINNER_MATERIALS__"', beginner_inline_json, 1)
+    return rendered.replace('"__EMBEDDED_INTERMEDIATE_MATERIALS__"', intermediate_inline_json, 1)
 
 
 def record_visit(request: Request):

@@ -775,6 +775,7 @@
         const EXAM_DATE = new Date(2026, 6, 5);
         const TOTAL_DAYS = 99;
         const WEEKDAY_NAMES = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+        const EMBEDDED_BEGINNER_MATERIALS = "__EMBEDDED_BEGINNER_MATERIALS__";
         const EMBEDDED_INTERMEDIATE_MATERIALS = "__EMBEDDED_INTERMEDIATE_MATERIALS__";
 
         const PHASES = [
@@ -1432,6 +1433,19 @@
         function sectionExcerpt(label, text, limit = 700) {
             const normalized = truncateEmbeddedText(text, limit);
             return normalized ? `【${label}】\n${normalized}` : '';
+        }
+
+        function getEmbeddedBeginnerMaterial(dayNumber) {
+            if (dayNumber < 1 || dayNumber > 56) return null;
+
+            const payload = EMBEDDED_BEGINNER_MATERIALS?.[String(dayNumber)];
+            if (!payload) return null;
+
+            return {
+                ...payload,
+                source: 'embedded-html',
+                resources: []
+            };
         }
 
         function getEmbeddedIntermediateMaterial(dayNumber) {
@@ -2327,7 +2341,7 @@
             if (!panel) return;
 
             try {
-                let data = getEmbeddedIntermediateMaterial(dayNumber);
+                let data = getEmbeddedBeginnerMaterial(dayNumber) || getEmbeddedIntermediateMaterial(dayNumber);
                 if (!data) {
                     const response = await fetch(`/jlpt-materials/day/${dayNumber}`);
                     if (!response.ok) throw new Error('failed');
@@ -2614,7 +2628,7 @@
                         <div class="study-grid">
                             <article class="study-card note-card local-material-card" id="local-material-panel">
                                 <h3>本地教材内容</h3>
-                                <div class="study-desc">正在加载今天对应的教材内容。中级 OCR 内容会优先直接从当前 HTML 页面读取。</div>
+                                <div class="study-desc">正在加载今天对应的教材内容。初级和中级的静态摘录都会优先直接从当前 HTML 页面读取。</div>
                             </article>
                             <article class="study-card note-card">
                                 <h3>今日单词</h3>
