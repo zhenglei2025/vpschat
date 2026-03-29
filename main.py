@@ -806,7 +806,9 @@ async def visitor_stats_page():
 
 
 @app.get("/visitor-stats/data")
-async def visitor_stats_data():
+async def visitor_stats_data(authorization: Optional[str] = Header(None)):
+    if not require_auth(authorization):
+        return JSONResponse(status_code=401, content={"error": "未授权"})
     return build_visitor_stats_payload()
 
 

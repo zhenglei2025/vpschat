@@ -210,7 +210,7 @@
         <div class="hero">
             <div>
                 <h1>访客统计</h1>
-                <p>查看主页、聊天页、访客统计页、顶会 DDL 和日语学习页的访问情况，包括独立访客、来源类型、来源页、浏览器设备分布以及最近访问记录。</p>
+                <p>查看主页、聊天页、访客统计页、顶会 DDL 和日语学习页的访问情况，包括独立访客、来源类型、来源页、浏览器设备分布以及最近访问记录。此页面复用聊天登录态，需先在聊天页完成认证。</p>
             </div>
             <div class="hero-actions">
                 <a href="/">返回主页</a>
@@ -328,9 +328,32 @@
             el.textContent = '';
         }
 
+        function redirectToChat(delay = 0) {
+            window.setTimeout(() => {
+                window.location.href = '/chat';
+            }, delay);
+        }
+
         async function loadStats() {
+            const token = localStorage.getItem('auth_token') || '';
+            if (!token) {
+                showError('未检测到聊天登录态，正在跳转到聊天页认证。');
+                redirectToChat(1200);
+                return;
+            }
+
             try {
-                const res = await fetch('/visitor-stats/data');
+                const res = await fetch('/visitor-stats/data', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (res.status === 401) {
+                    showError('聊天登录态已失效，正在跳转到聊天页重新认证。');
+                    redirectToChat(1200);
+                    return;
+                }
 
                 if (!res.ok) {
                     throw new Error(`HTTP ${res.status}`);
