@@ -18,6 +18,7 @@ from typing import List, Optional
 import shutil
 import json
 import termios
+import re
 from threading import Lock
 from urllib.parse import urlparse
 
@@ -41,6 +42,10 @@ LOGIN_WINDOW = 60           # 限流窗口（秒）
 VISITOR_STATS_FILE = "visitor_stats.json"
 CCF_DEADLINES_FILE = "ccf_ai_deadlines.json"
 MAX_RECENT_VISITS = 200
+ARXIV_CONTACT_RE = re.compile(
+    r'<p[^>]*>\s*<span[^>]*>📧\s*联系人：人工智能团队/郑雷\s*&nbsp;\s*zhenglei2@unionpay\.com</span>\s*</p>',
+    re.IGNORECASE,
+)
 JLPT_N2_PLAN_HTML = "jlpt_n2_plan.html"
 BEGINNER_STATIC_CACHE = "processed_beginner_materials.json"
 INTERMEDIATE_STATIC_CACHE = "processed_intermediate_materials.json"
@@ -192,6 +197,12 @@ def tracked_page_path(path: str) -> bool:
         or path.startswith("/news/view/")
         or path.startswith("/jlpt-n2-plan/day/")
     )
+
+
+def sanitize_news_html(category: str, content: str) -> str:
+    if category == "arxiv_summaries":
+        return ARXIV_CONTACT_RE.sub("", content)
+    return content
 
 
 @lru_cache(maxsize=1)
@@ -896,7 +907,7 @@ async def news_view(category: str, filename: str):
     if not os.path.isfile(filepath):
         return JSONResponse(status_code=404, content={"error": "文件不存在"})
     with open(filepath, "r", encoding="utf-8") as f:
-        return HTMLResponse(content=f.read())
+        return HTMLResponse(content=sanitize_news_html(category, f.read()))
 
 
 # ===== 启动 =====
