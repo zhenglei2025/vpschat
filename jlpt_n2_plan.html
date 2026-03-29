@@ -628,6 +628,80 @@
             color: var(--muted);
         }
 
+        .local-material-card {
+            grid-column: 1 / -1;
+        }
+
+        .local-material-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .local-material-head h3,
+        .local-material-block h4 {
+            margin: 0;
+        }
+
+        .local-material-summary {
+            margin-top: 10px;
+            color: var(--muted);
+            line-height: 1.7;
+        }
+
+        .local-material-block {
+            margin-top: 14px;
+            padding: 14px;
+            border-radius: 18px;
+            background: rgba(191, 77, 40, 0.05);
+            border: 1px solid rgba(231, 217, 197, 0.82);
+        }
+
+        .local-material-text {
+            margin-top: 10px;
+            white-space: pre-wrap;
+            line-height: 1.75;
+            color: var(--text);
+            font-size: 0.95rem;
+        }
+
+        .local-material-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .local-material-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border-radius: 14px;
+            background: #fff8f1;
+            border: 1px solid var(--line);
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 700;
+        }
+
+        .local-material-link:hover {
+            border-color: #d48358;
+        }
+
+        .local-material-meta {
+            margin-top: 6px;
+            color: var(--muted);
+            line-height: 1.7;
+        }
+
+        .local-material-empty {
+            margin-top: 10px;
+            color: var(--muted);
+            line-height: 1.7;
+        }
+
         @media (max-width: 1080px) {
             .stats,
             .phase-grid,
@@ -774,6 +848,23 @@
             phase3: { vocabNew: 36, vocabReview: 120, kanji: 12, grammar: 2, listening: 30, readingCount: 2, output: '摘要 80-120 字 + 90 秒复述', duration: '约 210 分钟' },
             phase4: { vocabNew: 18, vocabReview: 160, kanji: 8, grammar: 2, listening: 35, readingCount: 2, output: '错题回讲 + 120 秒复述', duration: '约 220-240 分钟' },
             phase5: { vocabNew: 8, vocabReview: 180, kanji: 0, grammar: 1, listening: 25, readingCount: 1, output: '状态调整与高频回顾', duration: '约 90-180 分钟' }
+        };
+
+        const INTERMEDIATE_BOOKS = {
+            upper: {
+                label: '标日中级上',
+                pdfKey: 'intermediate-upper-book',
+                vocabKey: 'intermediate-upper-vocab',
+                lessonStart: 1,
+                lessonEnd: 16
+            },
+            lower: {
+                label: '标日中级下',
+                pdfKey: 'intermediate-lower-book',
+                vocabKey: 'intermediate-lower-vocab',
+                lessonStart: 17,
+                lessonEnd: 32
+            }
         };
 
         const RESOURCE_LIBRARY = {
@@ -1315,6 +1406,22 @@
             return `${formatSomaPoint(start)} - ${formatSomaPoint(end)}`;
         }
 
+        function getIntermediateSlot(dayNumber) {
+            if (dayNumber < 57 || dayNumber > 92) return null;
+
+            if (dayNumber <= 74) {
+                const offset = dayNumber - 57;
+                if (offset === 8) return { book: 'upper', review: true, lessons: [1, 2, 3, 4, 5, 6, 7, 8] };
+                if (offset === 17) return { book: 'upper', review: true, lessons: [9, 10, 11, 12, 13, 14, 15, 16] };
+                return { book: 'upper', review: false, lessonNumber: 1 + offset - (offset > 8 ? 1 : 0) };
+            }
+
+            const offset = dayNumber - 75;
+            if (offset === 8) return { book: 'lower', review: true, lessons: [17, 18, 19, 20, 21, 22, 23, 24] };
+            if (offset === 17) return { book: 'lower', review: true, lessons: [25, 26, 27, 28, 29, 30, 31, 32] };
+            return { book: 'lower', review: false, lessonNumber: 17 + offset - (offset > 8 ? 1 : 0) };
+        }
+
         function getFoundationLessonNumber(dayNumber) {
             return dayNumber - Math.floor(dayNumber / 7);
         }
@@ -1402,8 +1509,56 @@
             };
         }
 
+        function buildIntermediateStudyContent(dayNumber, plan) {
+            if (plan.reviewLessons) {
+                const rangeText = `第 ${plan.reviewLessons[0]}-${plan.reviewLessons[plan.reviewLessons.length - 1]} 课`;
+                return {
+                    mode: '标日中级辅助卡',
+                    note: '上方“本地教材内容”里已经接入你自己目录下的会话 OCR、课文 OCR、词汇摘录和 PDF 直达。这里保留的是复盘时的辅助关注点。',
+                    vocab: [
+                        [`${plan.localBook} ${rangeText}`, '', '先从上面的本地摘录里挑每课最不熟的 6-8 个词，合并成这轮复盘清单。'],
+                        ['高频搭配', '', '遇到固定搭配不要只背中文，要顺手抄 1 个完整例句。'],
+                        ['主题词', '', '把同一主题下的人物、地点、动作词放在一起记，复盘效率更高。']
+                    ],
+                    grammar: [
+                        ['句型回看', '优先看本周最常错的语法和连接方式。', '复盘不是重学，而是找薄弱点。'],
+                        ['应用课文', '先看段落结构，再看具体词句。', '至少说出每课在讲什么。'],
+                        ['课后练习', '能重做就重做，不能重做也要口头解释答案依据。', '避免只看答案。']
+                    ],
+                    sentences: [
+                        ['先用本地摘录复述每课主场景。', '每课至少说 2-3 句关键内容。'],
+                        ['把这轮最容易混淆的表达放到一组里比较。', '不要把相近表达孤立记忆。'],
+                        ['今天的复盘重点是“查漏”，不是“开新坑”。', '只保留真正会失分的点。']
+                    ],
+                    texts: [[`今天复盘 ${plan.localBook} ${rangeText}。先看本地摘录，再打开右侧 PDF 对照正文、例句和练习，最后用自己的话说一遍每课主线。`, '建议先抓段落主旨、连接关系和高频词，再回头看细节。']]
+                };
+            }
+
+            return {
+                mode: '标日中级辅助卡',
+                note: '这张卡片是配套使用说明。真正的本地会话 OCR、课文 OCR、词汇摘录和 PDF 直达在上方“本地教材内容”区。',
+                vocab: [
+                    [`${plan.localBook} 第 ${plan.lessonNumber} 课`, '', '先看上面的本地词汇摘录，再补 12-15 个自己最不熟的词。'],
+                    ['场景词', '', '优先整理今天课文里的角色、地点、动作和评价表达。'],
+                    ['固定搭配', '', '中级阶段开始重点积累“词 + 词”的搭配，而不是孤立单词。']
+                ],
+                grammar: [
+                    ['应用课文', '先抓场景，再抓句型。', '至少能说出这课在什么场合使用。'],
+                    ['连接关系', '注意原因、转折、顺承和补充说明。', '中级最容易丢的是句间关系。'],
+                    ['输出', '今天至少用本课内容做一次 60-90 秒口头复述。', '只看不说很难真正吃进去。']
+                ],
+                sentences: [
+                    ['把本地摘录里的关键句改写成自己的版本。', '替换人物、时间和地点。'],
+                    ['对照 PDF 找出你最想抄写的 3 句。', '优先抄结构复杂但实用的句子。'],
+                    ['今天的重点是“读懂一课”，不是“翻完很多页”。', '保持颗粒度足够小。']
+                ],
+                texts: [[`今天主线是 ${plan.localBook} 第 ${plan.lessonNumber} 课。请先看上方本地摘录，再打开右侧本地 PDF 对照完整正文，最后做词汇复述和课后消化。`, '中级正文暂时走 PDF 直达，词汇可以直接在网页里看。']]
+            };
+        }
+
         function getStudyContent(dayNumber, plan) {
             if (dayNumber <= 56) return buildFoundationStudyContent(dayNumber, plan);
+            if (dayNumber <= 92 && plan && plan.localTrack === 'intermediate') return buildIntermediateStudyContent(dayNumber, plan);
             if (dayNumber <= 70) return buildN3StudyContent(dayNumber, plan);
             if (dayNumber <= 92) return buildN2StudyContent(dayNumber, plan);
             return buildFinalReviewContent(dayNumber);
@@ -1599,6 +1754,81 @@
             };
         }
 
+        function buildIntermediateLessonPlan(dayNumber, phase, weekTheme) {
+            const slot = getIntermediateSlot(dayNumber);
+            const book = INTERMEDIATE_BOOKS[slot.book];
+            return {
+                phase,
+                weekTheme,
+                localTrack: 'intermediate',
+                localBook: book.label,
+                lessonNumber: slot.lessonNumber,
+                title: `${book.label} 第 ${slot.lessonNumber} 课`,
+                summary: `今天主线切到你本地的 ${book.label} 第 ${slot.lessonNumber} 课。页面会直接展示本地会话 OCR、课文 OCR 和词汇摘录，并提供教材 PDF 直达，尽量把“翻书”成本降到最低。`,
+                tasks: [
+                    task('本地课次主线', `先看上方“本地教材内容”中的 ${book.label} 第 ${slot.lessonNumber} 课摘录，再打开本地主教材 PDF，把课文、例句和场景完整过一遍。`, '50 分钟'),
+                    task('词汇与表达', `以上方的会话 OCR、课文 OCR 和词汇摘录为起点，补记今天最不熟的 12-15 个词和 4-6 个固定搭配。`, '25 分钟'),
+                    task('正文精读', '对照 PDF 抓本课的段落结构、连接关系和关键句，不要求整页逐词翻译。', '30 分钟'),
+                    task('口头复述', '不看文本，用自己的话复述今天这课的主线内容；如果卡住，再回去补看关键句。', '15 分钟'),
+                    task('课后收口', '把今天最想保留的 3 句和最容易错的 5 个词写进复习清单。', '10 分钟')
+                ],
+                materials: [
+                    {
+                        name: `本地主教材：${book.label}`,
+                        detail: '直接打开你本地 PDF，对照正文、例句和课后内容。',
+                        url: `/jlpt-materials/file/${book.pdfKey}`
+                    },
+                    {
+                        name: `本地词汇表：${book.label}`,
+                        detail: '这份词汇 PDF 可以和上方的本地摘录配合使用。',
+                        url: `/jlpt-materials/file/${book.vocabKey}`
+                    }
+                ],
+                notes: [
+                    '中级阶段先保证“每天吃透一课”，不要急着把整本书翻得很快。',
+                    '正文如果是扫描版，先靠上方摘录和右侧直达把入口成本降下来。'
+                ]
+            };
+        }
+
+        function buildIntermediateReviewPlan(dayNumber, phase, weekTheme) {
+            const slot = getIntermediateSlot(dayNumber);
+            const book = INTERMEDIATE_BOOKS[slot.book];
+            const rangeText = `第 ${slot.lessons[0]}-${slot.lessons[slot.lessons.length - 1]} 课`;
+            return {
+                phase,
+                weekTheme,
+                localTrack: 'intermediate',
+                localBook: book.label,
+                reviewLessons: slot.lessons,
+                title: `${book.label} 复盘 · ${rangeText}`,
+                summary: `今天不推新课，集中复盘 ${book.label} ${rangeText}。页面会给出这几课的本地会话 OCR、课文 OCR、词汇摘录和教材直达，你只需要围绕最薄弱的地方查漏补缺。`,
+                tasks: [
+                    task('复盘摘录', `先看上方“本地教材内容”里的 ${rangeText} 摘录，快速回忆每课主题、场景和高频词。`, '25 分钟'),
+                    task('正文对照', `打开 ${book.label} 主教材 PDF，把这轮最薄弱的 2-3 课重新对照正文过一遍。`, '35 分钟'),
+                    task('词汇二刷', '把这几课最容易忘的词、搭配和表达重新抄写或遮住中文回忆一遍。', '25 分钟'),
+                    task('输出回讲', '用日语或中文讲清楚每课在讲什么，以及你最容易错在哪里。', '20 分钟'),
+                    task('下轮准备', '把下一轮新课之前必须补掉的问题单独列出来。', '10 分钟')
+                ],
+                materials: [
+                    {
+                        name: `本地主教材：${book.label}`,
+                        detail: '复盘时优先打开正文，对照你自己最卡的段落。',
+                        url: `/jlpt-materials/file/${book.pdfKey}`
+                    },
+                    {
+                        name: `本地词汇表：${book.label}`,
+                        detail: '复盘日建议把这几课高频词重新过一轮。',
+                        url: `/jlpt-materials/file/${book.vocabKey}`
+                    }
+                ],
+                notes: [
+                    '复盘日的目标是减少遗忘，不是把时间全部花在整理页面上。',
+                    '如果只能做一半任务，优先保住“对照正文 + 词汇二刷”。'
+                ]
+            };
+        }
+
         function getDailyVideos(dayNumber, plan) {
             if (dayNumber <= 56) {
                 if (dayNumber % 7 === 0) {
@@ -1644,46 +1874,44 @@
                 ];
             }
 
-            if (dayNumber <= 70) {
-                const blockIndex = dayNumber - 57;
-                const block = N3_BRIDGE_BLOCKS[blockIndex];
+            const intermediateSlot = getIntermediateSlot(dayNumber);
+            if (intermediateSlot) {
+                const book = INTERMEDIATE_BOOKS[intermediateSlot.book];
+                if (intermediateSlot.review) {
+                    const rangeText = `第${intermediateSlot.lessons[0]}课 第${intermediateSlot.lessons[intermediateSlot.lessons.length - 1]}课`;
+                    return [
+                        video(
+                            `YouTube 搜索：${book.label} ${rangeText} 复习`,
+                            '优先找和这轮复盘课次接近的讲解、跟读或总结视频。',
+                            youtubeSearchUrl(`${book.label} ${rangeText} 复习`)
+                        ),
+                        video(
+                            channel('sambon').title,
+                            '中级阶段适合拿来补语感和表达思路，今天看 1 支即可。',
+                            channel('sambon').url
+                        ),
+                        video(
+                            channel('miku').title,
+                            '用较自然的日语保持听感，不要在复盘日把耳朵停掉。',
+                            channel('miku').url
+                        )
+                    ];
+                }
                 return [
                     video(
-                        `YouTube 搜索：三本塾 N3 ${block.title}`,
-                        '优先找和今天 N3 主题最接近的文法或阅读讲解。',
-                        youtubeSearchUrl(`三本塾 N3 ${block.title}`)
+                        `YouTube 搜索：${book.label} 第 ${intermediateSlot.lessonNumber} 课`,
+                        '优先找和今天本地课次一致的讲解、跟读或课文解析。',
+                        youtubeSearchUrl(`${book.label} 第${intermediateSlot.lessonNumber}课`)
                     ),
                     video(
                         channel('sambon').title,
-                        '适合中级文法和阅读思路整理，今天建议看 1 支对应主题视频。',
+                        '适合中级表达、阅读思路和日语解释，今天建议看 1 支。',
                         channel('sambon').url
                     ),
                     video(
                         channel('miku').title,
                         '用较自然的日语补听力和表达，今天看 1 支主题接近的视频。',
                         channel('miku').url
-                    )
-                ];
-            }
-
-            if (dayNumber <= 92) {
-                const offset = dayNumber - 71;
-                const chunk = N2_CHUNKS[Math.floor(offset / 2)];
-                return [
-                    video(
-                        `YouTube 搜索：日本語の森 N2 ${chunk.title}`,
-                        '优先找今天这组 N2 文法或题型的讲解视频。',
-                        youtubeSearchUrl(`日本語の森 N2 ${chunk.title}`)
-                    ),
-                    video(
-                        channel('nihongoNoMori').title,
-                        'N2 阶段最值得固定跟的频道之一，今天建议看 1 支文法或读解视频。',
-                        channel('nihongoNoMori').url
-                    ),
-                    video(
-                        channel('sambon').title,
-                        '适合补充 N2 文法语感、阅读逻辑和日语解释。',
-                        channel('sambon').url
                     )
                 ];
             }
@@ -1921,12 +2149,12 @@
                 return attachVideosToPlan(dayNumber, foundationPlan);
             }
 
-            if (dayNumber <= 70) {
-                return attachVideosToPlan(dayNumber, buildN3BridgePlan(dayNumber, phase, weekTheme));
-            }
-
             if (dayNumber <= 92) {
-                return attachVideosToPlan(dayNumber, buildN2ChunkPlan(dayNumber, phase, weekTheme));
+                const slot = getIntermediateSlot(dayNumber);
+                const intermediatePlan = slot && slot.review
+                    ? buildIntermediateReviewPlan(dayNumber, phase, weekTheme)
+                    : buildIntermediateLessonPlan(dayNumber, phase, weekTheme);
+                return attachVideosToPlan(dayNumber, intermediatePlan);
             }
 
             if (dayNumber >= 93) {
@@ -2019,6 +2247,49 @@
             }
 
             alert(`请输入 1-${TOTAL_DAYS} 的 Day 编号，或选择 ${formatDate(START_DATE)} 到 ${formatDate(EXAM_DATE)} 之间的日期。`);
+        }
+
+        async function loadLocalMaterial(dayNumber) {
+            const panel = document.getElementById('local-material-panel');
+            if (!panel) return;
+
+            try {
+                const response = await fetch(`/jlpt-materials/day/${dayNumber}`);
+                if (!response.ok) throw new Error('failed');
+                const data = await response.json();
+                const badgeClass = data.mode === 'full-text' ? 'done' : 'pending';
+                const badgeText = data.mode === 'full-text' ? '已抽取本地内容' : data.mode === 'preview-plus-vocab' ? '词汇可读 / 正文直达' : '本地复盘建议';
+                const blocks = (data.blocks || []).map((item) => `
+                    <div class="local-material-block">
+                        <h4>${escapeHtml(item.title || '本地内容')}</h4>
+                        <div class="local-material-text">${escapeHtml(item.text || '')}</div>
+                    </div>
+                `).join('');
+                const resources = (data.resources || []).map((item) => `
+                    <div class="local-material-block">
+                        <a class="local-material-link" href="/jlpt-materials/file/${encodeURIComponent(item.sourceKey)}" target="_blank" rel="noreferrer">打开本地文件</a>
+                        <h4 style="margin-top:12px;">${escapeHtml(item.name || '本地资料')}</h4>
+                        <div class="local-material-meta">${escapeHtml(item.detail || '')}</div>
+                    </div>
+                `).join('');
+
+                panel.innerHTML = `
+                    <div class="local-material-head">
+                        <div>
+                            <h3>本地教材内容</h3>
+                            <div class="local-material-summary">${escapeHtml(data.title || '')}。${escapeHtml(data.summary || '')}</div>
+                        </div>
+                        <span class="badge ${badgeClass}">${badgeText}</span>
+                    </div>
+                    ${blocks || '<div class="local-material-empty">今天没有可展示的本地摘录。</div>'}
+                    ${resources ? `<div class="local-material-links">${resources}</div>` : ''}
+                `;
+            } catch (error) {
+                panel.innerHTML = `
+                    <h3>本地教材内容</h3>
+                    <div class="local-material-empty">今天的本地教材内容加载失败了。你仍然可以从右侧教材链接进入 PDF。</div>
+                `;
+            }
         }
 
         function renderOverview() {
@@ -2258,6 +2529,10 @@
                         <div class="task-grid">${tasksHtml}</div>
 
                         <div class="study-grid">
+                            <article class="study-card note-card local-material-card" id="local-material-panel">
+                                <h3>本地教材内容</h3>
+                                <div class="study-desc">正在从 ~/code/jp 加载今天对应的教材内容...</div>
+                            </article>
                             <article class="study-card note-card">
                                 <h3>今日单词</h3>
                                 <div class="study-desc">${study.mode}。先认读，再遮住中文回忆意思。</div>
@@ -2333,6 +2608,8 @@
                     </aside>
                 </section>
             `;
+
+            loadLocalMaterial(dayNumber);
         }
 
         function toggleTask(dayNumber, taskIndex, checked) {

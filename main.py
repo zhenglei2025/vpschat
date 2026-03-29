@@ -8,6 +8,7 @@ import asyncio
 import subprocess
 import stat
 import secrets
+import mimetypes
 from datetime import datetime
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, File, Request, Header
@@ -18,6 +19,8 @@ import json
 import termios
 from threading import Lock
 from urllib.parse import urlparse
+
+from jlpt_local_materials import get_local_material_for_day, get_material_source_path
 
 # ===== 配置 =====
 CHAT_PASSWORD = "3635363"
@@ -800,6 +803,27 @@ async def jlpt_n2_plan_day_page(day: int):
         return HTMLResponse(content="未找到对应学习计划页面", status_code=404)
     with open("jlpt_n2_plan.html", "r", encoding="utf-8") as f:
         return HTMLResponse(content=f.read())
+
+
+@app.get("/jlpt-materials/day/{day}")
+async def jlpt_material_day(day: int):
+    """返回指定 Day 对应的本地教材内容"""
+    if day < 1 or day > 99:
+        return JSONResponse(status_code=404, content={"error": "day 超出范围"})
+    try:
+        return JSONResponse(content=get_local_material_for_day(day))
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": f"读取本地教材失败: {e}"})
+
+
+@app.get("/jlpt-materials/file/{source_key}")
+async def jlpt_material_file(source_key: str):
+    """打开白名单中的本地教材文件"""
+    filepath = get_material_source_path(source_key)
+    if not filepath:
+        return JSONResponse(status_code=404, content={"error": "教材文件不存在"})
+    media_type, _ = mimetypes.guess_type(filepath)
+    return FileResponse(path=filepath, media_type=media_type or "application/octet-stream")
 
 
 @app.get("/news/list")
