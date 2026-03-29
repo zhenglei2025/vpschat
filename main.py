@@ -46,6 +46,74 @@ ARXIV_CONTACT_RE = re.compile(
     r'<p[^>]*>\s*<span[^>]*>📧\s*联系人：人工智能团队/郑雷\s*&nbsp;\s*zhenglei2@unionpay\.com</span>\s*</p>',
     re.IGNORECASE,
 )
+EMAIL_LAYOUT_WIDTH_RE = re.compile(r'(<table\b[^>]*?)\swidth="800"', re.IGNORECASE)
+RESPONSIVE_NEWS_CATEGORIES = {"arxiv_summaries", "finance_summaries", "live_summaries"}
+RESPONSIVE_NEWS_STYLE = """
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+    html, body {
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow-x: hidden !important;
+    }
+    body {
+        margin: 0 !important;
+        padding: 0 !important;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+    }
+    body > table:first-of-type,
+    body > table:first-of-type > tbody > tr > td > table:first-of-type {
+        width: 100% !important;
+        max-width: 800px !important;
+    }
+    body > table:first-of-type > tbody > tr > td {
+        padding: 12px 0 !important;
+    }
+    body > table:first-of-type > tbody > tr > td > table:first-of-type td {
+        max-width: 100% !important;
+    }
+    img, table, iframe, video {
+        max-width: 100% !important;
+    }
+    a, code, pre, p, li, blockquote, td, div, span, h1, h2, h3, h4 {
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+    pre, code {
+        white-space: pre-wrap !important;
+    }
+    @media (max-width: 768px) {
+        body > table:first-of-type > tbody > tr > td > table:first-of-type {
+            border-left: none !important;
+            border-right: none !important;
+        }
+        body > table:first-of-type > tbody > tr > td > table:first-of-type td[style] {
+            padding-left: 16px !important;
+            padding-right: 16px !important;
+        }
+        body > table:first-of-type > tbody > tr > td > table:first-of-type h1[style] {
+            font-size: 20px !important;
+            line-height: 1.35 !important;
+        }
+        body > table:first-of-type > tbody > tr > td > table:first-of-type h2[style] {
+            font-size: 18px !important;
+            line-height: 1.45 !important;
+        }
+        body > table:first-of-type > tbody > tr > td > table:first-of-type h3[style] {
+            font-size: 16px !important;
+            line-height: 1.45 !important;
+        }
+        body > table:first-of-type > tbody > tr > td > table:first-of-type p,
+        body > table:first-of-type > tbody > tr > td > table:first-of-type li,
+        body > table:first-of-type > tbody > tr > td > table:first-of-type td,
+        body > table:first-of-type > tbody > tr > td > table:first-of-type blockquote {
+            font-size: 15px !important;
+            line-height: 1.8 !important;
+        }
+    }
+</style>
+""".strip()
 JLPT_N2_PLAN_HTML = "jlpt_n2_plan.html"
 BEGINNER_STATIC_CACHE = "processed_beginner_materials.json"
 INTERMEDIATE_STATIC_CACHE = "processed_intermediate_materials.json"
@@ -201,8 +269,24 @@ def tracked_page_path(path: str) -> bool:
 
 def sanitize_news_html(category: str, content: str) -> str:
     if category == "arxiv_summaries":
-        return ARXIV_CONTACT_RE.sub("", content)
+        content = ARXIV_CONTACT_RE.sub("", content)
+    if category in RESPONSIVE_NEWS_CATEGORIES:
+        content = make_news_html_responsive(content)
     return content
+
+
+def make_news_html_responsive(content: str) -> str:
+    updated = EMAIL_LAYOUT_WIDTH_RE.sub(r'\1 width="100%"', content, count=1)
+    if 'name="viewport"' not in updated.lower():
+        if "</head>" in updated:
+            updated = updated.replace("</head>", f"{RESPONSIVE_NEWS_STYLE}\n</head>", 1)
+        elif "<head>" in updated:
+            updated = updated.replace("<head>", f"<head>\n{RESPONSIVE_NEWS_STYLE}\n", 1)
+        else:
+            updated = RESPONSIVE_NEWS_STYLE + "\n" + updated
+    elif "</head>" in updated:
+        updated = updated.replace("</head>", f"<style>{RESPONSIVE_NEWS_STYLE.split('<style>', 1)[1].rsplit('</style>', 1)[0]}</style>\n</head>", 1)
+    return updated
 
 
 @lru_cache(maxsize=1)
