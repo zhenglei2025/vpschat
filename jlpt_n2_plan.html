@@ -1,0 +1,2370 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JLPT N2 冲刺计划</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #f6efe4;
+            --panel: rgba(255, 252, 247, 0.92);
+            --line: #e7d9c5;
+            --text: #2f241b;
+            --muted: #7b6553;
+            --accent: #bf4d28;
+            --accent-dark: #8d2d11;
+            --accent-soft: rgba(191, 77, 40, 0.1);
+            --green: #2f7c59;
+            --gold: #b07a1e;
+            --shadow: 0 18px 42px rgba(95, 62, 30, 0.12);
+        }
+
+        body {
+            margin: 0;
+            color: var(--text);
+            font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(214, 114, 62, 0.15), transparent 26%),
+                radial-gradient(circle at top right, rgba(176, 122, 30, 0.14), transparent 22%),
+                linear-gradient(180deg, #fbf6ee 0%, var(--bg) 100%);
+        }
+
+        a {
+            color: inherit;
+        }
+
+        .page {
+            max-width: 1240px;
+            margin: 0 auto;
+            padding: 24px 16px 48px;
+        }
+
+        .hero {
+            padding: 28px;
+            border-radius: 28px;
+            color: #fff7ef;
+            background:
+                linear-gradient(135deg, rgba(73, 35, 15, 0.86), rgba(120, 44, 18, 0.92)),
+                linear-gradient(135deg, #5f2e16, #bf4d28);
+            box-shadow: 0 24px 48px rgba(95, 46, 22, 0.22);
+        }
+
+        .hero-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 18px;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.12);
+            font-size: 0.88rem;
+            letter-spacing: 0.04em;
+        }
+
+        .hero h1 {
+            margin: 14px 0 10px;
+            font-size: clamp(2rem, 4vw, 3.1rem);
+            line-height: 1.1;
+        }
+
+        .hero p {
+            margin: 0;
+            max-width: 760px;
+            line-height: 1.75;
+            color: rgba(255, 247, 239, 0.88);
+        }
+
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .hero-actions a,
+        .hero-actions button {
+            padding: 11px 15px;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff7ef;
+            text-decoration: none;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .hero-actions a:hover,
+        .hero-actions button:hover {
+            background: rgba(255, 255, 255, 0.18);
+        }
+
+        .hero-meta {
+            margin-top: 18px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .hero-pill {
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.1);
+            font-size: 0.92rem;
+        }
+
+        .warning {
+            margin-top: 18px;
+            padding: 14px 16px;
+            border-radius: 18px;
+            background: rgba(255, 244, 221, 0.16);
+            border: 1px solid rgba(255, 235, 201, 0.16);
+            line-height: 1.7;
+            color: #fff0df;
+        }
+
+        .jump-panel {
+            margin-top: 18px;
+            padding: 18px;
+        }
+
+        .jump-panel h2,
+        .jump-panel h3 {
+            margin: 0 0 8px;
+        }
+
+        .jump-panel p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.7;
+        }
+
+        .jump-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .jump-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .jump-field label {
+            font-size: 0.85rem;
+            color: var(--muted);
+            font-weight: 700;
+        }
+
+        .jump-field input {
+            width: 100%;
+            padding: 11px 13px;
+            border-radius: 14px;
+            border: 1px solid var(--line);
+            background: #fffdf9;
+            color: var(--text);
+            font: inherit;
+            outline: none;
+        }
+
+        .jump-field input:focus {
+            border-color: #d48358;
+            box-shadow: 0 0 0 3px rgba(191, 77, 40, 0.08);
+        }
+
+        .jump-submit {
+            align-self: end;
+            padding: 11px 16px;
+            border-radius: 14px;
+            border: none;
+            background: linear-gradient(135deg, #c55c33, #b07a1e);
+            color: #fff;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .jump-submit:hover {
+            filter: brightness(1.04);
+        }
+
+        .section {
+            margin-top: 18px;
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid rgba(231, 217, 197, 0.8);
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .stats,
+        .phase-grid,
+        .plan-grid,
+        .task-grid {
+            display: grid;
+            gap: 14px;
+        }
+
+        .stats {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            margin-top: 18px;
+        }
+
+        .stat-card,
+        .phase-card,
+        .plan-card,
+        .task-card,
+        .note-card {
+            background: var(--panel);
+            border: 1px solid rgba(231, 217, 197, 0.82);
+            border-radius: 22px;
+            box-shadow: var(--shadow);
+        }
+
+        .stat-card {
+            padding: 20px;
+        }
+
+        .stat-label {
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        .stat-value {
+            margin-top: 8px;
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--accent-dark);
+        }
+
+        .section-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+
+        .section-head h2 {
+            margin: 0;
+            font-size: 1.24rem;
+        }
+
+        .section-head p {
+            margin: 6px 0 0;
+            color: var(--muted);
+            line-height: 1.7;
+        }
+
+        .phase-grid {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        .phase-card {
+            padding: 18px;
+        }
+
+        .phase-tag,
+        .badge,
+        .small-badge {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            font-weight: 700;
+        }
+
+        .phase-tag {
+            padding: 6px 10px;
+            background: var(--accent-soft);
+            color: var(--accent-dark);
+            font-size: 0.82rem;
+        }
+
+        .badge {
+            padding: 5px 10px;
+            font-size: 0.8rem;
+        }
+
+        .badge.done {
+            background: rgba(47, 124, 89, 0.14);
+            color: var(--green);
+        }
+
+        .badge.pending {
+            background: rgba(176, 122, 30, 0.14);
+            color: var(--gold);
+        }
+
+        .small-badge {
+            padding: 4px 9px;
+            background: rgba(95, 46, 22, 0.08);
+            color: var(--muted);
+            font-size: 0.78rem;
+        }
+
+        .phase-card h3,
+        .plan-card h3,
+        .task-card h3,
+        .note-card h3 {
+            margin: 12px 0 8px;
+        }
+
+        .phase-card p,
+        .plan-card p,
+        .task-card p,
+        .note-card p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.7;
+        }
+
+        .phase-list,
+        .bullet-list {
+            margin: 12px 0 0;
+            padding-left: 18px;
+            color: var(--muted);
+            line-height: 1.8;
+        }
+
+        .phase-list li,
+        .bullet-list li {
+            margin-bottom: 4px;
+        }
+
+        .overview-panel {
+            padding: 22px;
+        }
+
+        .plan-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .resource-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .study-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+            margin-top: 18px;
+        }
+
+        .study-card {
+            padding: 18px;
+        }
+
+        .study-card h3 {
+            margin: 0 0 10px;
+            color: var(--accent-dark);
+        }
+
+        .study-desc {
+            color: var(--muted);
+            line-height: 1.7;
+            margin-bottom: 10px;
+        }
+
+        .study-list {
+            margin: 0;
+            padding-left: 18px;
+            line-height: 1.8;
+            color: var(--text);
+        }
+
+        .study-list li {
+            margin-bottom: 8px;
+        }
+
+        .study-jp {
+            display: block;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .study-cn {
+            display: block;
+            color: var(--muted);
+        }
+
+        .study-note {
+            margin-top: 14px;
+            padding: 12px 14px;
+            border-radius: 16px;
+            background: rgba(191, 77, 40, 0.06);
+            color: var(--muted);
+            line-height: 1.7;
+        }
+
+        .resource-card {
+            padding: 18px;
+        }
+
+        .resource-card h3 {
+            margin: 12px 0 8px;
+        }
+
+        .resource-card p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.7;
+        }
+
+        .resource-links,
+        .material-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .resource-links a,
+        .material-link {
+            color: var(--accent-dark);
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .resource-links a:hover,
+        .material-link:hover {
+            text-decoration: underline;
+        }
+
+        .material-item {
+            padding: 12px 14px;
+            border-radius: 16px;
+            background: rgba(191, 77, 40, 0.05);
+            border: 1px solid rgba(231, 217, 197, 0.82);
+        }
+
+        .material-item strong {
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .material-item span {
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .plan-card {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 18px;
+            text-decoration: none;
+            transition: transform 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .plan-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 22px 44px rgba(95, 62, 30, 0.16);
+        }
+
+        .plan-top,
+        .detail-top,
+        .task-top {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .plan-date {
+            font-size: 1.02rem;
+            font-weight: 800;
+            color: var(--accent-dark);
+        }
+
+        .plan-sub {
+            margin-top: 4px;
+            color: var(--muted);
+            font-size: 0.92rem;
+        }
+
+        .chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .detail-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.8fr);
+            gap: 16px;
+        }
+
+        .detail-main,
+        .detail-side {
+            padding: 22px;
+        }
+
+        .detail-title {
+            margin: 10px 0 6px;
+            font-size: clamp(1.7rem, 3vw, 2.45rem);
+            color: var(--accent-dark);
+        }
+
+        .detail-subtitle {
+            color: var(--muted);
+            line-height: 1.7;
+            margin-bottom: 16px;
+        }
+
+        .task-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            margin-top: 16px;
+        }
+
+        .task-card {
+            padding: 18px;
+        }
+
+        .task-check {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .task-check input {
+            margin-top: 4px;
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
+
+        .task-text {
+            flex: 1;
+        }
+
+        .task-text strong {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 1rem;
+            color: var(--text);
+        }
+
+        .task-time {
+            margin-top: 8px;
+            color: var(--accent-dark);
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+
+        .note-card {
+            padding: 18px;
+        }
+
+        .progress-wrap {
+            margin-top: 18px;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 8px;
+            font-size: 0.92rem;
+            color: var(--muted);
+        }
+
+        .progress-bar {
+            height: 12px;
+            border-radius: 999px;
+            background: rgba(95, 46, 22, 0.08);
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, #c85a30, #d9872a);
+            width: 0;
+        }
+
+        .nav-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .nav-row a,
+        .nav-row button {
+            padding: 10px 14px;
+            border-radius: 14px;
+            border: 1px solid var(--line);
+            background: #fff8f1;
+            color: var(--text);
+            text-decoration: none;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        .nav-row button.primary {
+            background: linear-gradient(135deg, #c55c33, #b07a1e);
+            color: #fff;
+            border-color: transparent;
+        }
+
+        .empty-state {
+            padding: 44px 20px;
+            text-align: center;
+            color: var(--muted);
+        }
+
+        @media (max-width: 1080px) {
+            .stats,
+            .phase-grid,
+            .resource-grid,
+            .plan-grid,
+            .task-grid,
+            .detail-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 720px) {
+            .page {
+                padding: 18px 12px 36px;
+            }
+
+            .hero,
+            .overview-panel,
+            .detail-main,
+            .detail-side {
+                padding: 18px;
+            }
+
+            .jump-controls {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-top,
+            .section-head,
+            .plan-top,
+            .detail-top,
+            .task-top {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page">
+        <section class="hero">
+            <div class="hero-top">
+                <div>
+                    <span class="eyebrow">JLPT N2 冲刺计划</span>
+                    <h1>从五十音和简单对话，硬核冲到 2026 年 7 月 5 日 N2</h1>
+                    <p>这是一套从 <strong>2026-03-29</strong> 到 <strong>2026-07-05</strong> 的高强度学习安排。默认你现在的基础是「五十音 + 简单会话」，因此前半段必须快速补齐 N5-N3 的词汇、语法、汉字和听读输入，后半段转入 N2 真题节奏。</p>
+                </div>
+                <div class="hero-actions">
+                    <a href="/">返回聊天</a>
+                    <button onclick="jumpToToday()">打开今天任务</button>
+                    <button onclick="window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })">看全部日期</button>
+                </div>
+            </div>
+            <div class="hero-meta">
+                <span class="hero-pill">考试日：2026 年 7 月 5 日</span>
+                <span class="hero-pill">计划天数：99 天</span>
+                <span class="hero-pill">建议投入：平日 2.5-3 小时，周末 4 小时</span>
+                <span class="hero-pill">目标节奏：先补基础，再做 N2 强化</span>
+            </div>
+            <div class="warning">
+                先说实话：从当前基础直接冲 N2，时间非常紧。这份计划是“尽可能提高通过概率”的版本，不是轻松版。真正执行时，优先保证每天不断线，其次再追求满额任务；如果哪天时间不够，至少完成单词复习、听力和一项主任务。
+            </div>
+        </section>
+
+        <div id="app" class="section"></div>
+    </div>
+
+    <script>
+        const START_DATE = new Date(2026, 2, 29);
+        const EXAM_DATE = new Date(2026, 6, 5);
+        const TOTAL_DAYS = 99;
+        const WEEKDAY_NAMES = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+
+        const PHASES = [
+            {
+                id: 'phase1',
+                name: '起步夯实',
+                dayStart: 1,
+                dayEnd: 21,
+                duration: '第 1-21 天',
+                goal: '补齐 N5-N4 高频内容，建立每天学习惯性。',
+                bullets: ['单词 500-700', '汉字 150 左右', '基础助词、动词变形、句型入门', '慢速会话听懂主旨']
+            },
+            {
+                id: 'phase2',
+                name: 'N3 过桥',
+                dayStart: 22,
+                dayEnd: 49,
+                duration: '第 22-49 天',
+                goal: '进入 N4-N3 中级内容，让阅读和听力真正开始成型。',
+                bullets: ['单词累计到 1600 左右', '汉字累计到 350 左右', '条件、被动、授受、因果表达', '短文和新闻简讯开始限时']
+            },
+            {
+                id: 'phase3',
+                name: 'N2 主体',
+                dayStart: 50,
+                dayEnd: 77,
+                duration: '第 50-77 天',
+                goal: '高频 N2 文法、书面表达和中长篇阅读全面介入。',
+                bullets: ['单词累计到 3000+', '汉字累计到 550 左右', '正式书面连接、推量、限定、强调', '听力进入真题题型']
+            },
+            {
+                id: 'phase4',
+                name: '真题强化',
+                dayStart: 78,
+                dayEnd: 92,
+                duration: '第 78-92 天',
+                goal: '用真题和模拟题修速度、修正确率、修心态。',
+                bullets: ['阅读和听力分项限时', '错题本二刷', '每周至少 1 套综合练习', '弱项单独补洞']
+            },
+            {
+                id: 'phase5',
+                name: '考前收口',
+                dayStart: 93,
+                dayEnd: 99,
+                duration: '第 93-99 天',
+                goal: '稳住节奏，减少新内容，转向状态管理和高频回顾。',
+                bullets: ['两套整卷回顾', '错题与高频词汇收口', '听力语感维持', '考试日流程准备']
+            }
+        ];
+
+        const WEEK_THEMES = [
+            { title: '五十音复盘与自我介绍', grammar: '判断句、指示词、は/が/の/も', reading: '自我介绍、校园或家庭短文', listening: '慢速会话与跟读' },
+            { title: '日常作息与助词', grammar: '动词现在时、时间表达、に/で/へ/を', reading: '作息、学校、打工场景', listening: '日常安排问答' },
+            { title: '购物出行与动词变形', grammar: 'ます形、て形、请求与许可', reading: '购物、餐馆、交通短文', listening: '点餐、问路、预约' },
+            { title: '经验比较与计划安排', grammar: 'た形、比较、喜欢/能力表达', reading: '兴趣、旅行计划、经验分享', listening: '周末计划与活动对话' },
+            { title: '理由条件与连接', grammar: 'から、ので、ながら、でも、たら', reading: '说明理由、流程短文', listening: '说明型独白' },
+            { title: '授受、被动、使役入门', grammar: 'あげる/くれる/もらう、受身、使役感知', reading: '学校和工作互动场景', listening: '人物关系和职责' },
+            { title: 'N3 阅读起步', grammar: 'ように、ために、ことになる', reading: '通知、说明文、公告', listening: '广播通知和规则说明' },
+            { title: '条件与推测深化', grammar: 'ば、なら、らしい、ようだ', reading: '比较型、推测型短文', listening: '原因判断类题目' },
+            { title: '工作学习场景', grammar: '敬体表达、依赖、建议、禁止', reading: '会议通知、邮件、学校制度', listening: '办公室与校园对话' },
+            { title: '新闻口吻与抽象主题', grammar: '一方だ、に違いない、わけだ', reading: '社会现象、生活方式', listening: '新闻摘要和访谈' },
+            { title: 'N2 高频连接与限定', grammar: 'にあたって、に際して、をめぐって、ものの', reading: '评论文、说明文', listening: '主张与理由对应' },
+            { title: 'N2 书面表达', grammar: 'ことから、うえで、末に、に伴って', reading: '长句拆解、指代追踪', listening: '讲座与说明会' },
+            { title: 'N2 阅读结构拆解', grammar: '反问、让步、转折、结论句', reading: '观点对立、论证结构', listening: '综合信息匹配' },
+            { title: 'N2 听力题型强化', grammar: '高频固定搭配回顾', reading: '真题阅读分题型', listening: '即时应答、课题理解、要点理解' },
+            { title: '模拟与考前回收', grammar: '错题复盘', reading: '整套或半套真题', listening: '整套或半套真题' }
+        ];
+
+        const PHASE_SETTINGS = {
+            phase1: { vocabNew: 28, vocabReview: 60, kanji: 8, grammar: 2, listening: 20, readingCount: 1, output: '口头复述 5 句', duration: '约 150 分钟' },
+            phase2: { vocabNew: 32, vocabReview: 90, kanji: 10, grammar: 2, listening: 25, readingCount: 2, output: '造句 6 句 + 60 秒复述', duration: '约 180 分钟' },
+            phase3: { vocabNew: 36, vocabReview: 120, kanji: 12, grammar: 2, listening: 30, readingCount: 2, output: '摘要 80-120 字 + 90 秒复述', duration: '约 210 分钟' },
+            phase4: { vocabNew: 18, vocabReview: 160, kanji: 8, grammar: 2, listening: 35, readingCount: 2, output: '错题回讲 + 120 秒复述', duration: '约 220-240 分钟' },
+            phase5: { vocabNew: 8, vocabReview: 180, kanji: 0, grammar: 1, listening: 25, readingCount: 1, output: '状态调整与高频回顾', duration: '约 90-180 分钟' }
+        };
+
+        const RESOURCE_LIBRARY = {
+            biaori: {
+                title: '《新版中日交流标准日本语 初级（第二版）》',
+                use: '第 1-56 天主线教材，按 48 课压缩推进。',
+                url: 'https://www.pep.com.cn/products/jc/dwhytsh/201711/t20171107_1920490.shtml'
+            },
+            biaoriAudio: {
+                title: '标日配套电子书 / 音频',
+                use: '每天听会话、跟读、做听写。',
+                url: 'https://www.pep.com.cn/products/dzyxn/qt/yy/201802/t20180202_1922555.shtml'
+            },
+            minna: {
+                title: '《大家的日本语》',
+                use: '如果你手头已经是这套书，可以把当天任务平移到对应课次作为备选主线。',
+                url: 'https://www.3anet.co.jp/np/books/2301/'
+            },
+            tryN3: {
+                title: 'TRY! 日本語能力試験 N3 中国语版',
+                use: '第 57-70 天做 N3 过桥，把基础语法拧成考试表达。',
+                url: 'https://ask-books.com/jp/978-4-86639-756-6/'
+            },
+            tryN2: {
+                title: 'TRY! 日本語能力試験 N2 中国语版',
+                use: '第 71-84 天进入 N2 书面表达与例句语感。',
+                url: 'https://ask-books.com/jp/978-4-86639-677-4/'
+            },
+            shinkanzenN2: {
+                title: '《新完全マスター文法 日本語能力試験 N2》',
+                use: '第 71-92 天系统吃 N2 文法和句子重组。',
+                url: 'https://www.3anet.co.jp/np/books/3602/'
+            },
+            somatome: {
+                title: '《日本语总まとめ》N3/N2 系列',
+                use: '第 57 天以后负责每天的词汇、汉字、读解、听解定量推进。',
+                url: 'https://www.ask-books.com/jp/somatome/'
+            },
+            jlptWorkbook: {
+                title: 'JLPT 官方样题 / Official Practice Workbook',
+                use: '第 78 天后必须进入官方题型和音频节奏。',
+                url: 'https://www.jlpt.jp/e/samples/sampleindex.html'
+            }
+        };
+
+        const YOUTUBE_CHANNELS = {
+            shun: {
+                title: 'Japanese with Shun',
+                url: 'https://www.youtube.com/channel/UCu6sZrHyl4hSS2PvlUo2XZA/'
+            },
+            miku: {
+                title: 'Miku Real Japanese',
+                url: 'https://www.youtube.com/channel/UCsQCbl3a9FtYvA55BxdzYiQ'
+            },
+            yuki: {
+                title: 'Yuki’s Japanese TV',
+                url: 'https://www.youtube.com/channel/UC5l9pe-Z7Jdh4q4ZnBev70w/'
+            },
+            akane: {
+                title: 'あかね的日本語教室',
+                url: 'https://www.youtube.com/channel/UCh-GhnQ7qDQmS6Bz3pGc1Mw/'
+            },
+            nihongoNoMori: {
+                title: '日本語の森',
+                url: 'https://www.youtube.com/c/nihongonomori2013'
+            },
+            sambon: {
+                title: '三本塾 -Sambon Juku-',
+                url: 'https://www.youtube.com/channel/UC0ujXryUUwILURRKt9Eh7Nw'
+            },
+            onomappu: {
+                title: 'Onomappu',
+                url: 'https://www.youtube.com/c/Onomappu'
+            },
+            nihongoToTabi: {
+                title: '日本語 to 旅',
+                url: 'https://www.youtube.com/channel/UCJUQG9V0DuccWVOw8ovzTsQ/'
+            }
+        };
+
+        const BOOK_ROUTE = [
+            {
+                title: '1. 起步到 N4',
+                days: 'Day 1-56',
+                detail: '主线用《新版中日交流标准日本语 初级（第二版）》48 课，按 6 天学习 + 1 天复盘推进。每天固定做会话、课文、生词、语法、练习和音频。',
+                resourceIds: ['biaori', 'biaoriAudio', 'minna']
+            },
+            {
+                title: '2. N3 过桥',
+                days: 'Day 57-70',
+                detail: '主线切到 TRY! N3 中国语版，配《日本语总总结 N3》做语法、词汇、读解、听解压缩训练，目标是把基础语法变成考试表达。',
+                resourceIds: ['tryN3', 'somatome']
+            },
+            {
+                title: '3. N2 主体',
+                days: 'Day 71-92',
+                detail: '文法主线用《新完全マスター文法 N2》，语感补强用 TRY! N2，中国学习者最缺的读解和听解用《日本语总总结 N2》每天定量推进。',
+                resourceIds: ['tryN2', 'shinkanzenN2', 'somatome']
+            },
+            {
+                title: '4. 真题与考前',
+                days: 'Day 93-99',
+                detail: '后 7 天进入 JLPT 官方样题 / 官方练习册节奏，主要目标是校准题型、时间分配和听力语速，不再盲目扩展新书。',
+                resourceIds: ['jlptWorkbook']
+            }
+        ];
+
+        const BIAORI_LESSONS = [
+            '李さんは中国人です', 'これは本です', 'ここはデパートです', '部屋に机といすがあります',
+            '森さんは7時に起きます', '吉田さんは来月中国へ行きます', '李さんは毎日コーヒーを飲みます', '李さんは日本語で手紙を書きます',
+            '四川料理は辛いです', '京都の紅葉は有名です', '小野さんは歌が好きです', '李さんは森さんより若いです',
+            '机の上に本が3冊あります', '昨日デパートへ行って、買い物しました', '小野さんは今新聞を読んでいます', 'ホテルの部屋は広くて明るいです',
+            'わたしは新しい洋服が欲しいです', '携帯電話はとても小さくなりました', '部屋のかぎを忘れないでください', 'スミスさんはピアノを弾くことができます',
+            '私はすき焼きを食べたことがあります', '森さんは毎晩テレビを見る', '休みの日、散歩したり買い物に行ったりします', '李さんはもうすぐ来ると思います',
+            'これは明日会議で使う資料です', '自転車に2人で乗るのは危ないです', '子供の時、大きな地震がありました', '馬さんは私に地図をくれました',
+            '電気を消せ', 'もう11時だから寝よう', 'このボタンを押すと、電源が入ります', '今度の日曜日に遊園地へ行くつもりです',
+            '電車が急に止まりました', '壁にカレンダーが掛けてあります', '明日雨が降ったら、マラソン大会は中止です', '遅くなって、すみません',
+            '優勝すれば、オリンピックに出場することができます', '戴さんは英語が話せます', '眼鏡をかけて本を読みます', 'これから友達と食事に行くところです',
+            '李さんは部長にほめられました', 'テレビをつけたまま、出かけてしまいました', '陳さんは息子をアメリカに留学させます', '玄関のところにだれかいるようです',
+            '少子化が進んで、日本の人口はだんだん減っていくでしょう', 'これは柔らかくて、まるで本物の毛皮のようです', '周先生は明日日本へ行かれます', 'お荷物は私がお持ちします'
+        ];
+
+        const N3_BRIDGE_BLOCKS = [
+            { title: '通知、安排与顺序', focus: '通知、时间顺序、预约、计划调整', output: '写一则 50-80 字的小通知或行程说明。' },
+            { title: '请求、建议与许可', focus: '拜托、建议、禁止、允许、依赖表达', output: '写 6 句请求 / 建议句，并录音朗读。' },
+            { title: '原因、理由与结果', focus: '因为、所以、结果、补充说明', output: '围绕一次迟到或请假的原因做 60 秒口头说明。' },
+            { title: '经验、回忆与变化', focus: '过去经验、变化、感受与比较', output: '写一段自己的学习经历，至少用 4 个连接词。' },
+            { title: '条件、假设与计划', focus: '如果、假如、就算、打算', output: '围绕“如果去日本留学”做 5 句假设句。' },
+            { title: '比较、评价与判断', focus: '比较、优缺点、原因分析', output: '写一段 80 字短评，比较两种学习方法。' },
+            { title: '工作和学校场景', focus: '开会、请假、提交、规定、说明', output: '模拟写一封迟交作业或请假的短邮件。' },
+            { title: '说明文与操作步骤', focus: '使用方法、步骤说明、规则提示', output: '把一个日常操作流程用日语写成 5-6 句。' },
+            { title: '口语到书面转换', focus: '把口语表达换成更自然的书面表达', output: '把 6 句口语句子改写成书面风格。' },
+            { title: '采访、意见与看法', focus: '表达观点、引用他人意见、总结主旨', output: '围绕一个社会小话题说出赞成 / 反对理由。' },
+            { title: '公告、海报与网页信息', focus: '抓关键信息、条件、时间、对象', output: '做 2 篇信息检索类阅读后口头复述答案依据。' },
+            { title: '广播与校园通知', focus: '抓听力关键词、人物、地点和结论', output: '听后写 4 条关键词，不看原文复述。' },
+            { title: 'N3 综合刷题', focus: '把文法、读解、听解放到同一天综合练', output: '今天做完后写 3 条自己最容易错的点。' },
+            { title: 'N3 冲刺回顾', focus: '把桥接阶段生词、文型和错题集中压缩', output: '整理一张“从 N4 迈到 N3”高频清单。' }
+        ];
+
+        const N2_CHUNKS = [
+            { title: '时间与过程', lessons: '第 1-2 课', focus: '〜際に、〜最中だ、〜うちに、〜つつある', tryChunk: '第 1/11 组' },
+            { title: '先后、范围与限定', lessons: '第 3-5 课', focus: '〜上で、〜次第、〜にわたって、〜限り、〜に限って', tryChunk: '第 2/11 组' },
+            { title: '添加、对象与依据', lessons: '第 6-8 课', focus: '〜のみならず、〜をめぐって、〜に基づいて、〜に沿って', tryChunk: '第 3/11 组' },
+            { title: '变化、枚举与对应', lessons: '第 9-10 课', focus: '〜につれて、〜に伴って、〜に応じて、〜にしろ', tryChunk: '第 4/11 组' },
+            { title: '否定、让步与转折', lessons: '第 11-14 课', focus: '〜を問わず、〜わけがない、〜にもかかわらず、〜ものの', tryChunk: '第 5/11 组' },
+            { title: '假设与理由', lessons: '第 15-17 课', focus: '〜としたら、〜ものなら、〜ばかりに、〜からには', tryChunk: '第 6/11 组' },
+            { title: '难易、限制与结果', lessons: '第 18-20 课', focus: '〜がたい、〜かねる、〜にしては、〜末に', tryChunk: '第 7/11 组' },
+            { title: '推量与主张', lessons: '第 22-24 课', focus: '〜おそれがある、〜に違いない、〜にすぎない、〜べきだ', tryChunk: '第 8/11 组' },
+            { title: '情感与愿望', lessons: '第 25-26 课', focus: '〜てたまらない、〜ざるを得ない、〜たいものだ', tryChunk: '第 9/11 组' },
+            { title: '句子重组', lessons: '第 2 部 1-3 课', focus: '固定形式、名词修饰、否定形的句子重组', tryChunk: '第 10/11 组' },
+            { title: '文章语法与整合', lessons: '第 3 部 1-12 课', focus: '时制、条件、授受、こそあど、は/が、接续、照应', tryChunk: '第 11/11 组' }
+        ];
+
+        const FOUNDATION_STUDY_BANKS = [
+            {
+                vocab: [
+                    ['わたし', '私', '我'], ['あなた', 'あなた', '你'], ['学生', 'がくせい', '学生'], ['先生', 'せんせい', '老师'],
+                    ['会社員', 'かいしゃいん', '公司职员'], ['中国', 'ちゅうごく', '中国'], ['日本', 'にほん', '日本'], ['友達', 'ともだち', '朋友'],
+                    ['名前', 'なまえ', '名字'], ['人', 'ひと', '人'], ['本', 'ほん', '书'], ['机', 'つくえ', '桌子']
+                ],
+                grammar: [
+                    ['A は B です', 'A 是 B。', '最基础的判断句。'],
+                    ['A は B ではありません', 'A 不是 B。', '否定判断句。'],
+                    ['A は B ですか', 'A 是 B 吗？', '疑问句。'],
+                    ['これ / それ / あれ', '这个 / 那个 / 那个（远）', '用来指代物品。']
+                ],
+                sentences: [
+                    ['わたし は リー です。', '我是小李。'],
+                    ['わたし は 中国人 です。', '我是中国人。'],
+                    ['これ は 日本語 の 本 です。', '这是一本日语书。'],
+                    ['それ は わたし の 机 です。', '那是我的桌子。'],
+                    ['あの 人 は 先生 ですか。', '那个人是老师吗？'],
+                    ['はい、先生 です。', '是的，是老师。']
+                ],
+                texts: [
+                    ['はじめまして。わたし は りん です。中国 から 来ました。日本語 を 勉強しています。よろしく お願いします。', '初次见面。我叫林，来自中国，正在学习日语，请多关照。'],
+                    ['これは わたし の ノート です。あれ は 友達 の 辞書 です。机 の 上 に 本 が 二冊 あります。', '这是我的笔记本。那是朋友的字典。桌上有两本书。']
+                ]
+            },
+            {
+                vocab: [
+                    ['朝', 'あさ', '早晨'], ['昼', 'ひる', '中午'], ['夜', 'よる', '晚上'], ['毎日', 'まいにち', '每天'],
+                    ['学校', 'がっこう', '学校'], ['会社', 'かいしゃ', '公司'], ['家', 'いえ', '家'], ['起きます', 'おきます', '起床'],
+                    ['行きます', 'いきます', '去'], ['帰ります', 'かえります', '回来'], ['食べます', 'たべます', '吃'], ['飲みます', 'のみます', '喝']
+                ],
+                grammar: [
+                    ['〜に 行きます', '去某地。', '表示目的地。'],
+                    ['〜から 〜まで', '从……到……', '表示时间或地点范围。'],
+                    ['〜で', '在某处做某事。', '表示动作发生地点。'],
+                    ['V ます', '动词ます形。', '基础礼貌表达。']
+                ],
+                sentences: [
+                    ['毎日 七時 に 起きます。', '我每天七点起床。'],
+                    ['八時 に 学校 へ 行きます。', '八点去学校。'],
+                    ['昼 に 友達 と ご飯 を 食べます。', '中午和朋友吃饭。'],
+                    ['夜 は 家 で 日本語 を 勉強します。', '晚上在家学日语。'],
+                    ['九時 から 十時 まで 本 を 読みます。', '从九点到十点看书。'],
+                    ['水 を 飲みます。', '喝水。']
+                ],
+                texts: [
+                    ['わたし は 毎朝 六時半 に 起きます。七時 に 朝ご飯 を 食べて、八時 に 学校 へ 行きます。', '我每天早上六点半起床，七点吃早饭，八点去学校。'],
+                    ['学校 の あと、図書館 で 一時間 勉強します。それから 家 に 帰ります。', '放学后我在图书馆学习一小时，然后回家。']
+                ]
+            },
+            {
+                vocab: [
+                    ['店', 'みせ', '店铺'], ['駅', 'えき', '车站'], ['電車', 'でんしゃ', '电车'], ['切符', 'きっぷ', '车票'],
+                    ['料理', 'りょうり', '料理'], ['水', 'みず', '水'], ['お茶', 'おちゃ', '茶'], ['高い', 'たかい', '贵，高'],
+                    ['安い', 'やすい', '便宜'], ['辛い', 'からい', '辣'], ['有名', 'ゆうめい', '有名'], ['買います', 'かいます', '买']
+                ],
+                grammar: [
+                    ['A は B より ...', 'A 比 B 更……', '比较表达。'],
+                    ['A が 好きです', '喜欢 A。', '表达喜好。'],
+                    ['A は どうですか', 'A 怎么样？', '询问评价。'],
+                    ['〜を 買います', '买……', '他动词基本搭配。']
+                ],
+                sentences: [
+                    ['この 店 の 料理 は おいしい です。', '这家店的菜很好吃。'],
+                    ['四川料理 は 辛い です。', '四川菜很辣。'],
+                    ['この 本 は あの 本 より 安い です。', '这本书比那本便宜。'],
+                    ['わたし は 日本 の お茶 が 好き です。', '我喜欢日本茶。'],
+                    ['駅 で 切符 を 買います。', '在车站买票。'],
+                    ['京都 は 有名 です。', '京都很有名。']
+                ],
+                texts: [
+                    ['きのう、友達 と デパート へ 行きました。本 を 一冊 買って、駅 の 近く で ご飯 を 食べました。', '昨天我和朋友去百货店，买了一本书，又在车站附近吃了饭。'],
+                    ['この 店 は 安くて、おいしい です。いつも 人 が 多い です。', '这家店又便宜又好吃，所以总是很多人。']
+                ]
+            },
+            {
+                vocab: [
+                    ['旅行', 'りょこう', '旅行'], ['写真', 'しゃしん', '照片'], ['歌', 'うた', '歌'], ['映画', 'えいが', '电影'],
+                    ['好き', 'すき', '喜欢'], ['上手', 'じょうず', '擅长'], ['下手', 'へた', '不擅长'], ['若い', 'わかい', '年轻'],
+                    ['静か', 'しずか', '安静'], ['便利', 'べんり', '方便'], ['時々', 'ときどき', '有时'], ['いっしょに', '一起']
+                ],
+                grammar: [
+                    ['A より B の ほうが ...', '与 A 相比，B 更……', '比较强调 B。'],
+                    ['〜こと が できます', '能够做……', '能力表达。'],
+                    ['〜たり 〜たり します', '时而……时而……', '列举动作。'],
+                    ['〜た こと が あります', '曾经做过……', '经验表达。']
+                ],
+                sentences: [
+                    ['わたし は 映画 を 見る こと が できます。', '我可以看电影。'],
+                    ['休み の 日 は 本 を 読んだり、音楽 を 聞いたり します。', '休息日我有时看书，有时听音乐。'],
+                    ['日本 へ 行った こと が あります。', '我去过日本。'],
+                    ['弟 は わたし より 若い です。', '弟弟比我年轻。'],
+                    ['この 町 は 静かで 便利 です。', '这个城市安静又方便。'],
+                    ['友達 と いっしょに 写真 を 撮ります。', '和朋友一起拍照。']
+                ],
+                texts: [
+                    ['休み の 日、わたし は 友達 と 町 を 散歩したり、カフェ で 話したり します。時々 映画 も 見ます。', '休息日我会和朋友散步、在咖啡馆聊天，有时也看电影。'],
+                    ['去年、京都 へ 旅行 しました。古い お寺 を 見て、たくさん 写真 を 撮りました。', '去年我去京都旅行，看了古老寺庙，也拍了很多照片。']
+                ]
+            },
+            {
+                vocab: [
+                    ['理由', 'りゆう', '理由'], ['説明', 'せつめい', '说明'], ['質問', 'しつもん', '问题'], ['答え', 'こたえ', '回答'],
+                    ['準備', 'じゅんび', '准备'], ['練習', 'れんしゅう', '练习'], ['手伝います', 'てつだいます', '帮忙'], ['教えます', 'おしえます', '教'],
+                    ['使います', 'つかいます', '使用'], ['待ちます', 'まちます', '等待'], ['急ぎます', 'いそぎます', '着急'], ['必要', 'ひつよう', '必要']
+                ],
+                grammar: [
+                    ['〜て ください', '请……', '委托表达。'],
+                    ['〜ないで ください', '请不要……', '禁止表达。'],
+                    ['〜ても いいです', '可以……', '许可表达。'],
+                    ['〜なければ なりません', '必须……', '义务表达。']
+                ],
+                sentences: [
+                    ['ゆっくり 話して ください。', '请慢一点说。'],
+                    ['ここ で 写真 を 撮らないで ください。', '请不要在这里拍照。'],
+                    ['この 辞書 を 使っても いい です。', '可以用这本词典。'],
+                    ['あした まで に 宿題 を 出さなければ なりません。', '明天之前必须交作业。'],
+                    ['分からない とき、先生 に 質問 します。', '不懂的时候问老师。'],
+                    ['友達 が 準備 を 手伝って くれます。', '朋友会帮我做准备。']
+                ],
+                texts: [
+                    ['教室 では 日本語 で 話して ください。分からない とき は 手 を あげて 質問 しても いい です。', '在教室里请说日语，不懂时可以举手提问。'],
+                    ['試験 の 前 に、ノート を よく 見て、必要 な ところ を 練習 しなければ なりません。', '考试前要认真看笔记，练习必要部分。']
+                ]
+            },
+            {
+                vocab: [
+                    ['もらいます', 'もらいます', '得到'], ['くれます', 'くれます', '给我'], ['あげます', 'あげます', '给别人'], ['地図', 'ちず', '地图'],
+                    ['会議', 'かいぎ', '会议'], ['資料', 'しりょう', '资料'], ['提出', 'ていしゅつ', '提交'], ['手紙', 'てがみ', '信'],
+                    ['借ります', 'かります', '借入'], ['返します', 'かえします', '归还'], ['送ります', 'おくります', '发送'], ['連絡', 'れんらく', '联系']
+                ],
+                grammar: [
+                    ['A は B に ... て あげます', 'A 为 B 做某事。', '给予他人帮助。'],
+                    ['A は B に ... て もらいます', 'A 请 B 为自己做某事。', '自己得到帮助。'],
+                    ['A は わたし に ... て くれます', 'A 为我做某事。', '他人为我做事。'],
+                    ['〜て います', '正在…… / 保持某状态。', '表示进行或结果状态。']
+                ],
+                sentences: [
+                    ['友達 が 地図 を 送って くれました。', '朋友把地图发给了我。'],
+                    ['わたし は 先生 に 日本語 を 教えて もらいました。', '我请老师教我日语。'],
+                    ['わたし は 友達 に 本 を 貸して あげました。', '我把书借给了朋友。'],
+                    ['今、会議 の 資料 を 読んで います。', '我现在正在看会议资料。'],
+                    ['借りた 本 を 返します。', '归还借来的书。'],
+                    ['あとで 連絡 して ください。', '之后请联系我。']
+                ],
+                texts: [
+                    ['きのう、友達 が 日本語 の 参考書 を 貸して くれました。わたし は 今日 その 本 を 読んで います。', '昨天朋友借给我一本日语参考书，我今天正在看。'],
+                    ['先生 に レポート の 書き方 を 教えて もらって、やっと 資料 を 提出 しました。', '我请老师教我如何写报告，终于把资料交上去了。']
+                ]
+            },
+            {
+                vocab: [
+                    ['知らせ', 'しらせ', '通知'], ['規則', 'きそく', '规则'], ['危ない', 'あぶない', '危险'], ['止まります', 'とまります', '停止'],
+                    ['押します', 'おします', '按'], ['入ります', 'はいります', '进入'], ['説明会', 'せつめいかい', '说明会'], ['参加', 'さんか', '参加'],
+                    ['予定', 'よてい', '预定'], ['予約', 'よやく', '预约'], ['決まります', 'きまります', '决定'], ['必要です', 'ひつようです', '有必要']
+                ],
+                grammar: [
+                    ['〜と', '一……就……', '表示自然结果。'],
+                    ['〜つもりです', '打算……', '意志 / 计划表达。'],
+                    ['〜ように します', '尽量做到……', '行为习惯目标。'],
+                    ['〜こと に なります', '决定…… / 将变成……', '外在决定。']
+                ],
+                sentences: [
+                    ['この ボタン を 押す と、電気 が つきます。', '按下这个按钮，灯就会亮。'],
+                    ['来月 から 日本語 学校 に 通う つもり です。', '我打算下个月开始去日语学校。'],
+                    ['毎日 日本語 を 聞く ように しています。', '我尽量每天都听日语。'],
+                    ['会議 は 三時 から 始まる こと に なりました。', '会议决定三点开始。'],
+                    ['ここ は 危ない ですから、入らないで ください。', '这里很危险，请不要进入。'],
+                    ['説明会 に 参加 したい です。', '我想参加说明会。']
+                ],
+                texts: [
+                    ['駅 で 電車 が 急に 止まりました。アナウンス を 聞く と、事故 の ため しばらく 動かない こと が 分かりました。', '车站里电车突然停下来了，一听广播就知道因为事故暂时不运行。'],
+                    ['来週 の 予定 が 決まりました。土曜日 は 説明会 に 参加して、日曜日 は 家 で 復習 する つもりです。', '下周安排定好了：周六参加说明会，周日在家复习。']
+                ]
+            },
+            {
+                vocab: [
+                    ['条件', 'じょうけん', '条件'], ['場合', 'ばあい', '情况'], ['中止', 'ちゅうし', '中止'], ['連れて行きます', 'つれていきます', '带去'],
+                    ['ほめます', 'ほめます', '表扬'], ['忘れます', 'わすれます', '忘记'], ['しまいます', 'しまいます', '……掉了 / 完成'], ['予報', 'よほう', '预报'],
+                    ['増えます', 'ふえます', '增加'], ['減ります', 'へります', '减少'], ['人口', 'じんこう', '人口'], ['ようです', 'ようです', '好像']
+                ],
+                grammar: [
+                    ['〜たら', '如果……的话', '常用条件句。'],
+                    ['〜ば', '只要……就……', '书面一些的条件。'],
+                    ['〜て しまいます', '不小心…… / 完成', '带遗憾或完成感。'],
+                    ['〜ようです', '好像……', '根据情况判断。']
+                ],
+                sentences: [
+                    ['明日 雨 が 降ったら、試合 は 中止 です。', '如果明天下雨，比赛就中止。'],
+                    ['時間 が あれば、図書館 へ 行きます。', '有时间的话就去图书馆。'],
+                    ['財布 を 家 に 忘れて しまいました。', '我把钱包忘在家里了。'],
+                    ['外 は 静かです。みんな もう 寝た ようです。', '外面很安静，大家好像都睡了。'],
+                    ['人口 は だんだん 減って います。', '人口正在逐渐减少。'],
+                    ['日本語 が 上手に なれば、もっと 話したい です。', '如果日语变好了，我想说更多。']
+                ],
+                texts: [
+                    ['天気予報 に よる と、あした は 雨 の ようです。もし 雨 が 降ったら、マラソン大会 は 中止 に なります。', '天气预报说明天好像会下雨，如果下雨马拉松大会就会取消。'],
+                    ['最近、この 町 の 人口 は 少し ずつ 減って います。若い 人 が 都会 へ 行って しまう から です。', '最近这座城市的人口正在一点点减少，因为年轻人都去了大城市。']
+                ]
+            }
+        ];
+
+        const N3_STUDY_TEMPLATES = [
+            {
+                vocab: [['連絡', 'れんらく', '联系'], ['変更', 'へんこう', '变更'], ['順番', 'じゅんばん', '顺序'], ['内容', 'ないよう', '内容'], ['確認', 'かくにん', '确认'], ['参加', 'さんか', '参加']],
+                grammar: [['〜ことにする', '决定……', '表达自己的决定。'], ['〜ようにする', '尽量做到……', '表示习惯或努力。']],
+                sentences: [['予定 を 変更 する とき、早く 連絡 してください。', '变更计划时请尽快联系。'], ['内容 を よく 確認 してから 申し込んでください。', '请先确认内容再报名。']],
+                text: ['来週 の 説明会 は 教室 が 変わります。参加 する 人 は 時間 と 場所 を もう一度 確認 してください。', '下周的说明会教室会变动。参加的人请再次确认时间和地点。']
+            },
+            {
+                vocab: [['経験', 'けいけん', '经验'], ['印象', 'いんしょう', '印象'], ['比較', 'ひかく', '比较'], ['特徴', 'とくちょう', '特征'], ['理由', 'りゆう', '理由'], ['工夫', 'くふう', '下功夫']],
+                grammar: [['〜ようになる', '变得会…… / 进入某种状态', '表示变化。'], ['〜わけではない', '并不是……', '部分否定。']],
+                sentences: [['毎日 練習しているので、少しずつ 話せる ように なりました。', '因为每天练习，渐渐能说了。'], ['便利だから といって、いつも 正しい わけではありません。', '并不是说方便就总是正确。']],
+                text: ['わたし は 三か月 前 より 日本語 を 聞き取れる ように なりました。しかし、まだ 何でも すぐ 分かる わけではありません。', '比起三个月前，我现在更能听懂日语了，但也不是所有内容都能马上理解。']
+            },
+            {
+                vocab: [['案内', 'あんない', ' 안내/介绍'], ['方法', 'ほうほう', '方法'], ['利用', 'りよう', '利用'], ['操作', 'そうさ', '操作'], ['必要', 'ひつよう', '必要'], ['手順', 'てじゅん', '步骤']],
+                grammar: [['〜ために', '为了……', '表示目的。'], ['〜ことがある', '有时会……', '表示偶发情况。']],
+                sentences: [['この アプリ を 利用する ために、最初に 登録 してください。', '为了使用这个应用，请先注册。'], ['忙しい とき、昼ご飯 を 食べない ことが あります。', '忙的时候，有时不吃午饭。']],
+                text: ['図書館 を 利用する ために、学生証 が 必要です。入口 で カード を 見せてから 入ってください。', '为了使用图书馆，需要学生证。请在入口处出示卡片后进入。']
+            },
+            {
+                vocab: [['意見', 'いけん', '意见'], ['賛成', 'さんせい', '赞成'], ['反対', 'はんたい', '反对'], ['調査', 'ちょうさ', '调查'], ['結果', 'けっか', '结果'], ['判断', 'はんだん', '判断']],
+                grammar: [['〜によると', '根据……', '引用信息来源。'], ['〜らしい', '好像…… / 据说……', '传闻或推测。']],
+                sentences: [['調査 の 結果 に よると、若い 人 の 読書時間 は 減っている そうです。', '根据调查结果，年轻人的阅读时间在减少。'], ['あの 店 は 新しい らしい です。', '那家店好像是新开的。']],
+                text: ['新聞 の 記事 に よると、最近 は 家で 勉強する 人 が 増えている らしいです。理由 は 時間 を 自由 に 使える から です。', '据报纸文章说，最近在家学习的人好像增加了，理由是可以自由安排时间。']
+            }
+        ];
+
+        const N2_STUDY_TEMPLATES = [
+            {
+                vocab: [['方針', 'ほうしん', '方针'], ['段階', 'だんかい', '阶段'], ['課題', 'かだい', '课题'], ['対策', 'たいさく', '对策'], ['改善', 'かいぜん', '改善'], ['進行', 'しんこう', '进行']],
+                grammar: [['〜に際して', '在……之际', '正式书面表达。'], ['〜にあたって', '在……之前 / 之际', '郑重场合常见。']],
+                sentences: [['試験 の 申し込み に 際して、必要な 書類 を そろえてください。', '在报名考试之际，请准备好所需材料。'], ['新しい 計画 を 始める にあたって、全員 の 意見 を 聞いた。', '在启动新计划之前，听取了所有人的意见。']],
+                text: ['新しい 制度 を 導入する にあたって、会社 は まず 社員 の 不安 を 調べた。その 結果 を もとに、説明会 を 開く こと にした。', '公司在导入新制度之前，首先调查了员工的不安，并根据结果决定召开说明会。']
+            },
+            {
+                vocab: [['立場', 'たちば', '立场'], ['議論', 'ぎろん', '讨论'], ['主張', 'しゅちょう', '主张'], ['根拠', 'こんきょ', '根据'], ['傾向', 'けいこう', '倾向'], ['把握', 'はあく', '把握']],
+                grammar: [['〜ものの', '虽然……但是……', '让步转折。'], ['〜にすぎない', '只不过是……', '限定程度。']],
+                sentences: [['便利に なった ものの、問題 が なくなった わけではない。', '虽然变方便了，但并不意味着问题消失了。'], ['その 変化 は 一時的な もの にすぎない。', '那种变化只不过是暂时的。']],
+                text: ['オンライン 会議 は 移動時間 が いらない ものの、相手 の 反応 を 細かく 把握しにくい と いう 面 も ある。', '线上会议虽然不需要移动时间，但也有难以细致把握对方反应的一面。']
+            },
+            {
+                vocab: [['負担', 'ふたん', '负担'], ['影響', 'えいきょう', '影响'], ['拡大', 'かくだい', '扩大'], ['縮小', 'しゅくしょう', '缩小'], ['対応', 'たいおう', '应对'], ['状況', 'じょうきょう', '状况']],
+                grammar: [['〜につれて', '随着……', '表示变化同步。'], ['〜に伴って', '伴随……', '书面常见。']],
+                sentences: [['年齢 が 上がる につれて、体力 の 使い方 を 考える ように なった。', '随着年龄增长，我开始思考体力的使用。'], ['人口 の 増加 に伴って、交通 の 問題 も 大きく なった。', '伴随着人口增加，交通问题也变大了。']],
+                text: ['外国人 観光客 が 増える につれて、駅 や 店 では 多言語 の 案内 が 必要 に なってきた。', '随着外国游客增加，车站和商店里也逐渐需要多语言 안내。']
+            },
+            {
+                vocab: [['評価', 'ひょうか', '评价'], ['成果', 'せいか', '成果'], ['不足', 'ふそく', '不足'], ['現実', 'げんじつ', '现实'], ['目的', 'もくてき', '目的'], ['条件', 'じょうけん', '条件']],
+                grammar: [['〜からには', '既然……就……', '表示已知前提下的决心。'], ['〜べきだ', '应该……', '较强建议 / 判断。']],
+                sentences: [['受ける からには、最後 まで 本気 で やる べきだ。', '既然要参加，就应该认真坚持到最后。'], ['時間 が ない からには、やること を 絞る べきだ。', '既然时间不多，就应该缩小任务范围。']],
+                text: ['N2 を 目指す からには、単語 を 覚える だけでは 足りない。読解 と 聴解 の 練習 も 毎日 続ける べきだ。', '既然目标是 N2，只背单词是不够的，阅读和听力训练也应该每天坚持。']
+            }
+        ];
+
+        const FINAL_REVIEW_BANKS = [
+            { title: '整卷日', vocab: ['根拠', '設問', '時間配分', '選択肢', '聞き取り', '見直し'], note: '今天以整卷为主，不额外开新知识。' },
+            { title: '订正日', vocab: ['誤答', '原因', '分類', '見落とし', '思い込み', '修正'], note: '重点是把错题拆开，而不是只看答案。' },
+            { title: '二刷整卷', vocab: ['比較', '改善', '速度', '安定', '再確認', '自信'], note: '和第一次模拟做横向对比，找变化。' },
+            { title: '错题回收', vocab: ['頻出', '混同', '整理', '圧縮', '記憶', '反復'], note: '只回收最值得抢分的内容。' },
+            { title: '速度调整', vocab: ['主旨', '接続', '結論', '立場', '要点', '予測'], note: '轻量限时，调整阅读和听力节奏。' },
+            { title: '考前轻复盘', vocab: ['確認', '持ち物', '会場', '睡眠', '朝食', '平常心'], note: '状态比增量更重要。' },
+            { title: '考试日', vocab: ['深呼吸', '落ち着く', '集中', '判断', '見直し', '終了'], note: '今天不学新内容，只做热身。' }
+        ];
+
+        const FINAL_WEEK_TASKS = {
+            93: {
+                title: '整卷模拟 1',
+                summary: '按照正式考试时间做一套完整模拟或近年真题，重点记录时间分配。',
+                tasks: [
+                    task('整套限时', '优先做 JLPT 官方 Practice Workbook N2 或官方样题；如果没有，再用你手头最接近真题的整套模拟卷。严格计时，不中途查词。', '110-125 分钟'),
+                    task('错题整理', '把阅读、语法、听力错题按“不会词/没听清/句子太长/审题错”四类记录。', '35 分钟'),
+                    task('词汇回收', '把今天卷子里出现的高频生词加入复习表，今晚只看一轮。', '20 分钟'),
+                    task('听力复听', '把最容易错的 2-3 段官方或模拟音频再听一遍，确认关键信息点。', '20 分钟'),
+                    task('状态复盘', '写下今天整卷时最容易崩的点，给明天改进。', '10 分钟')
+                ],
+                notes: ['今天不要追求满分，重点是找到“失分模式”。', '整卷之后一定订正，否则模拟价值会大幅下降。']
+            },
+            94: {
+                title: '整卷订正日',
+                summary: '把昨天整卷里的漏洞逐个补上，尤其是阅读逻辑和听力关键词。',
+                tasks: [
+                    task('阅读精订正', '把错的阅读题逐题回到原文，圈出答案依据句。', '45 分钟'),
+                    task('文法回补', '把昨天不会的语法点集中复盘 6-8 个例句。', '30 分钟'),
+                    task('听力关键词', '听力错题做逐句听写或关键词笔记，找出漏听原因。', '30 分钟'),
+                    task('高频词复习', '复习错题卷中的生词和近一周高频词汇。', '25 分钟'),
+                    task('轻量输出', '口头说明 3 道错题为什么选错、正确答案为什么对。', '10 分钟')
+                ],
+                notes: ['订正日比刷新题更重要。', '如果时间有限，优先订正阅读和听力。']
+            },
+            95: {
+                title: '整卷模拟 2',
+                summary: '再做一套整卷，验证两天前暴露的问题有没有改善。',
+                tasks: [
+                    task('整卷限时', '做第二套 N2 整卷，优先使用和第一套不同来源的官方 / 高质量模拟材料，继续严格按正式考试节奏。', '110-125 分钟'),
+                    task('横向对比', '和第一次模拟对比：哪一部分提高了，哪一部分仍然最慢。', '15 分钟'),
+                    task('生词筛选', '只保留最值得冲刺的 25-30 个高频生词。', '20 分钟'),
+                    task('听力巩固', '复听 2 个最容易失分的题型，如即时应答或课题理解。', '20 分钟'),
+                    task('睡眠准备', '今晚把作息向考试时间靠拢，尽量提前休息。', '10 分钟')
+                ],
+                notes: ['今天之后，不再大规模扩充新资料。', '第二套卷子主要用来稳住信心和节奏。']
+            },
+            96: {
+                title: '高频错题回收',
+                summary: '集中扫最后一轮高频词、错题语法和听力套路。',
+                tasks: [
+                    task('词汇高频表', '复习最近 10 天整理出来的高频词和固定搭配。', '35 分钟'),
+                    task('错题文法本', '把仍然容易混淆的 N2 语法再过一轮。', '30 分钟'),
+                    task('短阅读 2 篇', '做两篇中等长度阅读，重点练定位与句间关系。', '30 分钟'),
+                    task('听力保温', '听 20-25 分钟真题音频或模拟音频，保持耳朵状态。', '25 分钟'),
+                    task('口头复述', '用日语说出今天复习的主题和注意点。', '10 分钟')
+                ],
+                notes: ['不要为了“多学一点”把自己压崩。', '今天更像收网，而不是开新战线。']
+            },
+            97: {
+                title: '阅读速度调整',
+                summary: '轻量限时、调整心态，让节奏稳定下来。',
+                tasks: [
+                    task('限时阅读', '做 2-3 篇短阅读，限制每篇时间，练快速抓主旨。', '35 分钟'),
+                    task('关键词卡片', '看一遍自己整理的连接词、转折词、结论信号词。', '20 分钟'),
+                    task('听力轻练', '做 15-20 分钟即时应答或问答题。', '20 分钟'),
+                    task('错题回看', '只看最常错的 10 个语法点和 15 个词。', '20 分钟'),
+                    task('考试准备', '确认考点、路线、证件、文具与到场时间。', '15 分钟')
+                ],
+                notes: ['这一天开始，把紧张感控制住。', '越临近考试，越要减少无效熬夜。']
+            },
+            98: {
+                title: '考前轻复盘',
+                summary: '保持语感，但不再做高压训练。',
+                tasks: [
+                    task('轻量词汇', '快速过一遍高频词和易混淆语法。', '25 分钟'),
+                    task('听力保温', '听 10-15 分钟熟悉材料，保持耳朵热度。', '15 分钟'),
+                    task('阅读一篇', '做 1 篇短阅读即可，重点保持手感。', '15 分钟'),
+                    task('物品确认', '准考证、证件、手表、文具、路线全部确认。', '10 分钟'),
+                    task('早点休息', '停止高强度学习，尽量让身体进入考试模式。', '全天提醒')
+                ],
+                notes: ['今天最重要的是状态，不是多刷一题。', '晚上不要临时扩展新知识点。']
+            },
+            99: {
+                title: '考试日',
+                summary: '稳住节奏，把你过去 98 天积累的内容打出来。',
+                tasks: [
+                    task('早起热身', '起床后快速看一页高频连接词和固定搭配即可，不要大量输入。', '10 分钟'),
+                    task('通勤与到场', '预留充足时间到考场，避免路上焦虑。', '按行程'),
+                    task('考试策略', '阅读先抓结构和转折，听力先听问题类型，再盯关键词。', '考试中'),
+                    task('心态提醒', '不会的题先放过，先拿稳能拿的分。', '考试中'),
+                    task('考后收尾', '考完就放下，不要立刻自我攻击。', '考后')
+                ],
+                notes: ['考试日不要临时改变早餐和作息。', '你最需要的是稳定输出，而不是完美。']
+            }
+        };
+
+        function task(title, detail, time) {
+            return { title, detail, time };
+        }
+
+        function video(name, detail, url) {
+            return { name, detail, url };
+        }
+
+        function resource(id) {
+            return RESOURCE_LIBRARY[id];
+        }
+
+        function channel(id) {
+            return YOUTUBE_CHANNELS[id];
+        }
+
+        function youtubeSearchUrl(query) {
+            return `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+        }
+
+        function formatSomaPoint(unitNumber) {
+            const safeUnit = Math.min(Math.max(unitNumber, 1), 48);
+            const week = Math.ceil(safeUnit / 6);
+            const day = ((safeUnit - 1) % 6) + 1;
+            return `Week ${week} Day ${day}`;
+        }
+
+        function formatSomaRange(unitStart, count) {
+            const start = Math.min(Math.max(unitStart, 1), 48);
+            const end = Math.min(start + count - 1, 48);
+            if (start === end) return formatSomaPoint(start);
+            return `${formatSomaPoint(start)} - ${formatSomaPoint(end)}`;
+        }
+
+        function getFoundationLessonNumber(dayNumber) {
+            return dayNumber - Math.floor(dayNumber / 7);
+        }
+
+        function getFoundationLessonInfo(lessonNumber) {
+            const volume = lessonNumber <= 24 ? '初级上' : '初级下';
+            const lessonInVolume = lessonNumber <= 24 ? lessonNumber : lessonNumber - 24;
+            return {
+                volume,
+                lessonInVolume,
+                title: BIAORI_LESSONS[lessonNumber - 1]
+            };
+        }
+
+        function wrapSlice(list, start, count) {
+            const result = [];
+            for (let i = 0; i < count; i += 1) {
+                result.push(list[(start + i) % list.length]);
+            }
+            return result;
+        }
+
+        function buildFoundationStudyContent(dayNumber, plan) {
+            const weekIndex = Math.min(Math.floor((dayNumber - 1) / 7), FOUNDATION_STUDY_BANKS.length - 1);
+            const bank = FOUNDATION_STUDY_BANKS[weekIndex];
+            const cycle = (dayNumber - 1) % 7;
+            const isReview = dayNumber % 7 === 0;
+            return {
+                mode: isReview ? '复盘整理' : '原创整理版',
+                note: isReview
+                    ? '下面是这一周的复盘材料，适合直接在网页里读、背、造句和复述。'
+                    : '下面内容是我按当天主题整理的原创学习卡，方便你直接在网页里学习，不是教材原文。',
+                vocab: isReview ? wrapSlice(bank.vocab, 0, 10) : wrapSlice(bank.vocab, cycle, 8),
+                grammar: isReview ? bank.grammar : wrapSlice(bank.grammar, cycle % bank.grammar.length, 2),
+                sentences: isReview ? wrapSlice(bank.sentences, 0, 5) : wrapSlice(bank.sentences, cycle, 4),
+                texts: [bank.texts[cycle % bank.texts.length]]
+            };
+        }
+
+        function buildN3StudyContent(dayNumber, plan) {
+            const block = N3_BRIDGE_BLOCKS[dayNumber - 57];
+            const template = N3_STUDY_TEMPLATES[(dayNumber - 57) % N3_STUDY_TEMPLATES.length];
+            return {
+                mode: '原创整理版',
+                note: `这一页的单词、语法、例句和短文围绕「${block.title}」生成，方便你不翻书也能直接练输入与输出。`,
+                vocab: template.vocab.map(([jp, reading, cn]) => [jp, reading, `${cn}，关联主题：${block.title}`]),
+                grammar: template.grammar.map(([pattern, meaning, hint]) => [pattern, meaning, `${hint} 今天重点围绕：${block.focus}`]),
+                sentences: template.sentences,
+                texts: [[template.text[0], `${template.text[1]} 读完后请用 2-3 句日语总结主旨。`]]
+            };
+        }
+
+        function buildN2StudyContent(dayNumber, plan) {
+            const chunk = N2_CHUNKS[Math.floor((dayNumber - 71) / 2)];
+            const template = N2_STUDY_TEMPLATES[Math.floor((dayNumber - 71) / 2) % N2_STUDY_TEMPLATES.length];
+            return {
+                mode: '原创整理版',
+                note: `这部分内容按 N2 题型和文法重点整理，今天核心是「${chunk.title}」，建议先读语法，再背例句，最后读短文。`,
+                vocab: template.vocab.map(([jp, reading, cn]) => [jp, reading, `${cn}，适合写进 N2 高频词清单。`]),
+                grammar: template.grammar.map(([pattern, meaning, hint]) => [pattern, meaning, `${hint} 今天对应主题：${chunk.focus}`]),
+                sentences: template.sentences,
+                texts: [[template.text[0], `${template.text[1]} 读完后请划出转折、理由和结论。`]]
+            };
+        }
+
+        function buildFinalReviewContent(dayNumber) {
+            const bank = FINAL_REVIEW_BANKS[dayNumber - 93];
+            return {
+                mode: '考前整理版',
+                note: bank.note,
+                vocab: bank.vocab.map((item) => [item, '', '考前高频提醒词']),
+                grammar: [
+                    ['理由 -> 具体内容 -> 结论', '阅读里先抓结构。', '看到长句时先拆结构。'],
+                    ['问题类型 -> 关键词 -> 结论', '听力里先抓问什么。', '不要一边听一边全翻译。']
+                ],
+                sentences: [
+                    ['分からない 問題 は いったん 飛ばして、あとで 戻ります。', '不会的题先跳过，之后再回来。'],
+                    ['聞き取り では、まず 質問 の 形 を つかみます。', '听力先抓问题类型。'],
+                    ['長い 文 は 接続詞 と 結論 を 先に 見ます。', '长句先看连接词和结论。']
+                ],
+                texts: [[
+                    '試験 の 日 は、新しい こと を 覚える より、今まで の 力 を 安定して 出す こと が 大切です。深呼吸して、一問ずつ 落ち着いて 解きましょう。',
+                    '考试当天重在稳定输出，不是拼命新增。'
+                ]]
+            };
+        }
+
+        function getStudyContent(dayNumber, plan) {
+            if (dayNumber <= 56) return buildFoundationStudyContent(dayNumber, plan);
+            if (dayNumber <= 70) return buildN3StudyContent(dayNumber, plan);
+            if (dayNumber <= 92) return buildN2StudyContent(dayNumber, plan);
+            return buildFinalReviewContent(dayNumber);
+        }
+
+        function buildFoundationReviewPlan(dayNumber, phase, weekTheme) {
+            const reviewEnd = getFoundationLessonNumber(dayNumber);
+            const reviewStart = Math.max(1, reviewEnd - 5);
+            const rangeText = `第 ${reviewStart}-${reviewEnd} 课`;
+            const volumeHint = reviewEnd <= 24 ? '初级上' : '跨初级上/下或初级下';
+            return {
+                phase,
+                weekTheme,
+                title: `标日复盘 · ${rangeText}`,
+                summary: `今天不推进新课，主线是复盘《新版中日交流标准日本语》${rangeText}。把这一周的句型、会话、课文、生词和音频重新过一遍，避免“学过就忘”。`,
+                tasks: [
+                    task('课文会话回看', `回看《新版中日交流标准日本语》${volumeHint} ${rangeText} 的会话和课文，重新确认本周每课的场景与核心句。`, '40 分钟'),
+                    task('语法和替换句', `把 ${rangeText} 的重点语法各写 2 句替换句，总共至少 10 句。`, '30 分钟'),
+                    task('课后练习复做', `重做本周做错或没做顺的练习 A-C；如果有同步练习，也补完对应部分。`, '35 分钟'),
+                    task('音频听写', `选本周最卡的 2 课，使用标日配套音频听写 8-10 句，再跟读一遍。`, '25 分钟'),
+                    task('周小结', '把本周最容易混淆的 5 个语法点和 15 个词写进错题/错词本。', '15 分钟')
+                ],
+                materials: [
+                    {
+                        name: `主教材：标日 ${rangeText}`,
+                        detail: '重点回看会话、课文、重点语法、课后练习和配套音频。',
+                        url: resource('biaori').url
+                    },
+                    {
+                        name: '配套资源：标日电子书 / 音频',
+                        detail: '今天尤其要靠音频做复听和听写。',
+                        url: resource('biaoriAudio').url
+                    }
+                ],
+                notes: [
+                    '复盘日不要只浏览，要用“重做练习 + 听写 + 造句”的方式逼自己输出。',
+                    '如果你本周某课完全没吃透，宁可在今天补掉，也不要带着漏洞进入下一周。'
+                ]
+            };
+        }
+
+        function buildFoundationLessonPlan(dayNumber, phase, weekTheme) {
+            const lessonNumber = getFoundationLessonNumber(dayNumber);
+            const lesson = getFoundationLessonInfo(lessonNumber);
+            return {
+                phase,
+                weekTheme,
+                title: `标日 ${lesson.volume} 第 ${lesson.lessonInVolume} 课 · ${lesson.title}`,
+                summary: `今天主线学习《新版中日交流标准日本语》${lesson.volume} 第 ${lesson.lessonInVolume} 课「${lesson.title}」。先吃透会话、课文、生词和重点语法，再做课后练习与跟读。`,
+                tasks: [
+                    task('主线教材', `学习《新版中日交流标准日本语》${lesson.volume} 第 ${lesson.lessonInVolume} 课「${lesson.title}」：按“会话 -> 课文 -> 生词 -> 语法”顺序完整过一遍。`, '50 分钟'),
+                    task('课后练习', `完成本课课后练习 A-C；如果你有电子书或同步练习，补完本课对应练习。`, '30 分钟'),
+                    task('音频跟读', `使用标日配套音频听本课 3 遍；第 2 遍开始暂停跟读，第 3 遍尝试脱稿跟读核心句。`, '20 分钟'),
+                    task('词句输出', `从本课挑 8-12 个新词写成 5-6 个自己的句子，再围绕「${lesson.title}」做 60 秒口头输出。`, '25 分钟'),
+                    task('晚间复盘', '睡前只看今天的生词、句型和做错的题，第二天早上快速回看一遍。', '10 分钟')
+                ],
+                materials: [
+                    {
+                        name: `主教材：标日 ${lesson.volume} 第 ${lesson.lessonInVolume} 课`,
+                        detail: `课题是「${lesson.title}」，今天要把会话、课文、生词、语法、练习 A-C 全部跑完。`,
+                        url: resource('biaori').url
+                    },
+                    {
+                        name: '配套资源：标日电子书 / 音频',
+                        detail: '至少听 3 遍；第二遍跟读，第三遍尝试脱稿复述。',
+                        url: resource('biaoriAudio').url
+                    },
+                    {
+                        name: '备选教材：大家的日本语',
+                        detail: '如果你手头是《大家的日本语》，今天可以平移到相近主题课次，保持“会话 + 文法 + 练习 + 音频”四步走。',
+                        url: resource('minna').url
+                    }
+                ],
+                notes: [
+                    `阶段建议总时长：${PHASE_SETTINGS[phase.id].duration}。`,
+                    '基础阶段最怕只看不练，所以今天必须至少写句子、跟读和做练习各一次。'
+                ]
+            };
+        }
+
+        function buildN3BridgePlan(dayNumber, phase, weekTheme) {
+            const blockIndex = dayNumber - 57;
+            const block = N3_BRIDGE_BLOCKS[blockIndex];
+            const somaStart = blockIndex * 3 + 1;
+            return {
+                phase,
+                weekTheme,
+                title: `N3 过桥 · ${block.title}`,
+                summary: `从今天开始进入 N3 过桥阶段。主线是 TRY! N3 中国语版的压缩切块学习，配《日本语总まとめ N3》做文法、词汇、读解、听解定量推进。`,
+                tasks: [
+                    task('TRY! N3 主线', `学习《TRY! N3 中国语版》第 ${blockIndex + 1}/14 组内容，重点吃透这组文型、例句和会话 / 短文。今天的核心主题是「${block.focus}」。`, '50 分钟'),
+                    task('N3 文法 + 读解', `完成《日本语总まとめ N3 文法》${formatSomaRange(somaStart, 3)}；再做《日本语总まとめ N3 读解》同范围的训练。`, '35 分钟'),
+                    task('N3 听解 + 复听', `完成《日本语总まとめ N3 聴解》${formatSomaRange(somaStart, 2)}，并把 TRY! N3 今天这组的音频再复听 1 遍。`, '25 分钟'),
+                    task('词汇汉字', `完成《日本语总まとめ N3 语汇 / 汉字》${formatSomaRange(somaStart, 3)}，今天至少收下 20-25 个高频词。`, '25 分钟'),
+                    task('输出任务', block.output, '15 分钟')
+                ],
+                materials: [
+                    {
+                        name: `主教材：TRY! N3 中国语版 第 ${blockIndex + 1}/14 组`,
+                        detail: `今天重点练「${block.focus}」，要把例句和音频吃熟。`,
+                        url: resource('tryN3').url
+                    },
+                    {
+                        name: '定量补充：日本语总总结 N3',
+                        detail: `今天按 ${formatSomaRange(somaStart, 3)} 的节奏推进文法、词汇、读解、听解。`,
+                        url: resource('somatome').url
+                    }
+                ],
+                notes: [
+                    '这一段不是回头学 N3，而是用 N3 级别的题型把基础语法变成读题和做题能力。',
+                    '如果今天时间不够，优先保证 TRY! 主线和听力，不要把所有时间都花在查词。'
+                ]
+            };
+        }
+
+        function buildN2ChunkPlan(dayNumber, phase, weekTheme) {
+            const offset = dayNumber - 71;
+            const chunkIndex = Math.floor(offset / 2);
+            const isPracticeDay = offset % 2 === 1;
+            const chunk = N2_CHUNKS[chunkIndex];
+            const somaStart = chunkIndex * 4 + 1;
+
+            if (!isPracticeDay) {
+                return {
+                    phase,
+                    weekTheme,
+                    title: `N2 文法导入 · ${chunk.title}`,
+                    summary: `今天进入 N2 主体阶段的「导入日」。文法主线是《新完全マスター文法 N2》${chunk.lessons}，语感补强用 TRY! N2 的对应切块。`,
+                    tasks: [
+                        task('新完全文法', `学习《新完全マスター文法 N2》${chunk.lessons}，重点消化 ${chunk.focus}，把例句里的连接逻辑和语气区别做成笔记。`, '55 分钟'),
+                        task('TRY! N2 语境化', `学习《TRY! N2 中国语版》${chunk.tryChunk} 内容，至少精读 1 段短文 / 会话，确认这些文型在语境里怎么用。`, '35 分钟'),
+                        task('例句跟读', '把今天新学的文型各挑 2 个例句，大声跟读并模仿停顿与重音。', '15 分钟'),
+                        task('造句辨析', `从今天学的文型里挑 6-8 个，分别自己造句，并写明它们和近义表达的区别。`, '25 分钟'),
+                        task('词汇汉字保底', `完成《日本语总まとめ N2 语汇 / 汉字》${formatSomaRange(somaStart, 2)}，至少记住 15-20 个高频词。`, '20 分钟')
+                    ],
+                    materials: [
+                        {
+                            name: `主教材：新完全 N2 ${chunk.lessons}`,
+                            detail: `今天重点是「${chunk.title}」，文型焦点包括 ${chunk.focus}。`,
+                            url: resource('shinkanzenN2').url
+                        },
+                        {
+                            name: `语感补充：TRY! N2 ${chunk.tryChunk}`,
+                            detail: '用短文和会话把今天的文法装回语境里。',
+                            url: resource('tryN2').url
+                        },
+                        {
+                            name: '定量补充：日本语总总结 N2',
+                            detail: `今天至少推进 ${formatSomaRange(somaStart, 2)} 的词汇 / 汉字内容。`,
+                            url: resource('somatome').url
+                        }
+                    ],
+                    notes: [
+                        'N2 阶段不要只背中文意思，重点看文型的语气、搭配和句子位置。',
+                        '今天的文型请一定自己造句，否则第二天做题时容易只认得脸。'
+                    ]
+                };
+            }
+
+            return {
+                phase,
+                weekTheme,
+                title: `N2 读听巩固 · ${chunk.title}`,
+                summary: `今天是「巩固日」。目标是把昨天的 N2 文法放进读解、听解和官方题型里，训练定位速度和判断依据。`,
+                tasks: [
+                    task('总总结读解', `完成《日本语总まとめ N2 读解》${formatSomaRange(somaStart, 2)}，做完后回到原文圈出答案依据句。`, '35 分钟'),
+                    task('总总结听解', `完成《日本语总まとめ N2 聴解》${formatSomaRange(somaStart, 2)}，第二遍只记关键词和结论。`, '30 分钟'),
+                    task('文法回做', `把《新完全マスター文法 N2》${chunk.lessons} 的练习题再做一轮，重点订正 ${chunk.focus} 相关题。`, '30 分钟'),
+                    task('官方题型接触', '做一小段 JLPT 官方 N2 样题或 Official Practice Workbook 对应题型，开始适应官方出题方式。', '25 分钟'),
+                    task('错题回讲', '把今天错的 3-5 题写出错误原因，再用日语口头解释一次。', '15 分钟')
+                ],
+                materials: [
+                    {
+                        name: '定量主线：日本语总总结 N2',
+                        detail: `今天推进读解 / 听解 ${formatSomaRange(somaStart, 2)}，重点是定位速度和关键词。`,
+                        url: resource('somatome').url
+                    },
+                    {
+                        name: `回做：新完全 N2 ${chunk.lessons}`,
+                        detail: '把昨天学过的文型重新拉回题目里，不让它们只停留在笔记本上。',
+                        url: resource('shinkanzenN2').url
+                    },
+                    {
+                        name: '官方题型：JLPT 官方样题 / 练习册',
+                        detail: '从这一阶段开始，必须逐步接近官方题目和音频节奏。',
+                        url: resource('jlptWorkbook').url
+                    }
+                ],
+                notes: [
+                    '巩固日的关键不是“做更多”，而是把答案依据和错题原因说清楚。',
+                    '读解和听解至少各做一项，这样 N2 不会变成只会文法书。'
+                ]
+            };
+        }
+
+        function getDailyVideos(dayNumber, plan) {
+            if (dayNumber <= 56) {
+                if (dayNumber % 7 === 0) {
+                    const reviewEnd = getFoundationLessonNumber(dayNumber);
+                    const reviewStart = Math.max(1, reviewEnd - 5);
+                    return [
+                        video(
+                            `YouTube 搜索：标日 第 ${reviewStart}-${reviewEnd} 课复盘`,
+                            '优先找这几课的复习、总结或跟读合集视频。',
+                            youtubeSearchUrl(`标准日本语 第${reviewStart}课 第${reviewEnd}课 复习`)
+                        ),
+                        video(
+                            channel('yuki').title,
+                            '今天看 1 支基础语法或会话复习视频，帮助把这一周学过的句型重新串起来。',
+                            channel('yuki').url
+                        ),
+                        video(
+                            channel('shun').title,
+                            '做 10-15 分钟初级可理解输入，保持听力不断线。',
+                            channel('shun').url
+                        )
+                    ];
+                }
+
+                const lessonNumber = getFoundationLessonNumber(dayNumber);
+                const lesson = getFoundationLessonInfo(lessonNumber);
+                return [
+                    video(
+                        `YouTube 搜索：标日 ${lesson.volume} 第 ${lesson.lessonInVolume} 课`,
+                        '优先找和今天课次一致的讲解、跟读或会话视频。',
+                        youtubeSearchUrl(`标准日本语 ${lesson.volume} 第${lesson.lessonInVolume}课`)
+                    ),
+                    video(
+                        channel('yuki').title,
+                        '适合补基础语法和常用表达，今天优先看与本课主题相近的一支。',
+                        channel('yuki').url
+                    ),
+                    video(
+                        channel('shun').title,
+                        '用慢速日语做 10-15 分钟可理解输入，练耳朵和复述。',
+                        channel('shun').url
+                    )
+                ];
+            }
+
+            if (dayNumber <= 70) {
+                const blockIndex = dayNumber - 57;
+                const block = N3_BRIDGE_BLOCKS[blockIndex];
+                return [
+                    video(
+                        `YouTube 搜索：三本塾 N3 ${block.title}`,
+                        '优先找和今天 N3 主题最接近的文法或阅读讲解。',
+                        youtubeSearchUrl(`三本塾 N3 ${block.title}`)
+                    ),
+                    video(
+                        channel('sambon').title,
+                        '适合中级文法和阅读思路整理，今天建议看 1 支对应主题视频。',
+                        channel('sambon').url
+                    ),
+                    video(
+                        channel('miku').title,
+                        '用较自然的日语补听力和表达，今天看 1 支主题接近的视频。',
+                        channel('miku').url
+                    )
+                ];
+            }
+
+            if (dayNumber <= 92) {
+                const offset = dayNumber - 71;
+                const chunk = N2_CHUNKS[Math.floor(offset / 2)];
+                return [
+                    video(
+                        `YouTube 搜索：日本語の森 N2 ${chunk.title}`,
+                        '优先找今天这组 N2 文法或题型的讲解视频。',
+                        youtubeSearchUrl(`日本語の森 N2 ${chunk.title}`)
+                    ),
+                    video(
+                        channel('nihongoNoMori').title,
+                        'N2 阶段最值得固定跟的频道之一，今天建议看 1 支文法或读解视频。',
+                        channel('nihongoNoMori').url
+                    ),
+                    video(
+                        channel('sambon').title,
+                        '适合补充 N2 文法语感、阅读逻辑和日语解释。',
+                        channel('sambon').url
+                    )
+                ];
+            }
+
+            return [
+                video(
+                    'YouTube 搜索：N2 模拟 / 文法总复习',
+                    '考前优先看 N2 真题讲解、文法总复习和做题策略类视频。',
+                    youtubeSearchUrl('N2 模拟 文法 総まとめ')
+                ),
+                video(
+                    channel('nihongoNoMori').title,
+                    '考前适合拿来做 N2 文法和题型收口。',
+                    channel('nihongoNoMori').url
+                ),
+                video(
+                    channel('onomappu').title,
+                    '用轻量输入保持语速适应和听感，不要在最后几天让耳朵冷掉。',
+                    channel('onomappu').url
+                )
+            ];
+        }
+
+        function attachVideosToPlan(dayNumber, plan) {
+            const videos = getDailyVideos(dayNumber, plan);
+            return {
+                ...plan,
+                videos,
+                tasks: [
+                    ...plan.tasks,
+                    task(
+                        'YouTube 视频',
+                        `看今天的 1-2 个 YouTube 视频。优先打开「${videos[0].name}」，再从「${videos[1].name}」或「${videos[2].name}」里选一个补充。`,
+                        dayNumber <= 56 ? '15-20 分钟' : '20-25 分钟'
+                    )
+                ]
+            };
+        }
+
+        function addDays(baseDate, days) {
+            const date = new Date(baseDate);
+            date.setDate(date.getDate() + days);
+            return date;
+        }
+
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function formatHumanDate(date) {
+            return `${date.getFullYear()} 年 ${date.getMonth() + 1} 月 ${date.getDate()} 日 ${WEEKDAY_NAMES[date.getDay()]}`;
+        }
+
+        function getPhase(dayNumber) {
+            return PHASES.find((phase) => dayNumber >= phase.dayStart && dayNumber <= phase.dayEnd);
+        }
+
+        function getWeekTheme(dayNumber) {
+            const index = Math.min(Math.floor((dayNumber - 1) / 7), WEEK_THEMES.length - 1);
+            return WEEK_THEMES[index];
+        }
+
+        function getDateByDay(dayNumber) {
+            return addDays(START_DATE, dayNumber - 1);
+        }
+
+        function getDayByDate(targetDate) {
+            const diff = Math.round((targetDate.getTime() - START_DATE.getTime()) / 86400000);
+            return diff + 1;
+        }
+
+        function getStorageKey(dayNumber, taskIndex) {
+            return `jlpt-n2-plan-${dayNumber}-task-${taskIndex}`;
+        }
+
+        function isTaskDone(dayNumber, taskIndex) {
+            return localStorage.getItem(getStorageKey(dayNumber, taskIndex)) === '1';
+        }
+
+        function setTaskDone(dayNumber, taskIndex, checked) {
+            localStorage.setItem(getStorageKey(dayNumber, taskIndex), checked ? '1' : '0');
+        }
+
+        function getDayProgress(dayNumber, tasks) {
+            const doneCount = tasks.filter((_, index) => isTaskDone(dayNumber, index)).length;
+            return { doneCount, total: tasks.length, finished: doneCount === tasks.length && tasks.length > 0 };
+        }
+
+        function buildTasksForRegularDay(dayNumber, phase, weekTheme) {
+            const settings = PHASE_SETTINGS[phase.id];
+            const cycle = (dayNumber - 1) % 7;
+            const taskSets = [
+                [
+                    task('词汇主攻', `新学 ${settings.vocabNew} 个高频词，复习 ${settings.vocabReview} 个旧词，至少写 5 个例句。`, '40 分钟'),
+                    task('文法推进', `学习 ${settings.grammar} 个语法点，重点围绕「${weekTheme.grammar}」。`, '35 分钟'),
+                    task('听力输入', `听 ${settings.listening} 分钟「${weekTheme.listening}」类材料，先盲听后对照文本。`, `${settings.listening} 分钟`),
+                    task('跟读输出', `选 8-10 句做跟读和模仿，今天的输出目标是：${settings.output}。`, '20 分钟'),
+                    task('晚间复盘', '用 10 分钟回看当天错词、错句和没听懂的片段。', '10 分钟')
+                ],
+                [
+                    task('汉字推进', `学习 ${settings.kanji} 个汉字，写读音、词例和最小记忆点。`, '30 分钟'),
+                    task('阅读训练', `阅读 ${settings.readingCount} 篇「${weekTheme.reading}」材料，圈出主旨句和连接词。`, '35-45 分钟'),
+                    task('语法回做', `把昨天和前天的语法题再做一轮，确认没有“看懂但不会用”的点。`, '25 分钟'),
+                    task('听写短句', `从听力材料里抽 5 句做听写或关键词记录。`, '20 分钟'),
+                    task('口头复述', '看着今天的阅读材料，用自己的话复述内容。', '10 分钟')
+                ],
+                [
+                    task('词汇巩固', `新学 ${settings.vocabNew} 个词，重点记近义词和反义词。`, '35 分钟'),
+                    task('文法练习', `今天继续推进 ${settings.grammar} 个文法点，并完成对应练习。`, '35 分钟'),
+                    task('会话练习', `围绕本周主题「${weekTheme.title}」写 6-8 句可口头说出的表达。`, '20 分钟'),
+                    task('听力保温', `听 ${settings.listening} 分钟相关对话，第二遍开始暂停复述。`, `${settings.listening} 分钟`),
+                    task('错题本', '把今天错的题按词汇、语法、听力分类写进错题本。', '10 分钟')
+                ],
+                [
+                    task('阅读主攻', `做 ${settings.readingCount} 篇阅读，重点练“先看问题再回文定位”。`, '40-50 分钟'),
+                    task('汉字复习', `复习最近 3 天的汉字，再补 ${Math.max(4, settings.kanji - 2)} 个新字。`, '25 分钟'),
+                    task('文法串联', `把本周文法串成 5 个自己的句子，避免只会选择题。`, '25 分钟'),
+                    task('听力听写', `选 1 段 1-2 分钟音频做精听，记下漏听点。`, '20 分钟'),
+                    task('日结复盘', '总结今天哪类句子最容易卡住，明天优先补它。', '10 分钟')
+                ],
+                [
+                    task('综合刷题', '做一小组语法、词汇、阅读混合题，进入考试节奏。', '45 分钟'),
+                    task('高频词复习', `快速复盘最近 4 天的高频词，尤其是容易混淆的搭配。`, '25 分钟'),
+                    task('输出练习', `写一个 80-120 字的小总结，主题围绕「${weekTheme.title}」。`, '20 分钟'),
+                    task('听力跟读', `把本周最熟的一段材料跟读 3 遍，追求语速和连读感。`, '20 分钟'),
+                    task('错题回收', '把本周反复错的点单独列出来，周末重点消化。', '10 分钟')
+                ],
+                [
+                    task('周测', '做一次 45-60 分钟小测，覆盖本周词汇、文法和阅读。', '45-60 分钟'),
+                    task('订正', '今天的重点不是刷新题，而是把周测错题吃透。', '35 分钟'),
+                    task('听力强化', `做 ${settings.listening + 5} 分钟听力，练主旨和关键词抓取。`, `${settings.listening + 5} 分钟`),
+                    task('汉字回看', '把本周汉字过一轮，挑出还不稳的 10 个。', '15 分钟'),
+                    task('轻量输出', '用中文或日语写 3 句本周学习反思。', '10 分钟')
+                ],
+                [
+                    task('补漏优先', '把本周没完成的任务补上，不强行开新战线。', '40 分钟'),
+                    task('轻量阅读', '读 1 篇你能相对顺畅读下来的材料，建立成就感。', '20 分钟'),
+                    task('听力保温', `保持 ${Math.max(15, settings.listening - 5)} 分钟听力，不要断耳朵。`, `${Math.max(15, settings.listening - 5)} 分钟`),
+                    task('词汇复习', `只复习旧词，不加太多新词，目标是把记忆拧紧。`, '20 分钟'),
+                    task('下周准备', '看一眼下一周主题，把资料和时间先安排好。', '10 分钟')
+                ]
+            ];
+
+            return {
+                title: `${weekTheme.title} · ${['语法启动', '汉字阅读', '表达串联', '精听定位', '综合整合', '周测订正', '补漏调整'][cycle]}`,
+                summary: `当前阶段是「${phase.name}」。今天围绕「${weekTheme.title}」推进，核心语法是「${weekTheme.grammar}」，阅读重点是「${weekTheme.reading}」。`,
+                tasks: taskSets[cycle],
+                notes: [
+                    `阶段建议总时长：${settings.duration}。`,
+                    '每晚睡前请把当天错误点过一遍，第二天才更容易稳住。'
+                ]
+            };
+        }
+
+        function buildTasksForIntensiveDay(dayNumber, phase, weekTheme) {
+            const cycle = (dayNumber - 1) % 7;
+            const taskSets = [
+                [
+                    task('阅读限时', '做 2 篇 N2 阅读，严格计时并标注卡顿原因。', '45 分钟'),
+                    task('文法快刷', '刷一组 N2 高频文法题，重点看近义表达区别。', '25 分钟'),
+                    task('听力要点', `做 ${PHASE_SETTINGS.phase4.listening} 分钟听力，记录主旨和理由。`, '35 分钟'),
+                    task('错题归类', '把今天错题按“词不会/句太长/定位慢/审题错”分类。', '20 分钟'),
+                    task('高频词回顾', '回看近一周阅读和听力中反复出现的词。', '15 分钟')
+                ],
+                [
+                    task('听力专项', '专练即时应答或课题理解，做题后复听。', '40 分钟'),
+                    task('阅读补洞', '做 1-2 篇短阅读，练连接词定位和作者态度判断。', '30 分钟'),
+                    task('文法复盘', '整理最近最容易混淆的 8 个文法点。', '25 分钟'),
+                    task('口头解释', '用自己的话解释 3 道错题的正确思路。', '15 分钟'),
+                    task('错题本二刷', '只看最近 5 天的错题本，不开新资料。', '15 分钟')
+                ],
+                [
+                    task('套题混练', '做一组语法+阅读混合套题，练从前面快速切换到后面。', '50 分钟'),
+                    task('听力精听', '抽最难的 2 段听力，做关键词记录和复听。', '25 分钟'),
+                    task('词汇压缩', '把高频生词压缩到真正要背熟的核心清单。', '20 分钟'),
+                    task('阅读总结', `今天阅读仍然围绕「${weekTheme.reading}」题材，写出作者主张。`, '15 分钟'),
+                    task('状态记录', '记录今天最明显的失误模式。', '10 分钟')
+                ],
+                [
+                    task('半套模拟', '做半套阅读或半套听力模拟，完全按时。', '60 分钟'),
+                    task('订正拆解', '把错题和犹豫题全部拆解，不留模糊印象。', '35 分钟'),
+                    task('文法回勾', '用一页纸回顾高频连接表达和书面句型。', '20 分钟'),
+                    task('短时跟读', '选一段正式语速材料做跟读，保持耳朵敏感。', '15 分钟'),
+                    task('晚间放松', '今天结束后尽量不要加码熬夜。', '全天提醒')
+                ],
+                [
+                    task('弱项专项', '只打最弱的一项，例如阅读定位慢或听力关键词抓不住。', '45 分钟'),
+                    task('错题重做', '把最近 3 天错题不看答案重做一遍。', '30 分钟'),
+                    task('高频词巩固', '把高频词换成中译日或日译中快速抽查。', '20 分钟'),
+                    task('文法辨析', '做一组近义文法辨析题。', '20 分钟'),
+                    task('小结', '写 3 条本周后半段最要注意的答题提醒。', '10 分钟')
+                ],
+                [
+                    task('整套或大半套模拟', '本周主模拟日，尽量贴近正式考试。', '100-120 分钟'),
+                    task('立即订正', '模拟后马上订正，不拖到第二天。', '35 分钟'),
+                    task('听力复听', '把错的听力题对应片段再听一遍。', '15 分钟'),
+                    task('阅读回文', '回到原文找每一题答案依据。', '20 分钟'),
+                    task('节奏反思', '记录时间分配是否合理。', '10 分钟')
+                ],
+                [
+                    task('恢复日补漏', '今天用来整理、补漏和恢复，不再进行高压整套。', '30 分钟'),
+                    task('轻量听力', '保持 15-20 分钟听力输入。', '20 分钟'),
+                    task('词汇回顾', '只回顾高频词和错题词。', '20 分钟'),
+                    task('阅读手感', '读 1 篇不太难的文章，保持手感。', '15 分钟'),
+                    task('下周准备', '预留心力给下一轮强化。', '10 分钟')
+                ]
+            ];
+
+            return {
+                title: `${weekTheme.title} · 真题强化日`,
+                summary: `你已经进入「${phase.name}」。今天的主目标不再是堆新知识，而是提升做题速度、稳定率和错题识别能力。`,
+                tasks: taskSets[cycle],
+                notes: [
+                    '这段时间最忌讳“刷了很多题但没订正”。',
+                    '如果今天特别累，就保住模拟后的订正和听力保温。'
+                ]
+            };
+        }
+
+        function buildDailyPlan(dayNumber) {
+            const phase = getPhase(dayNumber);
+            const weekTheme = getWeekTheme(dayNumber);
+
+            if (!phase) {
+                return null;
+            }
+
+            if (dayNumber <= 56) {
+                const foundationPlan = dayNumber % 7 === 0
+                    ? buildFoundationReviewPlan(dayNumber, phase, weekTheme)
+                    : buildFoundationLessonPlan(dayNumber, phase, weekTheme);
+                return attachVideosToPlan(dayNumber, foundationPlan);
+            }
+
+            if (dayNumber <= 70) {
+                return attachVideosToPlan(dayNumber, buildN3BridgePlan(dayNumber, phase, weekTheme));
+            }
+
+            if (dayNumber <= 92) {
+                return attachVideosToPlan(dayNumber, buildN2ChunkPlan(dayNumber, phase, weekTheme));
+            }
+
+            if (dayNumber >= 93) {
+                const base = FINAL_WEEK_TASKS[dayNumber];
+                return attachVideosToPlan(dayNumber, {
+                    phase,
+                    weekTheme,
+                    title: base.title,
+                    summary: base.summary,
+                    tasks: base.tasks,
+                    notes: base.notes,
+                    materials: [
+                        {
+                            name: '官方题型：JLPT Official Practice Workbook / 样题',
+                            detail: '最后一周优先用官方题型和音频做整卷、半套、订正与复听。',
+                            url: resource('jlptWorkbook').url
+                        },
+                        {
+                            name: '个人错题本 / 高频词清单',
+                            detail: '考前不再大范围开新书，重点回看你自己积累的错题和高频词。',
+                            url: ''
+                        }
+                    ]
+                });
+            }
+        }
+
+        function countFinishedDays() {
+            let finished = 0;
+            for (let day = 1; day <= TOTAL_DAYS; day += 1) {
+                const plan = buildDailyPlan(day);
+                if (!plan) continue;
+                if (getDayProgress(day, plan.tasks).finished) {
+                    finished += 1;
+                }
+            }
+            return finished;
+        }
+
+        function jumpToToday() {
+            const today = new Date();
+            const dayNumber = getDayByDate(today);
+            const safeDay = Math.min(Math.max(dayNumber, 1), TOTAL_DAYS);
+            window.location.href = `/jlpt-n2-plan/day/${safeDay}`;
+        }
+
+        function jumpToDay(dayNumber) {
+            const safeDay = Math.min(Math.max(Number(dayNumber), 1), TOTAL_DAYS);
+            window.location.href = `/jlpt-n2-plan/day/${safeDay}`;
+        }
+
+        function buildJumpPanel(prefix, title = '查看任意一天', description = '可以按 Day 编号跳转，也可以直接选择具体日期。') {
+            return `
+                <section class="panel jump-panel">
+                    <h2>${title}</h2>
+                    <p>${description}</p>
+                    <div class="jump-controls">
+                        <div class="jump-field">
+                            <label for="${prefix}-day-input">按 Day 编号</label>
+                            <input id="${prefix}-day-input" type="number" min="1" max="${TOTAL_DAYS}" placeholder="输入 1-${TOTAL_DAYS}" onkeydown="if(event.key==='Enter') goToSelectedDay('${prefix}')">
+                        </div>
+                        <div class="jump-field">
+                            <label for="${prefix}-date-input">按日期跳转</label>
+                            <input id="${prefix}-date-input" type="date" min="${formatDate(START_DATE)}" max="${formatDate(EXAM_DATE)}" onkeydown="if(event.key==='Enter') goToSelectedDay('${prefix}')">
+                        </div>
+                        <button class="jump-submit" onclick="goToSelectedDay('${prefix}')">查看任务</button>
+                    </div>
+                </section>
+            `;
+        }
+
+        function goToSelectedDay(prefix) {
+            const dayInput = document.getElementById(`${prefix}-day-input`);
+            const dateInput = document.getElementById(`${prefix}-date-input`);
+
+            const dayValue = dayInput ? Number(dayInput.value) : NaN;
+            if (Number.isFinite(dayValue) && dayValue >= 1 && dayValue <= TOTAL_DAYS) {
+                jumpToDay(dayValue);
+                return;
+            }
+
+            if (dateInput && dateInput.value) {
+                const [year, month, day] = dateInput.value.split('-').map(Number);
+                const selectedDate = new Date(year, month - 1, day);
+                const selectedDay = getDayByDate(selectedDate);
+                if (selectedDay >= 1 && selectedDay <= TOTAL_DAYS) {
+                    jumpToDay(selectedDay);
+                    return;
+                }
+            }
+
+            alert(`请输入 1-${TOTAL_DAYS} 的 Day 编号，或选择 ${formatDate(START_DATE)} 到 ${formatDate(EXAM_DATE)} 之间的日期。`);
+        }
+
+        function renderOverview() {
+            const finishedDays = countFinishedDays();
+            const remainingDays = TOTAL_DAYS - finishedDays;
+            const progressPercent = Math.round((finishedDays / TOTAL_DAYS) * 100);
+
+            const statsHtml = `
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="stat-label">计划总天数</div>
+                        <div class="stat-value">${TOTAL_DAYS}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">已完成天数</div>
+                        <div class="stat-value">${finishedDays}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">剩余天数</div>
+                        <div class="stat-value">${remainingDays}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">完成进度</div>
+                        <div class="stat-value">${progressPercent}%</div>
+                    </div>
+                </div>
+            `;
+
+            const phaseHtml = PHASES.map((phase) => `
+                <article class="phase-card">
+                    <span class="phase-tag">${phase.duration}</span>
+                    <h3>${phase.name}</h3>
+                    <p>${phase.goal}</p>
+                    <ul class="phase-list">
+                        ${phase.bullets.map((item) => `<li>${item}</li>`).join('')}
+                    </ul>
+                </article>
+            `).join('');
+
+            const routeHtml = BOOK_ROUTE.map((item) => `
+                <article class="resource-card">
+                    <span class="phase-tag">${item.days}</span>
+                    <h3>${item.title}</h3>
+                    <p>${item.detail}</p>
+                    <div class="resource-links">
+                        ${item.resourceIds.map((id) => {
+                            const info = resource(id);
+                            return `<a href="${info.url}" target="_blank" rel="noreferrer">${info.title}</a>`;
+                        }).join('')}
+                    </div>
+                </article>
+            `).join('');
+
+            const dayCardsHtml = Array.from({ length: TOTAL_DAYS }, (_, index) => index + 1).map((dayNumber) => {
+                const date = getDateByDay(dayNumber);
+                const plan = buildDailyPlan(dayNumber);
+                const progress = getDayProgress(dayNumber, plan.tasks);
+                return `
+                    <a class="plan-card" href="/jlpt-n2-plan/day/${dayNumber}">
+                        <div class="plan-top">
+                            <div>
+                                <div class="plan-date">Day ${dayNumber} · ${formatDate(date)}</div>
+                                <div class="plan-sub">${formatHumanDate(date)}</div>
+                            </div>
+                            <span class="badge ${progress.finished ? 'done' : 'pending'}">${progress.finished ? '已完成' : `${progress.doneCount}/${progress.total}`}</span>
+                        </div>
+                        <div class="chips">
+                            <span class="small-badge">${plan.phase.name}</span>
+                            <span class="small-badge">${plan.weekTheme.title}</span>
+                        </div>
+                        <h3>${plan.title}</h3>
+                        <p>${plan.summary}</p>
+                    </a>
+                `;
+            }).join('');
+
+            document.getElementById('app').innerHTML = `
+                ${statsHtml}
+                ${buildJumpPanel('overview', '快速查看任意一天', '如果你想直接看某一天的任务，不用往下翻 99 个卡片，可以在这里按 Day 或日期跳转。')}
+                <section class="section panel overview-panel">
+                    <div class="section-head">
+                        <div>
+                            <h2>教材路线</h2>
+                            <p>我把材料收成了一条主线，避免你每天在《标日》《大家的日本语》《JLPT 备考书》之间来回摇摆。默认主线是标日，大家的日本语作为可平移备选。</p>
+                        </div>
+                    </div>
+                    <div class="resource-grid">${routeHtml}</div>
+                </section>
+                <section class="section panel overview-panel">
+                    <div class="section-head">
+                        <div>
+                            <h2>阶段路线</h2>
+                            <p>前面 7 周补基础和中级桥接，中间 4 周进入 N2 主体，最后 3 周转入真题和状态管理。</p>
+                        </div>
+                    </div>
+                    <div class="phase-grid">${phaseHtml}</div>
+                    <div class="progress-wrap">
+                        <div class="progress-label">
+                            <span>整体完成度</span>
+                            <span>${finishedDays} / ${TOTAL_DAYS} 天</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width:${progressPercent}%"></div>
+                        </div>
+                    </div>
+                </section>
+                <section class="section panel overview-panel">
+                    <div class="section-head">
+                        <div>
+                            <h2>执行提醒</h2>
+                            <p>这份计划默认你每天都会做复习。哪怕某天特别忙，也请保住“旧词复习 + 15 分钟听力 + 一个主任务”。持续不断线，比偶尔爆发更重要。</p>
+                        </div>
+                    </div>
+                    <ul class="bullet-list">
+                        <li>前 6 周先把句子读顺、把常见助词和动词变形跑通，不要一上来只背孤立词汇。</li>
+                        <li>从第 7 周开始，阅读必须逐步限时，否则后面做 N2 真题会明显来不及。</li>
+                        <li>听力不要只“听懂大概”，要开始记关键词、人物关系和结论句。</li>
+                        <li>每周至少有 1 天专门订正错题，不订正的刷题收益很低。</li>
+                    </ul>
+                </section>
+                <section class="section panel overview-panel">
+                    <div class="section-head">
+                        <div>
+                            <h2>每日入口</h2>
+                            <p>每天一个单独页面。点开后可以逐项勾选，勾选状态会保存在浏览器本地。</p>
+                        </div>
+                    </div>
+                    <div class="plan-grid">${dayCardsHtml}</div>
+                </section>
+            `;
+        }
+
+        function renderDayPage(dayNumber) {
+            if (dayNumber < 1 || dayNumber > TOTAL_DAYS) {
+                document.getElementById('app').innerHTML = `
+                    <section class="panel overview-panel">
+                        <div class="empty-state">
+                            未找到对应日期的学习计划。<br>
+                            <div class="nav-row" style="justify-content:center; margin-top:16px;">
+                                <a href="/jlpt-n2-plan">返回总览</a>
+                            </div>
+                        </div>
+                    </section>
+                `;
+                return;
+            }
+
+            const date = getDateByDay(dayNumber);
+            const plan = buildDailyPlan(dayNumber);
+            const study = getStudyContent(dayNumber, plan);
+            const progress = getDayProgress(dayNumber, plan.tasks);
+            const progressPercent = Math.round((progress.doneCount / progress.total) * 100);
+
+            const tasksHtml = plan.tasks.map((item, index) => `
+                <article class="task-card">
+                    <div class="task-check">
+                        <input type="checkbox" id="task-${index}" ${isTaskDone(dayNumber, index) ? 'checked' : ''} onchange="toggleTask(${dayNumber}, ${index}, this.checked)">
+                        <div class="task-text">
+                            <strong>${item.title}</strong>
+                            <p>${item.detail}</p>
+                            <div class="task-time">${item.time}</div>
+                        </div>
+                    </div>
+                </article>
+            `).join('');
+
+            const materialsHtml = (plan.materials || []).map((item) => `
+                <div class="material-item">
+                    <strong>${item.url ? `<a class="material-link" href="${item.url}" target="_blank" rel="noreferrer">${item.name}</a>` : item.name}</strong>
+                    <span>${item.detail}</span>
+                </div>
+            `).join('');
+
+            const videosHtml = (plan.videos || []).map((item) => `
+                <div class="material-item">
+                    <strong><a class="material-link" href="${item.url}" target="_blank" rel="noreferrer">${item.name}</a></strong>
+                    <span>${item.detail}</span>
+                </div>
+            `).join('');
+
+            const vocabHtml = study.vocab.map(([jp, reading, cn]) => `
+                <li>
+                    <span class="study-jp">${jp}${reading ? `（${reading}）` : ''}</span>
+                    <span class="study-cn">${cn}</span>
+                </li>
+            `).join('');
+
+            const grammarHtml = study.grammar.map(([pattern, meaning, hint]) => `
+                <li>
+                    <span class="study-jp">${pattern}</span>
+                    <span class="study-cn">${meaning} ${hint}</span>
+                </li>
+            `).join('');
+
+            const sentenceHtml = study.sentences.map(([jp, cn]) => `
+                <li>
+                    <span class="study-jp">${jp}</span>
+                    <span class="study-cn">${cn}</span>
+                </li>
+            `).join('');
+
+            const textHtml = study.texts.map(([jp, cn]) => `
+                <li>
+                    <span class="study-jp">${jp}</span>
+                    <span class="study-cn">${cn}</span>
+                </li>
+            `).join('');
+
+            document.getElementById('app').innerHTML = `
+                <section class="detail-layout">
+                    <article class="panel detail-main">
+                        <div class="detail-top">
+                            <div>
+                                <span class="phase-tag">Day ${dayNumber}</span>
+                                <div class="detail-title">${formatDate(date)} · ${plan.title}</div>
+                                <div class="detail-subtitle">${formatHumanDate(date)}。当前阶段是「${plan.phase.name}」，本周主题是「${plan.weekTheme.title}」。${plan.summary}</div>
+                            </div>
+                            <span class="badge ${progress.finished ? 'done' : 'pending'}">${progress.finished ? '今日已完成' : `已完成 ${progress.doneCount}/${progress.total}`}</span>
+                        </div>
+
+                        <div class="chips">
+                            <span class="small-badge">阶段：${plan.phase.name}</span>
+                            <span class="small-badge">主题：${plan.weekTheme.title}</span>
+                            <span class="small-badge">考试日：2026-07-05</span>
+                        </div>
+
+                        <div class="progress-wrap">
+                            <div class="progress-label">
+                                <span>今日完成度</span>
+                                <span>${progress.doneCount} / ${progress.total} 项</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width:${progressPercent}%"></div>
+                            </div>
+                        </div>
+
+                        <div class="task-grid">${tasksHtml}</div>
+
+                        <div class="study-grid">
+                            <article class="study-card note-card">
+                                <h3>今日单词</h3>
+                                <div class="study-desc">${study.mode}。先认读，再遮住中文回忆意思。</div>
+                                <ul class="study-list">${vocabHtml}</ul>
+                            </article>
+                            <article class="study-card note-card">
+                                <h3>今日语法</h3>
+                                <div class="study-desc">建议顺序：看形式 -> 看中文意思 -> 用自己的内容造句。</div>
+                                <ul class="study-list">${grammarHtml}</ul>
+                            </article>
+                            <article class="study-card note-card">
+                                <h3>今日例句</h3>
+                                <div class="study-desc">先朗读，再尝试把主语、时间、地点换成你自己的内容。</div>
+                                <ul class="study-list">${sentenceHtml}</ul>
+                            </article>
+                            <article class="study-card note-card">
+                                <h3>今日短文</h3>
+                                <div class="study-desc">先自己读一遍，再对照中文，最后试着口头复述。</div>
+                                <ul class="study-list">${textHtml}</ul>
+                                <div class="study-note">${study.note}</div>
+                            </article>
+                        </div>
+
+                        <div class="nav-row">
+                            <a href="/jlpt-n2-plan">返回总览</a>
+                            ${dayNumber > 1 ? `<a href="/jlpt-n2-plan/day/${dayNumber - 1}">上一天</a>` : ''}
+                            ${dayNumber < TOTAL_DAYS ? `<a href="/jlpt-n2-plan/day/${dayNumber + 1}">下一天</a>` : ''}
+                            <button class="primary" onclick="markAllDone(${dayNumber}, ${plan.tasks.length})">全部完成</button>
+                            <button onclick="clearDay(${dayNumber}, ${plan.tasks.length})">清空勾选</button>
+                        </div>
+                    </article>
+
+                    <aside class="panel detail-side">
+                        <div class="note-card" style="box-shadow:none; border:none; background:transparent; padding:0;">
+                            <h3>今天抓什么</h3>
+                            <p>如果今天时间不够，请优先完成词汇复习、听力和最重要的一项主任务，不要整天都花在“整理资料”。</p>
+                        </div>
+                        <div class="note-card">
+                            <h3>今天用哪些教材</h3>
+                            <div class="material-list">
+                                ${materialsHtml}
+                            </div>
+                        </div>
+                        <div class="note-card">
+                            <h3>今天的 YouTube</h3>
+                            <div class="material-list">
+                                ${videosHtml}
+                            </div>
+                        </div>
+                        <div class="note-card">
+                            <h3>本周核心</h3>
+                            <p><strong>${plan.weekTheme.title}</strong></p>
+                            <ul class="bullet-list">
+                                <li>语法焦点：${plan.weekTheme.grammar}</li>
+                                <li>阅读焦点：${plan.weekTheme.reading}</li>
+                                <li>听力焦点：${plan.weekTheme.listening}</li>
+                            </ul>
+                        </div>
+                        <div class="note-card">
+                            <h3>完成标准</h3>
+                            <ul class="bullet-list">
+                                ${plan.notes.map((note) => `<li>${note}</li>`).join('')}
+                            </ul>
+                        </div>
+                        <div class="note-card">
+                            <h3>使用建议</h3>
+                            <ul class="bullet-list">
+                                <li>单词建议当天晚间复习一次，第二天早上再快速回看。</li>
+                                <li>听力一定要二刷，第二遍重点抓关键词和结论。</li>
+                                <li>阅读不要逐词翻译，先定位主旨和连接词。</li>
+                            </ul>
+                        </div>
+                    </aside>
+                </section>
+            `;
+        }
+
+        function toggleTask(dayNumber, taskIndex, checked) {
+            setTaskDone(dayNumber, taskIndex, checked);
+            renderCurrentView();
+        }
+
+        function markAllDone(dayNumber, totalTasks) {
+            for (let i = 0; i < totalTasks; i += 1) {
+                setTaskDone(dayNumber, i, true);
+            }
+            renderCurrentView();
+        }
+
+        function clearDay(dayNumber, totalTasks) {
+            for (let i = 0; i < totalTasks; i += 1) {
+                setTaskDone(dayNumber, i, false);
+            }
+            renderCurrentView();
+        }
+
+        function renderCurrentView() {
+            const match = window.location.pathname.match(/\/jlpt-n2-plan\/day\/(\d+)/);
+            if (match) {
+                renderDayPage(Number(match[1]));
+            } else {
+                renderOverview();
+            }
+        }
+
+        renderCurrentView();
+    </script>
+</body>
+
+</html>

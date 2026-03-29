@@ -180,7 +180,11 @@ def classify_source(request: Request, referer: str) -> str:
 
 
 def tracked_page_path(path: str) -> bool:
-    return path in {"/", "/news", "/visitor-stats"} or path.startswith("/news/view/")
+    return (
+        path in {"/", "/news", "/visitor-stats", "/jlpt-n2-plan"}
+        or path.startswith("/news/view/")
+        or path.startswith("/jlpt-n2-plan/day/")
+    )
 
 
 def record_visit(request: Request):
@@ -780,6 +784,22 @@ async def ccf_deadlines_data():
             return JSONResponse(content=json.load(f))
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": f"读取 DDL 数据失败: {e}"})
+
+
+@app.get("/jlpt-n2-plan")
+async def jlpt_n2_plan_page():
+    """JLPT N2 学习计划页面"""
+    with open("jlpt_n2_plan.html", "r", encoding="utf-8") as f:
+        return HTMLResponse(content=f.read())
+
+
+@app.get("/jlpt-n2-plan/day/{day}")
+async def jlpt_n2_plan_day_page(day: int):
+    """JLPT N2 单日计划页面"""
+    if day < 1 or day > 99:
+        return HTMLResponse(content="未找到对应学习计划页面", status_code=404)
+    with open("jlpt_n2_plan.html", "r", encoding="utf-8") as f:
+        return HTMLResponse(content=f.read())
 
 
 @app.get("/news/list")
