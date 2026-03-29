@@ -1968,6 +1968,15 @@
             return `${date.getFullYear()} 年 ${date.getMonth() + 1} 月 ${date.getDate()} 日 ${WEEKDAY_NAMES[date.getDay()]}`;
         }
 
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
         function getPhase(dayNumber) {
             return PHASES.find((phase) => dayNumber >= phase.dayStart && dayNumber <= phase.dayEnd);
         }
@@ -2285,6 +2294,7 @@
                     ${resources ? `<div class="local-material-links">${resources}</div>` : ''}
                 `;
             } catch (error) {
+                console.error('Failed to load local material', error);
                 panel.innerHTML = `
                     <h3>本地教材内容</h3>
                     <div class="local-material-empty">今天的本地教材内容加载失败了。你仍然可以从右侧教材链接进入 PDF。</div>
