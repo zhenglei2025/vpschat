@@ -188,7 +188,7 @@ def classify_source(request: Request, referer: str) -> str:
 
 def tracked_page_path(path: str) -> bool:
     return (
-        path in {"/", "/chat", "/news", "/visitor-stats", "/jlpt-n2-plan", "/ccf-deadlines"}
+        path in {"/", "/news", "/chat", "/visitor-stats", "/ccf-deadlines", "/jlpt-n2-plan"}
         or path.startswith("/news/view/")
         or path.startswith("/jlpt-n2-plan/day/")
     )

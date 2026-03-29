@@ -27,10 +27,10 @@
         .top-bar .nav-actions {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
             justify-content: flex-end;
+            gap: 10px;
         }
-        .top-bar .back-btn {
+        .top-bar .nav-btn {
             padding: 8px 18px;
             background: rgba(255,255,255,0.2);
             color: white;
@@ -41,7 +41,7 @@
             text-decoration: none;
             transition: background 0.2s;
         }
-        .top-bar .back-btn:hover { background: rgba(255,255,255,0.35); }
+        .top-bar .nav-btn:hover { background: rgba(255,255,255,0.35); }
         .container { max-width: 1100px; margin: 0 auto; padding: 24px 16px; }
         .category-section {
             margin-bottom: 28px;
@@ -198,8 +198,17 @@
             color: #999;
         }
         @media (max-width: 600px) {
-            .top-bar { padding: 14px 16px; }
+            .top-bar {
+                padding: 14px 16px;
+                align-items: flex-start;
+                flex-direction: column;
+                gap: 12px;
+            }
             .top-bar h1 { font-size: 1.1em; }
+            .top-bar .nav-actions {
+                width: 100%;
+                justify-content: flex-start;
+            }
             .container { padding: 16px 10px; }
             .viewer-box { width: 100%; height: 100%; border-radius: 0; }
         }
@@ -209,10 +218,10 @@
     <div class="top-bar">
         <h1>📰 NewsAgent 新闻中心</h1>
         <div class="nav-actions">
-            <a class="back-btn" href="/chat">聊天</a>
-            <a class="back-btn" href="/visitor-stats">访客统计</a>
-            <a class="back-btn" href="/ccf-deadlines">顶会 DDL</a>
-            <a class="back-btn" href="/jlpt-n2-plan">日语学习</a>
+            <a class="nav-btn" href="/chat">进入聊天</a>
+            <a class="nav-btn" href="/visitor-stats">访客统计</a>
+            <a class="nav-btn" href="/ccf-deadlines">顶会 DDL</a>
+            <a class="nav-btn" href="/jlpt-n2-plan">日语学习</a>
         </div>
     </div>
     <div class="container" id="content">
