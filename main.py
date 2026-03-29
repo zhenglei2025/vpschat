@@ -188,7 +188,7 @@ def classify_source(request: Request, referer: str) -> str:
 
 def tracked_page_path(path: str) -> bool:
     return (
-        path in {"/", "/news", "/visitor-stats", "/jlpt-n2-plan"}
+        path in {"/", "/chat", "/news", "/visitor-stats", "/jlpt-n2-plan", "/ccf-deadlines"}
         or path.startswith("/news/view/")
         or path.startswith("/jlpt-n2-plan/day/")
     )
@@ -430,6 +430,12 @@ def require_auth(authorization: Optional[str] = Header(None)):
 # ===== 1. 首页 UI（公开） =====
 @app.get("/")
 async def get():
+    with open("news.html", "r", encoding="utf-8") as f:
+        return HTMLResponse(content=f.read())
+
+
+@app.get("/chat")
+async def chat_page():
     with open("index.html", "r", encoding="utf-8") as f:
         return HTMLResponse(content=f.read())
 
@@ -800,9 +806,7 @@ async def visitor_stats_page():
 
 
 @app.get("/visitor-stats/data")
-async def visitor_stats_data(authorization: Optional[str] = Header(None)):
-    if not require_auth(authorization):
-        return JSONResponse(status_code=401, content={"error": "未授权"})
+async def visitor_stats_data():
     return build_visitor_stats_payload()
 
 

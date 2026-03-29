@@ -210,10 +210,10 @@
         <div class="hero">
             <div>
                 <h1>访客统计</h1>
-                <p>查看聊天页、新闻页和访客统计页的访问情况，包括独立访客、来源类型、来源页、浏览器设备分布以及最近访问记录。</p>
+                <p>查看主页、聊天页、新闻页、顶会 DDL 页、日语学习页和访客统计页的访问情况，包括独立访客、来源类型、来源页、浏览器设备分布以及最近访问记录。</p>
             </div>
             <div class="hero-actions">
-                <a href="/" target="_blank">返回聊天</a>
+                <a href="/" target="_blank">返回主页</a>
                 <a href="/news" target="_blank">打开新闻</a>
                 <button onclick="loadStats()">刷新数据</button>
             </div>
@@ -329,23 +329,8 @@
         }
 
         async function loadStats() {
-            const token = localStorage.getItem('auth_token') || '';
-            if (!token) {
-                showError('未检测到登录态，请先回到聊天页登录，再打开访客统计。');
-                return;
-            }
-
             try {
-                const res = await fetch('/visitor-stats/data', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-
-                if (res.status === 401) {
-                    showError('登录态已失效，请回到聊天页重新登录。');
-                    return;
-                }
+                const res = await fetch('/visitor-stats/data');
 
                 if (!res.ok) {
                     throw new Error(`HTTP ${res.status}`);

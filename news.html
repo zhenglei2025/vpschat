@@ -24,6 +24,12 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.15);
         }
         .top-bar h1 { font-size: 1.4em; }
+        .top-bar .nav-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: flex-end;
+        }
         .top-bar .back-btn {
             padding: 8px 18px;
             background: rgba(255,255,255,0.2);
@@ -202,7 +208,12 @@
 <body>
     <div class="top-bar">
         <h1>📰 NewsAgent 新闻中心</h1>
-        <a class="back-btn" href="/">← 返回聊天</a>
+        <div class="nav-actions">
+            <a class="back-btn" href="/chat">聊天</a>
+            <a class="back-btn" href="/visitor-stats">访客统计</a>
+            <a class="back-btn" href="/ccf-deadlines">顶会 DDL</a>
+            <a class="back-btn" href="/jlpt-n2-plan">日语学习</a>
+        </div>
     </div>
     <div class="container" id="content">
         <div class="loading" id="loading">正在加载新闻列表...</div>
