@@ -105,6 +105,10 @@ def _local_materials_runtime_ready() -> bool:
     return os.path.isdir(JP_DIR) and fitz is not None and PdfReader is not None
 
 
+def _intermediate_static_cache_ready() -> bool:
+    return os.path.isfile(INTERMEDIATE_STATIC_CACHE)
+
+
 def _unavailable_payload(reason: str) -> dict[str, Any]:
     return {
         "mode": "unavailable",
@@ -515,7 +519,11 @@ def _beginner_lower_lessons() -> dict[int, dict[str, str]]:
 
 @lru_cache(maxsize=2)
 def _intermediate_vocab_lessons(source_key: str) -> dict[int, str]:
-    reader = PdfReader(SOURCE_FILES[source_key])
+    path = SOURCE_FILES.get(source_key)
+    if PdfReader is None or not path or not os.path.isfile(path):
+        return {}
+
+    reader = PdfReader(path)
     text = "\n".join((page.extract_text() or "") for page in reader.pages)
     pattern = re.compile(r"第\s*([0-9０-９]+)\s*[课課]")
     matches = list(pattern.finditer(text))
@@ -576,6 +584,33 @@ def _beginner_resources(lesson_number: int) -> list[dict[str, str]]:
     return items
 
 
+def _intermediate_resources(book_key: str) -> list[dict[str, str]]:
+    book_source = f"intermediate-{book_key}-book"
+    vocab_source = f"intermediate-{book_key}-vocab"
+    book_label = INTERMEDIATE_BOOK_LABELS[book_key]
+    items = []
+
+    if get_material_source_path(book_source):
+        items.append(
+            {
+                "name": f"{book_label} 主教材 PDF",
+                "detail": "如果你想对照原版排版、练习和插图，直接打开这份 PDF。",
+                "sourceKey": book_source,
+            }
+        )
+
+    if get_material_source_path(vocab_source):
+        items.append(
+            {
+                "name": f"{book_label} 单词 PDF",
+                "detail": "这份词汇 PDF 可以直接对照今天课次做记忆和复习。",
+                "sourceKey": vocab_source,
+            }
+        )
+
+    return items
+
+
 def _build_beginner_day(lesson_number: int) -> dict[str, Any]:
     lesson = _get_beginner_lesson(lesson_number)
     text = lesson.get("text", "")
@@ -627,7 +662,6 @@ def _build_beginner_review(start_lesson: int, end_lesson: int) -> dict[str, Any]
 
 def _build_intermediate_lesson(book_key: str, lesson_number: int) -> dict[str, Any]:
     vocab_source = f"intermediate-{book_key}-vocab"
-    book_source = f"intermediate-{book_key}-book"
     static_payload = _load_intermediate_static_cache().get(book_key, {}).get(str(lesson_number), {})
     vocab_text = static_payload.get("vocab") or _intermediate_vocab_lessons(vocab_source).get(lesson_number, "")
     book_label = INTERMEDIATE_BOOK_LABELS[book_key]
@@ -659,18 +693,7 @@ def _build_intermediate_lesson(book_key: str, lesson_number: int) -> dict[str, A
                 "text": _truncate(vocab_text or "当前没有抽到这一课的词汇文本，请直接打开右侧 PDF。", 1800),
             }
         ],
-        "resources": [
-            {
-                "name": f"{book_label} 主教材 PDF",
-                "detail": "如果你想对照原版排版、练习和插图，直接打开这份 PDF。",
-                "sourceKey": book_source,
-            },
-            {
-                "name": f"{book_label} 单词 PDF",
-                "detail": "这份词汇 PDF 可以直接对照今天课次做记忆和复习。",
-                "sourceKey": vocab_source,
-            },
-        ],
+        "resources": _intermediate_resources(book_key),
         "lessonNumber": lesson_number,
         "lessonTitle": f"第 {lesson_number} 课",
     }
@@ -678,7 +701,6 @@ def _build_intermediate_lesson(book_key: str, lesson_number: int) -> dict[str, A
 
 def _build_intermediate_review(book_key: str, lesson_numbers: list[int]) -> dict[str, Any]:
     vocab_source = f"intermediate-{book_key}-vocab"
-    book_source = f"intermediate-{book_key}-book"
     book_label = INTERMEDIATE_BOOK_LABELS[book_key]
     static_payload = _load_intermediate_static_cache().get(book_key, {})
     vocab_lessons = _intermediate_vocab_lessons(vocab_source)
@@ -707,18 +729,7 @@ def _build_intermediate_review(book_key: str, lesson_numbers: list[int]) -> dict
                 "text": "\n\n".join(excerpts),
             }
         ],
-        "resources": [
-            {
-                "name": f"{book_label} 主教材 PDF",
-                "detail": "复盘时建议对照正文、例句和课后练习。",
-                "sourceKey": book_source,
-            },
-            {
-                "name": f"{book_label} 单词 PDF",
-                "detail": "复盘日优先二刷这几课的高频词和固定搭配。",
-                "sourceKey": vocab_source,
-            },
-        ],
+        "resources": _intermediate_resources(book_key),
         "lessonRange": [lesson_numbers[0], lesson_numbers[-1]],
     }
 
@@ -754,13 +765,13 @@ def get_local_material_for_day(day: int) -> dict[str, Any]:
     if day < 1 or day > 99:
         raise ValueError("day out of range")
 
-    if not os.path.isdir(JP_DIR):
-        return _unavailable_payload("当前服务器没有挂载本地日语资料目录，因此只能展示计划本身，无法读取本地教材摘录。")
-
-    if fitz is None or PdfReader is None:
-        return _unavailable_payload("当前服务器缺少本地教材解析依赖，因此无法读取本地教材摘录。")
-
     if day <= 56:
+        if not os.path.isdir(JP_DIR):
+            return _unavailable_payload("当前服务器没有挂载本地日语资料目录，因此初级阶段无法读取本地教材摘录。")
+
+        if fitz is None or PdfReader is None:
+            return _unavailable_payload("当前服务器缺少本地教材解析依赖，因此初级阶段无法读取本地教材摘录。")
+
         if day % 7 == 0:
             end_lesson = _foundation_lesson_for_day(day)
             start_lesson = max(1, end_lesson - 5)
@@ -777,6 +788,10 @@ def get_local_material_for_day(day: int) -> dict[str, Any]:
                 "blocks": [],
                 "resources": [],
             }
+
+        if not _intermediate_static_cache_ready() and not _local_materials_runtime_ready():
+            return _unavailable_payload("当前服务器既没有已提交的中级 OCR 缓存，也没有挂载本地教材目录，因此无法读取中级教材摘录。")
+
         if schedule["review"]:
             return _build_intermediate_review(schedule["book"], schedule["lessons"])
         return _build_intermediate_lesson(schedule["book"], schedule["lesson"])
