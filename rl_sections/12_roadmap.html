@@ -154,6 +154,72 @@
     <li><strong>THU NLP (清华)</strong>：Agent 评测和 benchmark</li>
 </ul>
 
+<div class="subsection">🔬 深度研究课题：MCTS × Memory × RL</div>
+<div id="research-locked-container" class="locked-container">
+    <div class="lock-overlay">
+        <div class="lock-box">
+            <h3>🔒 前沿进阶课题</h3>
+            <p>结合 TreeRL 与 Search Adapter，深入探讨 MCTS, Memory 与 RL 的前沿结合方向</p>
+            <input type="password" id="research-pwd-input" placeholder="请输入密码..." onkeypress="if(event.key==='Enter') window.unlockResearch()">
+            <button id="research-unlock-btn" onclick="window.unlockResearch()">解锁内容</button>
+            <div id="research-pwd-error" class="lock-error">密码错误，请重试</div>
+        </div>
+    </div>
+    
+    <div class="locked-content-blur">
+        <div class="roadmap-grid">
+            <div class="roadmap-card">
+                <strong>1. MCTS-Enhanced Training-Time Exploration for Agent RL</strong>
+                <p>
+                    <strong>动机</strong>: DeepSearch (TreeRL) 证明了在训练循环中嵌入 MCTS 能打破 RLVR 性能瓶颈。然而，Agentic 轨迹（如网页操作、代码调优）远比线性计算复杂。<br>
+                    <strong>挑战</strong>: 针对开放探索环境，如何在缺乏 Dense Reward 时进行可靠的 Node 扩展和 Quality 估计？<br>
+                    <strong>预期实验</strong>: 移植 Global Frontier Selection 与 Tree-GRPO 算法到 RAGEN 或类似 Agent 环境中，验证 Training-Time Exploration 相比于 Direct Rollout 的大幅效率提升。
+                </p>
+            </div>
+            <div class="roadmap-card">
+                <strong>2. Memory-Augmented MCTS: Persistent Experience for Tree Search</strong>
+                <p>
+                    <strong>动机</strong>: 现有 MCTS 每次遇到新问题多从零开始，而人类专家擅长检索历史经验。<br>
+                    <strong>挑战</strong>: 如何构建一套能在不同推理任务或轮次间复用的检索记忆系统（Cross-problem Replay Buffer），辅助 Tree Search？<br>
+                    <strong>预期实验</strong>: 构建 Embedding-based Experience Memory，使搜索初期便能通过 Retriever 提供先验的 Frontier Scoring 或 Subgoal 方向，显著降低 MCTS 步数。
+                </p>
+            </div>
+            <div class="roadmap-card">
+                <strong>3. Guided Subgoal Discovery via MCTS Backpropagation</strong>
+                <p>
+                    <strong>动机</strong>: Guided-ReST (Search Adapter) 依赖 Oracle 提供的 Optimal Solutions 作为 Landmark；而 MCTS 可以自动返回每个中间节点的 Q-Value。<br>
+                    <strong>挑战</strong>: 能否基于 Tree Search 中反向传播的高置信度 Q-Value 分布，纯自动地挖掘并标注出高质量的推理里程碑（Subgoals）？<br>
+                    <strong>预期实验</strong>: 自动提取搜索树中价值跃升的节点作为 Subgoal，以此作为 Jump-Start 或 ReST 的锚点，进而完全摆脱 Oracle 监督的强依赖。
+                </p>
+            </div>
+            <div class="roadmap-card">
+                <strong>4. Entropy-Guided Negative Mining for RL Training</strong>
+                <p>
+                    <strong>动机</strong>: DeepSearch 中最有趣的发现之一是：探索中“模型最自信的错误”（熵最低的错误轨迹）反而是最具指导价值的训练负样本。<br>
+                    <strong>挑战</strong>: 该策略可否作为通用的对齐/强化学习组件？而不仅仅局限于 MCTS 搜索内部。<br>
+                    <strong>预期实验</strong>: 在标准 DAPO/GRPO 训练中，抛弃随机负例采样，改用根据 Entropy 进行动态 Negative Mining，对比算法在复杂推理环境下的方差及收敛。
+                </p>
+            </div>
+            <div class="roadmap-card">
+                <strong>5. Unified Hierarchical MDP: Token vs Operation vs Episode</strong>
+                <p>
+                    <strong>动机</strong>: Search Adapter 表明 Operation-level MDP 比 Token-level 更高效，而复杂场景通常是分层多轮（Episode-level）的。<br>
+                    <strong>挑战</strong>: 如何在一个统一的 RL 框架下组合多层级的 Advantage Estimation？<br>
+                    <strong>预期实验</strong>: 搭建混合粒度学习模型：底层 Token-level SFT 对齐语言流，中层 Operation-level GRPO 掌控逻辑步骤，顶层 Episode-level 提供整体奖惩信号。
+                </p>
+            </div>
+            <div class="roadmap-card">
+                <strong>6. Self-Evolving Search Curriculum: MCTS + Adaptive Difficulty</strong>
+                <p>
+                    <strong>动机</strong>: 简单题用 Direct Rollout，难题用 Deep MCTS，应是一个随模型能力共同进化的过程（Self-Evolving Curriculum）。<br>
+                    <strong>挑战</strong>: 如何精确且自适应地分配 MCTS 的 Budget，并在训练中动态拔高环境难度？<br>
+                    <strong>预期实验</strong>: 监测 Pass@1 与 Model Confidence 动态调整搜索宽度/深度，形成一套自适应强化学习算法，以极小化的 Rollout 成本实现渐进式极限对齐。
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="formula">
     $$\text{一句话总结：Agentic RL} = \text{强先验模型} + \text{可验证奖励} + \text{稳定 rollout 基建} + \text{合适的策略更新} + \text{你的研究贡献}$$
 </div>
