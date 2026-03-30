@@ -963,7 +963,7 @@ async def agentic_rl_guide_page():
 
 @app.get("/gufeng-xiqiang-tutorial")
 async def gufeng_xiqiang_tutorial_page():
-    """古风戏腔唱歌教程页面"""
+    """通用唱歌教程页面，侧重流行唱法和古风戏腔"""
     with open(GUFENG_XIQIANG_TUTORIAL_HTML, "r", encoding="utf-8") as f:
         return HTMLResponse(content=f.read())
 
