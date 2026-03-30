@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>人像摄影教程</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #f3efe8;
+            --paper: rgba(255, 252, 247, 0.94);
+            --panel: #fff9f2;
+            --line: rgba(86, 68, 48, 0.14);
+            --ink: #2c2117;
+            --muted: #6d5b4a;
+            --coffee: #6a4932;
+            --coffee-deep: #41281b;
+            --amber: #c48743;
+            --amber-soft: rgba(196, 135, 67, 0.14);
+            --olive: #6f7b58;
+            --olive-soft: rgba(111, 123, 88, 0.14);
+            --shadow: 0 18px 42px rgba(67, 43, 27, 0.12);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            color: var(--ink);
+            font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background:
+                radial-gradient(circle at 8% 0%, rgba(196, 135, 67, 0.16), transparent 30%),
+                radial-gradient(circle at 92% 12%, rgba(111, 123, 88, 0.14), transparent 24%),
+                linear-gradient(180deg, #faf6f0 0%, var(--bg) 100%);
+        }
+
+        a {
+            color: inherit;
+        }
+
+        .page {
+            max-width: 1240px;
+            margin: 0 auto;
+            padding: 24px 16px 56px;
+        }
+
+        .hero {
+            position: relative;
+            overflow: hidden;
+            padding: 32px;
+            border-radius: 30px;
+            color: #fffaf4;
+            background:
+                linear-gradient(135deg, rgba(37, 27, 20, 0.92), rgba(91, 61, 39, 0.9)),
+                linear-gradient(135deg, #3e2b1f, #7a5638);
+            box-shadow: 0 28px 60px rgba(62, 43, 31, 0.24);
+        }
+
+        .hero::after {
+            content: "";
+            position: absolute;
+            inset: auto -80px -110px auto;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 214, 162, 0.24), transparent 68%);
+            pointer-events: none;
+        }
+
+        .hero-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 18px;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 13px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.13);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            font-size: 0.9rem;
+            letter-spacing: 0.04em;
+        }
+
+        .hero h1 {
+            margin: 16px 0 12px;
+            font-size: clamp(2.1rem, 4vw, 3.4rem);
+            line-height: 1.08;
+        }
+
+        .hero p {
+            margin: 0;
+            max-width: 790px;
+            line-height: 1.82;
+            color: rgba(255, 250, 244, 0.9);
+        }
+
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .hero-actions a {
+            padding: 11px 15px;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            background: rgba(255, 255, 255, 0.12);
+            color: #fffaf4;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .hero-actions a:hover {
+            background: rgba(255, 255, 255, 0.18);
+        }
+
+        .hero-meta,
+        .anchor-strip,
+        .card-grid,
+        .gear-grid,
+        .lighting-grid,
+        .setting-grid,
+        .posing-grid,
+        .scene-grid,
+        .retouch-grid,
+        .mistake-grid,
+        .practice-grid {
+            display: grid;
+            gap: 14px;
+        }
+
+        .hero-meta {
+            margin-top: 22px;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        .hero-pill,
+        .card,
+        .gear-card,
+        .lighting-card,
+        .setting-card,
+        .posing-card,
+        .scene-card,
+        .retouch-card,
+        .mistake-card,
+        .practice-card,
+        .panel,
+        .flow-step {
+            background: var(--paper);
+            border: 1px solid var(--line);
+            border-radius: 22px;
+            box-shadow: var(--shadow);
+        }
+
+        .hero-pill {
+            padding: 16px 18px;
+            background: rgba(255, 249, 242, 0.12);
+            border-color: rgba(255, 255, 255, 0.12);
+            color: #fffaf4;
+            box-shadow: none;
+        }
+
+        .hero-pill .label {
+            font-size: 0.86rem;
+            color: rgba(255, 250, 244, 0.72);
+        }
+
+        .hero-pill .value {
+            margin-top: 7px;
+            font-size: 1.02rem;
+            font-weight: 700;
+        }
+
+        .warning {
+            margin-top: 18px;
+            padding: 16px 18px;
+            border-radius: 18px;
+            background: rgba(255, 238, 218, 0.14);
+            border: 1px solid rgba(255, 238, 218, 0.18);
+            color: #fff2e4;
+            line-height: 1.75;
+        }
+
+        .anchor-strip {
+            margin-top: 18px;
+            grid-template-columns: repeat(8, minmax(0, 1fr));
+        }
+
+        .anchor-strip a {
+            padding: 14px 16px;
+            border-radius: 18px;
+            background: var(--panel);
+            border: 1px solid var(--line);
+            text-decoration: none;
+            font-weight: 700;
+            color: var(--coffee-deep);
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+
+        .anchor-strip a span {
+            display: block;
+            margin-top: 4px;
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: var(--muted);
+        }
+
+        .section {
+            margin-top: 20px;
+        }
+
+        .section-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+
+        .section-head h2 {
+            margin: 0;
+            font-size: 1.32rem;
+        }
+
+        .section-head p {
+            margin: 6px 0 0;
+            color: var(--muted);
+            line-height: 1.72;
+            max-width: 760px;
+        }
+
+        .section-kicker,
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 11px;
+            border-radius: 999px;
+            background: var(--amber-soft);
+            color: var(--coffee);
+            font-size: 0.84rem;
+            font-weight: 700;
+        }
+
+        .card-grid,
+        .gear-grid,
+        .lighting-grid,
+        .setting-grid,
+        .posing-grid,
+        .scene-grid,
+        .retouch-grid,
+        .mistake-grid {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        .practice-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .card,
+        .gear-card,
+        .lighting-card,
+        .setting-card,
+        .posing-card,
+        .scene-card,
+        .retouch-card,
+        .mistake-card,
+        .practice-card {
+            padding: 20px;
+        }
+
+        .stat-label,
+        .mini-title,
+        .scene-sub {
+            color: var(--muted);
+        }
+
+        .stat-value {
+            margin-top: 10px;
+            font-size: 2.02rem;
+            font-weight: 800;
+            color: var(--coffee-deep);
+        }
+
+        .mini-title {
+            font-size: 0.88rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .card h3,
+        .gear-card h3,
+        .lighting-card h3,
+        .setting-card h3,
+        .posing-card h3,
+        .scene-card h3,
+        .retouch-card h3,
+        .mistake-card h3,
+        .practice-card h3,
+        .panel h3,
+        .flow-step h3 {
+            margin: 10px 0 8px;
+            font-size: 1.08rem;
+        }
+
+        .card p,
+        .gear-card p,
+        .lighting-card p,
+        .setting-card p,
+        .posing-card p,
+        .scene-card p,
+        .retouch-card p,
+        .mistake-card p,
+        .practice-card p,
+        .panel p,
+        .flow-step p {
+            margin: 0;
+            line-height: 1.78;
+            color: var(--muted);
+        }
+
+        .list,
+        .flow {
+            margin: 14px 0 0;
+            padding-left: 18px;
+            color: var(--ink);
+            line-height: 1.8;
+        }
+
+        .list li,
+        .flow li {
+            margin-bottom: 8px;
+        }
+
+        .panel {
+            padding: 22px;
+        }
+
+        .two-col {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 14px;
+        }
+
+        .quote {
+            margin-top: 14px;
+            padding: 16px 18px;
+            border-radius: 18px;
+            background: var(--olive-soft);
+            border: 1px solid rgba(111, 123, 88, 0.16);
+            color: #4c593a;
+            line-height: 1.78;
+        }
+
+        .daily-flow {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .flow-step {
+            padding: 18px 16px;
+        }
+
+        .flow-step .time {
+            color: var(--coffee);
+            font-weight: 800;
+            font-size: 1rem;
+        }
+
+        .scene-card {
+            background:
+                linear-gradient(180deg, rgba(255, 251, 246, 0.98), rgba(255, 247, 239, 0.92));
+        }
+
+        .scene-sub {
+            margin-top: 2px;
+            font-size: 0.92rem;
+        }
+
+        .footer-note {
+            margin-top: 22px;
+            padding: 18px;
+            border-radius: 18px;
+            background: rgba(65, 40, 27, 0.06);
+            color: var(--muted);
+            line-height: 1.78;
+        }
+
+        @media (max-width: 1100px) {
+            .hero-meta,
+            .card-grid,
+            .gear-grid,
+            .lighting-grid,
+            .setting-grid,
+            .posing-grid,
+            .scene-grid,
+            .retouch-grid,
+            .mistake-grid,
+            .practice-grid,
+            .daily-flow {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .anchor-strip {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 820px) {
+            .hero {
+                padding: 24px;
+                border-radius: 24px;
+            }
+
+            .hero-top,
+            .section-head,
+            .two-col {
+                display: block;
+            }
+
+            .hero-actions,
+            .section-head .section-kicker {
+                margin-top: 14px;
+            }
+
+            .hero-meta,
+            .anchor-strip,
+            .card-grid,
+            .gear-grid,
+            .lighting-grid,
+            .setting-grid,
+            .posing-grid,
+            .scene-grid,
+            .retouch-grid,
+            .mistake-grid,
+            .practice-grid,
+            .daily-flow {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page">
+        <section class="hero">
+            <div class="hero-top">
+                <div>
+                    <div class="eyebrow">摄影学习手册</div>
+                    <h1>从会按快门开始，练到能稳定拍出耐看的人像</h1>
+                    <p>
+                        这页重点不放在器材堆砌，而是把人像摄影真正决定成片的部分拆开讲清楚：
+                        光线怎么找、参数怎么设、怎么和模特沟通、怎么避免表情僵硬、怎么把环境和人放在同一张画面里。
+                        如果你现在拍人像常见的问题是脸大、背景乱、对不上焦、姿势别扭，这套教程就是按这些痛点安排的。
+                    </p>
+                </div>
+                <div class="hero-actions">
+                    <a href="#mindset">拍摄思路</a>
+                    <a href="#gear">器材选择</a>
+                    <a href="#light">光线处理</a>
+                    <a href="#scenes">人像场景</a>
+                </div>
+            </div>
+
+            <div class="hero-meta">
+                <div class="hero-pill">
+                    <div class="label">适合起点</div>
+                    <div class="value">手机党到相机新手</div>
+                </div>
+                <div class="hero-pill">
+                    <div class="label">训练重点</div>
+                    <div class="value">人像拍摄与引导</div>
+                </div>
+                <div class="hero-pill">
+                    <div class="label">建议频率</div>
+                    <div class="value">每周 2 次实拍</div>
+                </div>
+                <div class="hero-pill">
+                    <div class="label">核心目标</div>
+                    <div class="value">稳定输出可用照片</div>
+                </div>
+            </div>
+
+            <div class="warning">
+                人像摄影最容易犯的错，不是“器材不够好”，而是把注意力都放在参数上，却忽略了光线、交流和构图。
+                一张让人愿意保存的人像，通常是“表情自然 + 光线干净 + 画面有主次”，不是单纯的虚化越大越好。
+            </div>
+        </section>
+
+        <section class="anchor-strip section">
+            <a href="#mindset">拍摄思路<span>先知道什么才叫好看的人像</span></a>
+            <a href="#gear">器材选择<span>手机、镜头、配件怎么搭</span></a>
+            <a href="#flow">拍摄流程<span>一场人像怎么从热身到出片</span></a>
+            <a href="#light">光线处理<span>顺光、侧光、逆光怎么拍人</span></a>
+            <a href="#settings">参数设置<span>焦段、光圈、快门、对焦</span></a>
+            <a href="#posing">引导摆姿<span>表情、手部、站姿和互动</span></a>
+            <a href="#scenes">场景实战<span>室内、街头、草地、夜景</span></a>
+            <a href="#retouch">后期修图<span>让照片更干净，不修成假脸</span></a>
+        </section>
+
+        <section class="section">
+            <div class="card-grid">
+                <article class="card">
+                    <div class="stat-label">成片关键</div>
+                    <div class="stat-value">3 项</div>
+                    <p>情绪、光线、画面主次到位，比单纯升级器材更能提升人像质感。</p>
+                </article>
+                <article class="card">
+                    <div class="stat-label">新手高频问题</div>
+                    <div class="stat-value">僵</div>
+                    <p>动作僵、表情僵、构图也僵，通常不是模特不会拍，而是摄影师没给出引导。</p>
+                </article>
+                <article class="card">
+                    <div class="stat-label">最稳焦段</div>
+                    <div class="stat-value">50 到 85</div>
+                    <p>半身和特写阶段最容易出效果，也不容易把脸拍变形。</p>
+                </article>
+                <article class="card">
+                    <div class="stat-label">练习策略</div>
+                    <div class="stat-value">先稳定</div>
+                    <p>先追求“每次都能交片”，再追求复杂布光和高级氛围感。</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="section" id="mindset">
+            <div class="section-head">
+                <div>
+                    <div class="section-kicker">先建立概念</div>
+                    <h2>人像不是把人拍进画面，而是把人的状态拍出来</h2>
+                    <p>很多新手拍人像时只盯着“脸清不清楚”，却没有想过这张照片到底想表达什么。你至少要先决定：是拍氛围、拍情绪、拍清爽感，还是拍故事感。风格一旦清楚，后面的光线、背景、色彩、动作才会开始统一。</p>
+                </div>
+            </div>
+
+            <div class="two-col">
+                <div class="panel">
+                    <h3>先看哪三个点</h3>
+                    <ul class="list">
+                        <li>人物是不是画面里最明确的视觉中心，背景有没有抢戏。</li>
+                        <li>模特状态是否放松，眼神、嘴角、手部有没有明显的不自然。</li>
+                        <li>光线是否干净，脸上有没有大面积脏阴影或乱七八糟的杂色反光。</li>
+                    </ul>
+                </div>
+                <div class="panel">
+                    <h3>先别急着追什么</h3>
+                    <ul class="list">
+                        <li>不要一开始就沉迷大光圈和极致虚化，背景处理不好时会更乱。</li>
+                        <li>不要把所有照片都修成一个滤镜颜色，人物肤色常常会先崩掉。</li>
+                        <li>不要拍到后面才开始沟通，模特一紧张，整组片都会发硬。</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="quote">
+                好看的人像，往往是摄影师把现场减法做得足够好。少一点杂乱背景，少一点僵硬指令，少一点错误曝光，人物就会自然出来。
+            </div>
+        </section>
+
+        <section class="section" id="gear">
+            <div class="section-head">
+                <div>
+                    <div class="section-kicker">器材选择</div>
+                    <h2>人像器材不需要豪华，但需要顺手</h2>
+                    <p>手机、微单、单反都可以拍人像。关键不是价格，而是你是否清楚它的优点和限制。人像入门期，优先保证稳定对焦、好找角度和轻便执行。</p>
+                </div>
+            </div>
+
+            <div class="gear-grid">
+                <article class="gear-card">
+                    <div class="badge">手机</div>
+                    <h3>适合练交流和构图</h3>
+                    <p>手机最适合拿来练引导、找背景和控制光线。尽量用 2x 或 3x 焦段拍人，不要贴脸用超广角。</p>
+                </article>
+                <article class="gear-card">
+                    <div class="badge">50mm</div>
+                    <h3>入门最稳的人像焦段</h3>
+                    <p>适合半身、环境半身和自然抓拍，透视舒服，和模特沟通距离也刚好。</p>
+                </article>
+                <article class="gear-card">
+                    <div class="badge">85mm</div>
+                    <h3>适合特写和氛围压缩</h3>
+                    <p>脸部比例更顺，背景压缩感更明显，拍近景肖像很容易出质感，但现场移动空间要够。</p>
+                </article>
+                <article class="gear-card">
+                    <div class="badge">反光板</div>
+                    <h3>比补光灯更值得先买</h3>
+                    <p>在窗边、树荫、逆光草地都很好用。新手先学反光补脸，比直接硬上闪光更容易控制。</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="section" id="flow">
+            <div class="section-head">
+                <div>
+                    <div class="section-kicker">拍摄流程</div>
+                    <h2>一场人像拍摄，最好按“热身到出片”推进</h2>
+                    <p>不要一上来就把相机举到脸前猛拍。模特需要进入状态，你也需要通过前几分钟确认光线、背景和沟通方式。</p>
+                </div>
+            </div>
+
+            <div class="daily-flow">
+                <article class="flow-step">
+                    <div class="time">01</div>
+                    <h3>先找主背景</h3>
+                    <p>先确定 2 到 3 个可拍位置，再把人带进去，而不是站哪拍哪。</p>
+                </article>
+                <article class="flow-step">
+                    <div class="time">02</div>
+                    <h3>先拍热身照</h3>
+                    <p>从走路、回头、整理头发这种轻动作开始，帮模特放松。</p>
+                </article>
+                <article class="flow-step">
+                    <div class="time">03</div>
+                    <h3>慢慢收近</h3>
+                    <p>先全身，再半身，再近景，不要第一张就怼到大特写。</p>
+                </article>
+                <article class="flow-step">
+                    <div class="time">04</div>
+                    <h3>边拍边反馈</h3>
+                    <p>适当给模特看几张顺手的照片，能明显提高后续状态。</p>
+                </article>
+                <article class="flow-step">
+                    <div class="time">05</div>
+                    <h3>最后补保险镜头</h3>
+                    <p>拍够稳妥正片后，再尝试逆光、俯拍、局部特写这些变化镜头。</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="section" id="light">
+            <div class="section-head">
+                <div>
+                    <div class="section-kicker">光线处理</div>
+                    <h2>人像的好看程度，往往先由光线决定</h2>
+                    <p>新手阶段不要急着复杂布光。先把自然光拍明白，已经能解决大多数人像场景。你需要学会分辨：脸有没有均匀受光，鼻影是不是过重，眼睛里有没有神光。</p>
+                </div>
+            </div>
+
+            <div class="lighting-grid">
+                <article class="lighting-card">
+                    <div class="badge">顺光</div>
+                    <h3>最稳，最适合新手</h3>
+                    <p>人物正面受光均匀，皮肤状态好控制，尤其适合证件感、清新感和手机拍摄。</p>
+                </article>
+                <article class="lighting-card">
+                    <div class="badge">侧光</div>
+                    <h3>最容易出立体感</h3>
+                    <p>让人脸有一点明暗变化，轮廓会更清晰，但要注意别让一边眼睛完全黑掉。</p>
+                </article>
+                <article class="lighting-card">
+                    <div class="badge">逆光</div>
+                    <h3>适合氛围感和发丝光</h3>
+                    <p>背景容易发亮发透，人物边缘有层次。重点是给脸补曝光，否则主体会灰。</p>
+                </article>
+                <article class="lighting-card">
+                    <div class="badge">窗边光</div>
+                    <h3>室内人像最省心</h3>
+                    <p>让人物站在窗边 45 度位置，光线柔和、方向明确，很容易拍出安静干净的脸部层次。</p>
+                </article>
+            </div>
+
+            <div class="panel section">
+                <h3>三条特别实用的人像用光判断</h3>
+                <ul class="list">
+                    <li>先看眼睛里有没有亮点。眼神光一出来，人物马上会更有精神。</li>
+                    <li>先看鼻影和法令纹是否过深。光位太高时，脸会显脏、显老。</li>
+                    <li>如果背景比人亮很多，优先想办法让人走进更均匀的光里，而不是一味拉高曝光。</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="section" id="settings">
+            <div class="section-head">
+                <div>
+                    <div class="section-kicker">参数设置</div>
+                    <h2>拍人像时，参数的目标是“稳准清”，不是“全开到底”</h2>
+                    <p>参数本身没有艺术感，但它决定你会不会糊、会不会跑焦、会不会把脸拍变形。人像入门可以先记住一套很稳的起步参数，再根据场景调。</p>
+                </div>
+            </div>
+
+            <div class="setting-grid">
+                <article class="setting-card">
+                    <div class="badge">焦段</div>
+                    <h3>50mm / 85mm 优先</h3>
+                    <p>全身和环境半身可用 35mm，半身和特写优先 50mm 或 85mm，脸型会更自然。</p>
+                </article>
+                <article class="setting-card">
+                    <div class="badge">光圈</div>
+                    <h3>别总是开到最极限</h3>
+                    <p>单人特写可从 f/1.8 到 f/2.2 起步，双人或动作稍大的场景更建议收到 f/2.8 到 f/4。</p>
+                </article>
+                <article class="setting-card">
+                    <div class="badge">快门</div>
+                    <h3>先保证不糊</h3>
+                    <p>人物静止建议至少 1/250，走动或转身建议 1/500 往上，抓拍会稳很多。</p>
+                </article>
+                <article class="setting-card">
+                    <div class="badge">对焦</div>
+                    <h3>优先盯眼睛</h3>
+                    <p>单人肖像尽量让最近的那只眼成为焦点，眼睛一虚，整张照片很难救。</p>
+                </article>
+            </div>
+
+            <div class="two-col section">
+                <div class="panel">
+                    <h3>一套通用起步参数</h3>
+                    <ul class="list">
+                        <li>白天户外半身：50mm，f/2.2，1/500，ISO 自动上限 800。</li>
+                        <li>窗边静态人像：50mm，f/2，1/250，ISO 200 到 800。</li>
+                        <li>夜景街头人像：35mm 或 50mm，f/1.8 到 f/2.2，1/250，ISO 800 到 3200。</li>
+                    </ul>
+                </div>
+                <div class="panel">
+                    <h3>什么时候要立刻调整</h3>
+                    <ul class="list">
+                        <li>表情很好但手微动时，先提快门，不要先怪镜头不行。</li>
+                        <li>背景虚得太狠，耳朵和眼睛已经不在一个清晰面上时，先收一点光圈。</li>
+                        <li>脸部曝光正常但天空彻底炸掉时，先换机位或压背景亮度，而不是盲目死守原位。</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="posing">
+            <div class="section-head">
+                <div>
+                    <div class="section-kicker">引导摆姿</div>
+                    <h2>不会引导，比不会调参数更影响人像出片</h2>
+                    <p>模特大多数时候不是“不会拍”，而是不知道摄影师想要什么。你给的指令越具体，照片越自然。不要只说“随意一点”，而是要把动作拆成可执行的小步骤。</p>
+                </div>
+            </div>
+
+            <div class="posing-grid">
+                <article class="posing-card">
+                    <div class="badge">站姿</div>
+                    <h3>先让重心有变化</h3>
+                    <p>不要正面对镜头站死。让一只脚承重，一只脚放松，肩线和胯线自然就会有层次。</p>
+                </article>
+                <article class="posing-card">
+                    <div class="badge">手部</div>
+                    <h3>手一定要有事做</h3>
+                    <p>摸头发、扶包带、拉袖口、拿花、碰栏杆，都比双手僵在身体两侧好看。</p>
+                </article>
+                <article class="posing-card">
+                    <div class="badge">表情</div>
+                    <h3>让她先动，再抓那一瞬间</h3>
+                    <p>比起强行要求“笑一下”，更有效的是让模特走两步、看远处、回头、轻轻低头再抬眼。</p>
+                </article>
+                <article class="posing-card">
+                    <div class="badge">交流</div>
+                    <h3>反馈要明确</h3>
+                    <p>直接说“很好，这个角度脸很顺，再把下巴收一点”会比“不错不错”更能帮助对方进入状态。</p>
+                </article>
+            </div>
+
+            <div class="panel section">
+                <h3>四句很好用的现场引导口令</h3>
+                <ol class="flow">
+                    <li>身体先侧一点，肩膀放松，头再轻轻转回来。</li>
+                    <li>眼睛先不要看我，先看左边那个树影，再慢慢看回来。</li>
+                    <li>手不要停，摸一下头发或者整理一下衣领，我抓动作里的瞬间。</li>
+                    <li>很好，这一张状态对了，保持住，再往前走一步。</li>
+                </ol>
+            </div>
+        </section>
+
+        <section class="section" id="scenes">
+            <div class="section-head">
+                <div>
+                    <div class="section-kicker">场景实战</div>
+                    <h2>把常见人像场景拆开练，你会进步得更快</h2>
+                    <p>不要每次都临场碰运气。先把几个高频环境吃透，比如窗边、街头、草地和夜景。每个场景都有固定的风险点和稳定拍法。</p>
+                </div>
+            </div>
+
+            <div class="scene-grid">
+                <article class="scene-card">
+                    <div class="badge">室内</div>
+                    <h3>窗边人像</h3>
+                    <div class="scene-sub">适合安静、日系、清爽风格</div>
+                    <p>让模特离窗户半步到一步，人物面朝窗或 45 度侧面对窗，背景尽量简化到纯墙或干净家具。</p>
+                </article>
+                <article class="scene-card">
+                    <div class="badge">街头</div>
+                    <h3>城市抓拍</h3>
+                    <div class="scene-sub">适合动态感和生活感</div>
+                    <p>先找重复线条、路牌、橱窗反光，再让人物在其中穿过。重点不是站在路边摆拍，而是让环境成为叙事的一部分。</p>
+                </article>
+                <article class="scene-card">
+                    <div class="badge">户外</div>
+                    <h3>草地与树荫</h3>
+                    <div class="scene-sub">适合柔和、自然、轻松感</div>
+                    <p>别让人物站在树叶斑驳光里，脸上容易花。优先选大块均匀树荫，再把亮背景放在人物后方。</p>
+                </article>
+                <article class="scene-card">
+                    <div class="badge">夜景</div>
+                    <h3>路灯和霓虹</h3>
+                    <div class="scene-sub">适合氛围感与情绪片</div>
+                    <p>让人物靠近稳定光源，比如橱窗、招牌、便利店门口，再用环境光做背景层次，不要把人扔进纯黑处硬拉 ISO。</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="section" id="retouch">
+            <div class="section-head">
+                <div>
+                    <div class="section-kicker">后期修图</div>
+                    <h2>后期的任务，是把拍到的优点整理出来，不是重新捏一张脸</h2>
+                    <p>人像后期最容易翻车的地方就是：磨皮过头、肤色漂移、液化太狠。你应该把后期当作“统一画面、清理干扰、强化情绪”的最后一步。</p>
+                </div>
+            </div>
+
+            <div class="retouch-grid">
+                <article class="retouch-card">
+                    <div class="badge">第一步</div>
+                    <h3>先做曝光和白平衡</h3>
+                    <p>先让肤色回到自然状态，再谈滤镜风格。肤色不对，整张片会立刻廉价。</p>
+                </article>
+                <article class="retouch-card">
+                    <div class="badge">第二步</div>
+                    <h3>修杂物，不急着修五官</h3>
+                    <p>先清掉路人、电线、地上垃圾、脸上的临时小瑕疵，画面会马上干净很多。</p>
+                </article>
+                <article class="retouch-card">
+                    <div class="badge">第三步</div>
+                    <h3>局部提亮人物</h3>
+                    <p>轻微提亮脸部和眼神，压暗边角和抢戏背景，比全局乱拉对比更高级。</p>
+                </article>
+                <article class="retouch-card">
+                    <div class="badge">第四步</div>
+                    <h3>保留皮肤纹理</h3>
+                    <p>宁可保留一点真实毛孔，也不要磨到像塑料。人像质感来自真实，不来自糊。</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="section-head">
+                <div>
+                    <div class="section-kicker">常见翻车点</div>
+                    <h2>下面这些错误，比“镜头不够贵”更影响成片</h2>
+                </div>
+            </div>
+
+            <div class="mistake-grid">
+                <article class="mistake-card">
+                    <div class="badge">构图</div>
+                    <h3>头顶长树杆，背后长电线</h3>
+                    <p>拍之前不看背景，后面再修会非常痛苦。按快门前先扫一眼人物头顶和身体边缘。</p>
+                </article>
+                <article class="mistake-card">
+                    <div class="badge">表情</div>
+                    <h3>一直让模特盯镜头硬笑</h3>
+                    <p>连续几十张都一个表情，会显得很僵。要通过动作和聊天让情绪流动起来。</p>
+                </article>
+                <article class="mistake-card">
+                    <div class="badge">参数</div>
+                    <h3>快门太低导致假清晰</h3>
+                    <p>缩略图看着没问题，放大后眼睛其实糊了。这类废片在拍摄现场就应该及时发现。</p>
+                </article>
+                <article class="mistake-card">
+                    <div class="badge">后期</div>
+                    <h3>肤色一键修成灰白</h3>
+                    <p>肤色一旦失去血色，人物会显得没有生命力。修图时优先保证肤色自然，而不是追滤镜统一。</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="section" id="practice">
+            <div class="section-head">
+                <div>
+                    <div class="section-kicker">练习计划</div>
+                    <h2>如果你想真的把人像拍好，最好按主题拆周练</h2>
+                    <p>不要每次拍完只看“有没有几张能发”，而是要问自己这次到底在练什么。下面这个四周循环非常适合打基础。</p>
+                </div>
+            </div>
+
+            <div class="practice-grid">
+                <article class="practice-card">
+                    <div class="badge">第 1 周</div>
+                    <h3>只练光线</h3>
+                    <p>同一个人、同一套衣服，分别拍顺光、侧光、逆光和窗边光，学会比较脸部层次的变化。</p>
+                </article>
+                <article class="practice-card">
+                    <div class="badge">第 2 周</div>
+                    <h3>只练引导</h3>
+                    <p>不急着换景，固定一个场地，连续给出不同动作口令，看哪些指令最容易让人放松。</p>
+                </article>
+                <article class="practice-card">
+                    <div class="badge">第 3 周</div>
+                    <h3>只练焦段和构图</h3>
+                    <p>用 35mm、50mm、85mm 分别拍全身、半身、特写，建立你对透视和背景压缩的直觉。</p>
+                </article>
+                <article class="practice-card">
+                    <div class="badge">第 4 周</div>
+                    <h3>只练选片和后期</h3>
+                    <p>从一场拍摄里只留 12 张，再做统一修图。学会删片，比盲目留很多差不多的照片更重要。</p>
+                </article>
+                <article class="practice-card">
+                    <div class="badge">复盘</div>
+                    <h3>每次拍完记三件事</h3>
+                    <p>哪种光最稳、哪种口令最有效、哪组参数最容易出废片。复盘越具体，下次提升越快。</p>
+                </article>
+                <article class="practice-card">
+                    <div class="badge">目标</div>
+                    <h3>先做到稳定交片</h3>
+                    <p>真正的进步不是偶尔拍出一张神图，而是约一次人像就能稳定交出一组完整、能看的照片。</p>
+                </article>
+            </div>
+        </section>
+
+        <div class="footer-note">
+            建议你把这页当成“拍摄前检查单”来用：出门前看器材和场景，开拍前看光线和参数，拍摄中看状态和背景，回去后按选片与后期流程整理。
+            真正把人像拍稳，往往不是突然学会了某个技巧，而是每个步骤都少犯一点错。
+        </div>
+    </div>
+</body>
+
+</html>

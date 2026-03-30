@@ -126,6 +126,7 @@ RESPONSIVE_NEWS_STYLE = """
 JLPT_N2_PLAN_HTML = "jlpt_n2_plan.html"
 AGENTIC_RL_GUIDE_HTML = "agentic_rl_guide.html"
 GUFENG_XIQIANG_TUTORIAL_HTML = "gufeng_xiqiang_tutorial.html"
+PORTRAIT_PHOTOGRAPHY_TUTORIAL_HTML = "portrait_photography_tutorial.html"
 BEGINNER_STATIC_CACHE = "processed_beginner_materials.json"
 INTERMEDIATE_STATIC_CACHE = "processed_intermediate_materials.json"
 
@@ -272,7 +273,7 @@ def classify_source(request: Request, referer: str) -> str:
 
 def tracked_page_path(path: str) -> bool:
     return (
-        path in {"/", "/news", "/chat", "/visitor-stats", "/ccf-deadlines", "/jlpt-n2-plan", "/gufeng-xiqiang-tutorial"}
+        path in {"/", "/news", "/chat", "/visitor-stats", "/ccf-deadlines", "/jlpt-n2-plan", "/gufeng-xiqiang-tutorial", "/portrait-photography-tutorial"}
         or path.startswith("/news/view/")
         or path.startswith("/jlpt-n2-plan/day/")
     )
@@ -964,6 +965,13 @@ async def agentic_rl_guide_page():
 async def gufeng_xiqiang_tutorial_page():
     """古风戏腔唱歌教程页面"""
     with open(GUFENG_XIQIANG_TUTORIAL_HTML, "r", encoding="utf-8") as f:
+        return HTMLResponse(content=f.read())
+
+
+@app.get("/portrait-photography-tutorial")
+async def portrait_photography_tutorial_page():
+    """人像摄影教程页面"""
+    with open(PORTRAIT_PHOTOGRAPHY_TUTORIAL_HTML, "r", encoding="utf-8") as f:
         return HTMLResponse(content=f.read())
 
 
