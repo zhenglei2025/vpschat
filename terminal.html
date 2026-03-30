@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>VPS Terminal</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css">
+    <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0.10.0/lib/addon-fit.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            height: 100%;
+            background: #0b1020;
+            color: #e8ebff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        #login-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(6, 10, 20, 0.72);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+        }
+
+        #login-box {
+            width: min(92vw, 360px);
+            padding: 28px 24px;
+            border-radius: 18px;
+            background: linear-gradient(180deg, #141c33, #0f1528);
+            border: 1px solid rgba(145, 167, 255, 0.16);
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+            text-align: center;
+        }
+
+        #login-box h2 {
+            margin: 0 0 10px;
+            font-size: 22px;
+        }
+
+        #login-box p {
+            margin: 0 0 18px;
+            color: #9fa8c8;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        #password-input {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(145, 167, 255, 0.18);
+            background: rgba(255, 255, 255, 0.04);
+            color: #fff;
+            font-size: 15px;
+            outline: none;
+        }
+
+        #password-input:focus {
+            border-color: rgba(145, 167, 255, 0.4);
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.12);
+        }
+
+        #login-box button {
+            margin-top: 14px;
+            width: 100%;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #667eea, #4b5fc9);
+            color: #fff;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        #login-error {
+            display: none;
+            margin-top: 12px;
+            color: #ff9a9a;
+            font-size: 13px;
+        }
+
+        #terminal-page {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            min-height: 0;
+        }
+
+        #terminal-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 18px;
+            background: linear-gradient(135deg, #10172c, #0c1223);
+            border-bottom: 1px solid rgba(145, 167, 255, 0.14);
+        }
+
+        .header-title {
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+
+        #term-status {
+            margin-left: auto;
+            font-size: 12px;
+            color: #96a1c2;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .header-btn {
+            padding: 8px 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(145, 167, 255, 0.16);
+            background: rgba(255, 255, 255, 0.04);
+            color: #dbe2ff;
+            text-decoration: none;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .header-btn:hover {
+            background: rgba(145, 167, 255, 0.12);
+        }
+
+        #terminal-container {
+            flex: 1;
+            min-height: 0;
+            padding: 8px;
+        }
+
+        @media (max-width: 720px) {
+            #terminal-header {
+                flex-wrap: wrap;
+            }
+
+            #term-status {
+                order: 3;
+                width: 100%;
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="login-overlay">
+        <div id="login-box">
+            <h2>🖥 VPS 终端</h2>
+            <p>使用聊天页相同的密码验证后，即可连接终端。</p>
+            <input type="password" id="password-input" placeholder="请输入密码..."
+                onkeypress="if(event.key === 'Enter') doLogin()">
+            <button onclick="doLogin()">进入终端</button>
+            <div id="login-error">密码错误，请重试</div>
+        </div>
+    </div>
+
+    <div id="terminal-page">
+        <div id="terminal-header">
+            <span class="header-title">Terminal</span>
+            <span id="term-status">disconnected</span>
+            <button class="header-btn" onclick="refreshTerminal()">重连</button>
+            <a class="header-btn" href="/chat" target="_blank">聊天页</a>
+        </div>
+        <div id="terminal-container"></div>
+    </div>
+
+    <script>
+        let authToken = localStorage.getItem('auth_token') || '';
+        let termWs = null;
+        let term = null;
+        let fitAddon = null;
+
+        function setStatus(text, color) {
+            const statusEl = document.getElementById('term-status');
+            statusEl.textContent = text;
+            statusEl.style.color = color;
+        }
+
+        function showLoginError(message) {
+            const errorEl = document.getElementById('login-error');
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+        }
+
+        function hideLogin() {
+            document.getElementById('login-overlay').style.display = 'none';
+            document.getElementById('login-error').style.display = 'none';
+        }
+
+        function showLogin(message = '请输入密码') {
+            document.getElementById('login-overlay').style.display = 'flex';
+            if (message) showLoginError(message);
+        }
+
+        async function doLogin() {
+            const pwd = document.getElementById('password-input').value.trim();
+            if (!pwd) return;
+            document.getElementById('login-error').style.display = 'none';
+
+            try {
+                const res = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: pwd })
+                });
+
+                if (!res.ok) {
+                    if (res.status === 429) showLoginError('尝试次数过多，请稍后再试');
+                    else showLoginError('密码错误，请重试');
+                    return;
+                }
+
+                const data = await res.json();
+                authToken = data.token;
+                localStorage.setItem('auth_token', authToken);
+                hideLogin();
+                refreshTerminal();
+            } catch (e) {
+                showLoginError('登录失败，请稍后重试');
+            }
+        }
+
+        function initTerminal() {
+            if (term) return;
+            term = new Terminal({
+                cursorBlink: true,
+                fontSize: 14,
+                fontFamily: "'SF Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace",
+                theme: {
+                    background: '#0b1020',
+                    foreground: '#eef2ff',
+                    cursor: '#7dd3fc',
+                    selectionBackground: '#667eea44',
+                    black: '#0b1020',
+                    red: '#f38ba8',
+                    green: '#a6e3a1',
+                    yellow: '#f9e2af',
+                    blue: '#89b4fa',
+                    magenta: '#cba6f7',
+                    cyan: '#94e2d5',
+                    white: '#bac2de',
+                    brightBlack: '#585b70',
+                    brightRed: '#f38ba8',
+                    brightGreen: '#a6e3a1',
+                    brightYellow: '#f9e2af',
+                    brightBlue: '#89b4fa',
+                    brightMagenta: '#cba6f7',
+                    brightCyan: '#94e2d5',
+                    brightWhite: '#f5e0dc'
+                }
+            });
+            fitAddon = new FitAddon.FitAddon();
+            term.loadAddon(fitAddon);
+            term.open(document.getElementById('terminal-container'));
+            fitAddon.fit();
+            term.focus();
+            term.onData((data) => {
+                if (termWs && termWs.readyState === WebSocket.OPEN) {
+                    termWs.send(data);
+                }
+            });
+            window.addEventListener('resize', fitTerminal);
+        }
+
+        function fitTerminal() {
+            if (!term || !fitAddon) return;
+            fitAddon.fit();
+            if (termWs && termWs.readyState === WebSocket.OPEN) {
+                termWs.send(JSON.stringify({ type: 'resize', rows: term.rows, cols: term.cols }));
+            }
+        }
+
+        function disconnectTerminal() {
+            if (termWs) {
+                termWs.close();
+                termWs = null;
+            }
+        }
+
+        function connectTerminal() {
+            if (!authToken) {
+                showLogin('请先登录');
+                return;
+            }
+
+            initTerminal();
+            disconnectTerminal();
+            setStatus('connecting...', '#f9e2af');
+
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            termWs = new WebSocket(`${protocol}//${window.location.host}/ws-terminal`);
+            termWs.binaryType = 'arraybuffer';
+
+            termWs.onopen = () => {
+                termWs.send(authToken);
+            };
+
+            termWs.onmessage = (event) => {
+                if (typeof event.data === 'string') {
+                    try {
+                        const msg = JSON.parse(event.data);
+                        if (msg.type === 'auth') {
+                            if (msg.success) {
+                                hideLogin();
+                                setStatus('connected', '#a6e3a1');
+                                fitTerminal();
+                                return;
+                            }
+                            localStorage.removeItem('auth_token');
+                            authToken = '';
+                            setStatus('auth failed', '#f38ba8');
+                            showLogin('登录已过期，请重新输入密码');
+                            return;
+                        }
+                    } catch (e) { }
+                    term.write(event.data);
+                    return;
+                }
+                term.write(new Uint8Array(event.data));
+            };
+
+            termWs.onclose = () => {
+                setStatus('disconnected', '#f38ba8');
+            };
+
+            termWs.onerror = () => {
+                setStatus('error', '#f38ba8');
+            };
+        }
+
+        function refreshTerminal() {
+            if (term) {
+                term.clear();
+                term.focus();
+            }
+            connectTerminal();
+        }
+
+        window.addEventListener('beforeunload', () => {
+            disconnectTerminal();
+        });
+
+        initTerminal();
+        if (authToken) {
+            hideLogin();
+            connectTerminal();
+        } else {
+            showLogin('');
+        }
+    </script>
+</body>
+
+</html>

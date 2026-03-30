@@ -547,6 +547,12 @@ async def chat_page():
         return HTMLResponse(content=f.read())
 
 
+@app.get("/terminal")
+async def terminal_page():
+    with open("terminal.html", "r", encoding="utf-8") as f:
+        return HTMLResponse(content=f.read())
+
+
 # ===== 2. 登录接口（公开） =====
 @app.post("/login")
 async def login(request: Request):
