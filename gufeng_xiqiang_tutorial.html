@@ -465,6 +465,88 @@
             line-height: 1.78;
         }
 
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+            margin-top: 16px;
+        }
+
+        .video-card {
+            padding: 20px;
+            border-radius: 22px;
+            background: linear-gradient(180deg, rgba(255, 251, 246, 0.98), rgba(255, 246, 238, 0.92));
+            border: 1px solid var(--line);
+            box-shadow: var(--shadow);
+        }
+
+        .video-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .video-platform,
+        .video-fit {
+            display: inline-flex;
+            align-items: center;
+            padding: 5px 10px;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+
+        .video-platform {
+            background: rgba(143, 48, 68, 0.1);
+            color: var(--wine);
+        }
+
+        .video-fit {
+            background: rgba(62, 117, 104, 0.1);
+            color: var(--jade);
+        }
+
+        .video-card h3 {
+            margin: 12px 0 8px;
+            font-size: 1.04rem;
+        }
+
+        .video-card p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.76;
+        }
+
+        .video-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .video-actions a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(143, 48, 68, 0.16);
+            background: rgba(143, 48, 68, 0.08);
+            color: var(--wine-deep);
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .video-actions a:hover {
+            background: rgba(143, 48, 68, 0.14);
+        }
+
+        .video-tip {
+            margin-top: 10px;
+            font-size: 0.88rem;
+            color: var(--muted);
+        }
+
         .footer-note {
             margin-top: 22px;
             padding: 18px;
@@ -509,6 +591,7 @@
             .song-grid,
             .mistake-grid,
             .check-grid,
+            .video-grid,
             .daily-flow,
             .anchor-strip,
             .hero-meta,
@@ -721,6 +804,36 @@
             <div class="quote">
                 判断你是不是在“真支撑”：吸气后肚子不是拼命鼓出去，而是在发声过程中，腰腹像在稳定地托住气流。你会觉得声音更容易挂住，而不是用脖子往上顶。
             </div>
+
+            <div class="panel section">
+                <h3>配套视频教程</h3>
+                <p>这一阶段重点是把静吸气、均匀呼气和基础支撑做稳定。先跟练，再自己计时和录音，效果会比只看理论强很多。</p>
+                <div class="video-grid">
+                    <article class="video-card">
+                        <div class="video-meta">
+                            <span class="video-platform">Bilibili</span>
+                            <span class="video-fit">静吸气 / 呼气控制</span>
+                        </div>
+                        <h3>〖唱歌干货〗唱歌基础训练教程 {呼吸控制专项训练}</h3>
+                        <p>很适合对应这一页里的“静吸气 4 组”和“嘶声长呼气”，直接拿来做每日气息跟练。</p>
+                        <div class="video-actions">
+                            <a href="https://www.bilibili.com/video/BV1yC4y1y7WD/" target="_blank" rel="noopener noreferrer">打开视频</a>
+                        </div>
+                    </article>
+                    <article class="video-card">
+                        <div class="video-meta">
+                            <span class="video-platform">Bilibili</span>
+                            <span class="video-fit">腹式呼吸 / 初学打底</span>
+                        </div>
+                        <h3>B站最全唱歌教程，初学者教程 | 气息的训练 | 腹式呼吸法 | 气泡音</h3>
+                        <p>更适合刚开始找身体感觉的人，能和站姿调整、下肋打开、呼吸路径这些内容配套着练。</p>
+                        <div class="video-actions">
+                            <a href="https://www.bilibili.com/video/BV17S4y1k7RC/" target="_blank" rel="noopener noreferrer">打开视频</a>
+                        </div>
+                    </article>
+                </div>
+                <div class="video-tip">建议做法：先看 1 遍，再跟练 1 遍，最后脱离视频自己完成一组 15 到 20 秒的均匀呼气。</div>
+            </div>
         </section>
 
         <section class="section" id="voice">
@@ -776,6 +889,36 @@
                     <p>不要在发声没稳时乱唱大段旋律。先把小范围音阶唱准，听感会比硬唱整首歌提升更明显。</p>
                 </article>
             </div>
+
+            <div class="panel section">
+                <h3>配套视频教程</h3>
+                <p>第二阶段的核心不是硬冲高音，而是先把发声通道唱通，再慢慢把亮度提起来。下面两支更贴近“混声通道”和“基础练声动作”。</p>
+                <div class="video-grid">
+                    <article class="video-card">
+                        <div class="video-meta">
+                            <span class="video-platform">Bilibili</span>
+                            <span class="video-fit">混声 / 头声衔接</span>
+                        </div>
+                        <h3>〖声乐教学〗如何通过咽音建立混声通道？胸声 头声 咽腔共鸣 咽音 会厌 关闭</h3>
+                        <p>适合和这页里的“从说话感往上接”“轻头声别发虚”一起练，重点看胸声到头声如何连起来。</p>
+                        <div class="video-actions">
+                            <a href="https://www.bilibili.com/video/BV1t54y1p77x/" target="_blank" rel="noopener noreferrer">打开视频</a>
+                        </div>
+                    </article>
+                    <article class="video-card">
+                        <div class="video-meta">
+                            <span class="video-platform">Bilibili</span>
+                            <span class="video-fit">唇颤音 / 放松通道</span>
+                        </div>
+                        <h3>〖唱功School〗专业歌手必修课 唇颤攻略 VOL.1 怎样发出最标准的唇颤音？</h3>
+                        <p>这支更适合解决“唇颤音做不起来”或“滑音一上去就卡住”的问题，能直接服务第二阶段的热身顺序。</p>
+                        <div class="video-actions">
+                            <a href="https://www.bilibili.com/video/BV1tb411b71P/" target="_blank" rel="noopener noreferrer">打开视频</a>
+                        </div>
+                    </article>
+                </div>
+                <div class="video-tip">建议做法：把视频里的动作强度压低一点，先求松和通，再求亮和高。</div>
+            </div>
         </section>
 
         <section class="section">
@@ -816,6 +959,36 @@
                     先把要唱的那一句当成“朗诵”读顺，再按照原旋律用 `lu` 或 `na` 唱顺，最后带歌词唱。
                     这样做能把节奏、字口和旋律拆开，避免你一上来就因为歌词复杂把气息和音准都带乱。
                 </p>
+            </div>
+
+            <div class="panel section">
+                <h3>配套视频教程</h3>
+                <p>这一阶段要把“咬字、归韵、连线、弱起”练得更像一句话写出来，而不是一字一字往外蹦。下面两支视频更贴这类练法。</p>
+                <div class="video-grid">
+                    <article class="video-card">
+                        <div class="video-meta">
+                            <span class="video-platform">Bilibili</span>
+                            <span class="video-fit">咬字 / 归韵</span>
+                        </div>
+                        <h3>〖Da老师唱歌咬字教程〗第三章：唱歌必学的咬字规律与归韵技巧</h3>
+                        <p>很适合对应这页里的“字头清，字腹长，字尾收”，尤其适合中文歌里句尾容易塌、字口发硬的人。</p>
+                        <div class="video-actions">
+                            <a href="https://www.bilibili.com/video/BV1pt411h7js/" target="_blank" rel="noopener noreferrer">打开视频</a>
+                        </div>
+                    </article>
+                    <article class="video-card">
+                        <div class="video-meta">
+                            <span class="video-platform">Bilibili</span>
+                            <span class="video-fit">古风句法 / 线条感</span>
+                        </div>
+                        <h3>唱歌教学：五分钟教你热门古风歌曲《锦鲤抄》唱歌技巧教学</h3>
+                        <p>这支更偏古风实战，适合拿来体会弱起、连音、字头别太重这些细节怎么放进一句中国风旋律里。</p>
+                        <div class="video-actions">
+                            <a href="https://www.bilibili.com/video/BV13t411a7th/" target="_blank" rel="noopener noreferrer">打开视频</a>
+                        </div>
+                    </article>
+                </div>
+                <div class="video-tip">建议做法：先把视频里的示范句用 `la` 唱顺，再换成歌词，不要直接上完整原词。</div>
             </div>
         </section>
 
@@ -884,6 +1057,36 @@
                         <li>录音回放时，字仍然清楚，不是只有尖音没有内容。</li>
                     </ul>
                 </div>
+            </div>
+
+            <div class="panel section">
+                <h3>配套视频教程</h3>
+                <p>戏腔阶段最怕一上来就模仿情绪和尖细感，所以我把资源分成“方法讲解”和“古风句子实战”两类，先练位置，再练味道。</p>
+                <div class="video-grid">
+                    <article class="video-card">
+                        <div class="video-meta">
+                            <span class="video-platform">Bilibili</span>
+                            <span class="video-fit">戏腔方法 / 高位置</span>
+                        </div>
+                        <h3>〖戏腔〗这可能是B站最易懂的戏腔唱法教学了！轻松学会古风戏腔歌曲</h3>
+                        <p>适合配合这一节的“亮、细、提、稳”一起看，先建立高位置和轻头声的方向感，再加一点戏曲化色彩。</p>
+                        <div class="video-actions">
+                            <a href="https://www.bilibili.com/video/BV1bu4y12748/" target="_blank" rel="noopener noreferrer">打开视频</a>
+                        </div>
+                    </article>
+                    <article class="video-card">
+                        <div class="video-meta">
+                            <span class="video-platform">Bilibili</span>
+                            <span class="video-fit">戏腔实战 / 句子拆练</span>
+                        </div>
+                        <h3>古风戏腔歌曲唱法怎么练？1分钟教你学好这首歌《谪仙》</h3>
+                        <p>更适合你开始做“正常唱一遍，再戏腔版唱一遍”的对比练习，能把转色和句子处理落到具体作品里。</p>
+                        <div class="video-actions">
+                            <a href="https://www.bilibili.com/video/BV1eh41127zb/" target="_blank" rel="noopener noreferrer">打开视频</a>
+                        </div>
+                    </article>
+                </div>
+                <div class="video-tip">建议做法：先把视频里的示范句降 2 到 4 个半音唱稳，录音没有喉紧和漏气，再逐步回原调。</div>
             </div>
         </section>
 
