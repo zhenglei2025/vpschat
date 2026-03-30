@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>VPS Relay Chat</title>
+    <title>VPS 控制台</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
@@ -547,11 +547,11 @@
 <body>
     <div id="login-overlay">
         <div id="login-box">
-            <h2>🔒 VPS 中转聊天室</h2>
+            <h2>🔒 VPS 控制台</h2>
             <input type="password" id="password-input" placeholder="请输入密码..."
                 onkeypress="if(event.key==='Enter') doLogin()">
             <br>
-            <button onclick="doLogin()">进入聊天</button>
+            <button onclick="doLogin()">进入控制台</button>
             <div id="login-error">密码错误，请重试</div>
         </div>
     </div>
@@ -584,7 +584,7 @@
     <!-- 中间主聊天区 -->
     <div id="main-area">
         <div id="chat-header">
-            <span class="header-title">VPS 中转聊天室</span>
+            <span class="header-title">VPS 控制台</span>
             <a href="/news" target="_blank" class="header-link-btn">📰 新闻</a>
             <a href="/visitor-stats" target="_blank" class="header-link-btn">📊 访客统计</a>
             <a href="/terminal" target="_blank" class="terminal-link-btn">🖥 终端</a>
