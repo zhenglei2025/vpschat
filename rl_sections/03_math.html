@@ -1,0 +1,185 @@
+<div class="panel-head">
+    <div>
+        <div class="panel-kicker">Mathematics</div>
+        <h2>数学基础：从策略梯度定理到现代 LLM RL</h2>
+    </div>
+</div>
+<p class="panel-intro">
+    这一节不是列公式，而是带你<strong>推一遍</strong>。核心推导链是：
+    目标函数 → log-trick → Policy Gradient Theorem → baseline → advantage → GAE → importance sampling → PPO clip。
+    后面所有算法（GRPO、DAPO、GSPO）都是在这条链的某个环节做变形。
+</p>
+
+<div class="subsection">3.1 Policy Gradient Theorem 推导</div>
+<div class="derivation">
+    <div class="derivation-title">定理（策略梯度定理，Sutton et al. 2000）</div>
+    <div class="derivation-step">
+        <span class="step-num">1</span>
+        <strong>目标函数</strong>：最大化策略 $\pi_\theta$ 下的期望回报
+        <p>$$J(\theta) = \mathbb{E}_{\tau \sim \pi_\theta}[R(\tau)] = \sum_{\tau} P(\tau | \theta) R(\tau)$$</p>
+    </div>
+    <div class="derivation-step">
+        <span class="step-num">2</span>
+        <strong>对 $\theta$ 求梯度</strong>，注意 $R(\tau)$ 不依赖 $\theta$（奖励由环境决定）
+        <p>$$\nabla_\theta J(\theta) = \sum_{\tau} \nabla_\theta P(\tau | \theta) \cdot R(\tau)$$</p>
+    </div>
+    <div class="derivation-step">
+        <span class="step-num">3</span>
+        <strong>Log-derivative trick</strong>：$\nabla_\theta P(\tau|\theta) = P(\tau|\theta) \nabla_\theta \log P(\tau|\theta)$
+        <p>$$\nabla_\theta J(\theta) = \sum_{\tau} P(\tau|\theta) \nabla_\theta \log P(\tau|\theta) \cdot R(\tau) = \mathbb{E}_{\tau \sim \pi_\theta}\left[\nabla_\theta \log P(\tau|\theta) \cdot R(\tau)\right]$$</p>
+        <p>这就是 REINFORCE 的核心——把对概率的梯度变成对 log 概率的期望，从而可用采样估计。</p>
+    </div>
+    <div class="derivation-step">
+        <span class="step-num">4</span>
+        <strong>分解轨迹概率</strong>：$P(\tau|\theta) = p(s_0)\prod_{t=0}^{T-1} \pi_\theta(a_t|s_t) P(s_{t+1}|s_t,a_t)$
+        <p>取对数后：$\log P(\tau|\theta) = \log p(s_0) + \sum_{t=0}^{T-1} \log \pi_\theta(a_t|s_t) + \sum_{t=0}^{T-1} \log P(s_{t+1}|s_t,a_t)$</p>
+        <p>对 $\theta$ 求梯度时，$\log p(s_0)$ 和 $\log P(s_{t+1}|s_t,a_t)$ 都和 $\theta$ 无关，消去：</p>
+        <p>$$\nabla_\theta \log P(\tau|\theta) = \sum_{t=0}^{T-1} \nabla_\theta \log \pi_\theta(a_t|s_t)$$</p>
+    </div>
+    <div class="derivation-step">
+        <span class="step-num">5</span>
+        <strong>得到 REINFORCE estimator</strong>
+        <p>$$\nabla_\theta J(\theta) = \mathbb{E}_{\tau \sim \pi_\theta}\left[\sum_{t=0}^{T-1} \nabla_\theta \log \pi_\theta(a_t|s_t) \cdot R(\tau)\right]$$</p>
+        <p>这是最基本的策略梯度估计：采样轨迹，计算每个 action 的 log-prob 梯度，乘以整条轨迹的回报。</p>
+    </div>
+</div>
+
+<div class="subsection">3.2 Baseline 与方差缩减</div>
+<p>REINFORCE 的致命问题是<strong>方差巨大</strong>：$R(\tau)$ 的绝对值可能很大且波动剧烈。解决方案是引入 baseline $b(s_t)$。</p>
+
+<div class="derivation">
+    <div class="derivation-title">引理：任意 baseline 不改变梯度期望</div>
+    <div class="derivation-step">
+        <span class="step-num">1</span>
+        <strong>要证明</strong>：$\mathbb{E}_{a \sim \pi_\theta(\cdot|s)}[\nabla_\theta \log \pi_\theta(a|s) \cdot b(s)] = 0$ 对任意 $b(s)$ 成立
+    </div>
+    <div class="derivation-step">
+        <span class="step-num">2</span>
+        <strong>展开期望</strong>：
+        <p>$$\sum_a \pi_\theta(a|s) \nabla_\theta \log \pi_\theta(a|s) \cdot b(s) = b(s) \sum_a \pi_\theta(a|s) \frac{\nabla_\theta \pi_\theta(a|s)}{\pi_\theta(a|s)} = b(s) \sum_a \nabla_\theta \pi_\theta(a|s)$$</p>
+    </div>
+    <div class="derivation-step">
+        <span class="step-num">3</span>
+        <strong>关键恒等式</strong>：$\sum_a \nabla_\theta \pi_\theta(a|s) = \nabla_\theta \sum_a \pi_\theta(a|s) = \nabla_\theta 1 = 0$
+        <p>概率归一化条件保证了 baseline 不引入 bias。这是 policy gradient 方法能自由使用 baseline 的理论基础。</p>
+    </div>
+</div>
+
+<p>有了这个保证，标准做法是用 <strong>状态值函数</strong> $V^\pi(s)$ 作为 baseline，得到 <strong>advantage function</strong>：</p>
+<div class="formula">
+    $$A^\pi(s_t, a_t) = Q^\pi(s_t, a_t) - V^\pi(s_t)$$
+    <div class="formula-note">$A > 0$ 表示这个 action 好于平均水平，$A < 0$ 表示差于平均。梯度更新时，好的 action 提升概率，差的降低。<br>
+    这比用 $R(\tau)$ 作为梯度权重方差小得多——advantage 衡量的是"相对好坏"而非"绝对回报"。</div>
+</div>
+
+<div class="subsection">3.3 GAE（Generalized Advantage Estimation）</div>
+<p>
+    实际中 $A^\pi$ 不可精确计算，需要估计。GAE（Schulman et al. 2016）提供了一族参数化的估计器，
+    通过 $\lambda$ 参数在 bias 和 variance 之间权衡。
+</p>
+<p>定义 TD residual：</p>
+<div class="formula">
+    $$\delta_t = r_t + \gamma V(s_{t+1}) - V(s_t)$$
+    <div class="formula-note">$\delta_t$ 是 one-step advantage 的估计。如果 $V$ 精确，$\mathbb{E}[\delta_t] = A^\pi(s_t, a_t)$（无偏但高方差）。</div>
+</div>
+<p>GAE 是 TD residual 的指数加权平均：</p>
+<div class="formula">
+    $$\hat{A}_t^{\text{GAE}(\gamma,\lambda)} = \sum_{l=0}^{T-t-1} (\gamma\lambda)^l \delta_{t+l} = \delta_t + \gamma\lambda\delta_{t+1} + (\gamma\lambda)^2\delta_{t+2} + \cdots$$
+</div>
+<p>两个极端情况揭示了 $\lambda$ 的意义：</p>
+<ul>
+    <li>$\lambda = 0$：$\hat{A}_t = \delta_t = r_t + \gamma V(s_{t+1}) - V(s_t)$，纯 TD(0)，<strong>低方差但高 bias</strong>（完全依赖 $V$ 的精度）。</li>
+    <li>$\lambda = 1$：$\hat{A}_t = \sum_{l=0}^{T-t-1}\gamma^l \delta_{t+l} = R_t - V(s_t)$，等价于 Monte Carlo return 减去 baseline，<strong>无偏但高方差</strong>。</li>
+</ul>
+
+<div class="callout">
+    <strong>LLM RL 中的 GAE</strong>
+    在大模型 RL 中使用 GAE 需要一个和 policy 同规模的 value model $V_\phi$，这意味着训练成本几乎翻倍。
+    这正是 GRPO 去掉 value model 的动机之一。当 $\gamma = 1$（undiscounted）且只在序列末端给奖励时，
+    GAE 退化为 $\hat{A}_t = r_T - V(s_t)$，此时 value model 的作用是提供 state-dependent baseline。
+    GRPO 用组内均值替代了这个 baseline，虽然不再 state-dependent，但换来了架构上的极大简化。
+</div>
+
+<div class="subsection">3.4 Importance Sampling 与 Off-policy Correction</div>
+<p>
+    On-policy 采样要求 rollout 策略和更新策略完全一致。实际中为了效率，通常采样一批数据后做多 epoch 更新。
+    此时需要 importance sampling correction：
+</p>
+<div class="formula">
+    $$\nabla_\theta J(\theta) = \mathbb{E}_{\tau \sim \pi_{\theta_{\text{old}}}}\left[\sum_t \frac{\pi_\theta(a_t|s_t)}{\pi_{\theta_{\text{old}}}(a_t|s_t)} \nabla_\theta \log \pi_\theta(a_t|s_t) \cdot A_t\right]$$
+    <div class="formula-note">$r_t(\theta) = \frac{\pi_\theta(a_t|s_t)}{\pi_{\theta_{\text{old}}}(a_t|s_t)}$ 就是 importance sampling ratio（概率比率）。</div>
+</div>
+<p>LLM 场景下 importance ratio 的特殊问题：</p>
+<ul>
+    <li><strong>高维性</strong>：词表通常 32K-128K，softmax 输出的微小变化就会使某些 token 的 ratio 极端偏大或偏小。</li>
+    <li><strong>序列级放大</strong>：如果按序列计算 ratio $\rho_{\text{seq}} = \prod_t r_t$，由于连乘效应，长序列的 ratio 可能 explode 或 vanish。</li>
+    <li><strong>多 epoch 漂移</strong>：即使只做 2-4 epoch，LLM 参数的一次更新可能显著改变某些 token 的概率分布。</li>
+</ul>
+
+<div class="subsection">3.5 PPO Clipping 的几何直觉</div>
+<p>PPO 的核心是用 clipping 替代 TRPO 的 constrained optimization：</p>
+<div class="formula">
+    $$\mathcal{L}_{\text{PPO}}(\theta) = \mathbb{E}_t\left[\min\left(r_t(\theta) A_t, \;\text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon) \cdot A_t\right)\right]$$
+</div>
+<p>分两种情况理解：</p>
+<ul>
+    <li>当 $A_t > 0$（好 action）：奖励方向允许 $r_t$ 增大（即提高这个 action 的概率），但最多到 $1+\epsilon$ 就被截停。防止一步更新太猛。</li>
+    <li>当 $A_t < 0$（差 action）：惩罚方向允许 $r_t$ 减小（即降低概率），但最多到 $1-\epsilon$。防止概率被压到接近 0。</li>
+</ul>
+
+<div class="callout warn">
+    <strong>TRPO → PPO 的近似代价</strong>
+    TRPO 通过 KL constraint 精确限制策略更新幅度（二阶优化），理论上保证单调改进。
+    PPO 用 clipping 做一阶近似，丢失了理论保证，但工程实现极大简化。
+    在 LLM RL 中几乎没有人用 TRPO，因为二阶优化对大模型参数量不可承受。
+    但这意味着 PPO 在 LLM 上的收敛保证比经典 RL 更弱——这是一个值得关注的理论 gap。
+</div>
+
+<div class="subsection">3.6 KL Divergence 在 LLM RL 中的三种角色</div>
+<div class="card-grid">
+    <div class="card">
+        <strong>角色 1：Loss 中的正则项</strong>
+        <p>
+            $\mathcal{L} = \mathbb{E}[A_t \log\pi_\theta] - \beta \text{KL}(\pi_\theta \| \pi_{\text{ref}})$<br>
+            防止策略偏离参考策略太远。$\beta$ 越大约束越强、学习越慢但越稳定。
+            InstructGPT、GRPO 都使用这种形式。
+        </p>
+    </div>
+    <div class="card">
+        <strong>角色 2：Early Stopping Criterion</strong>
+        <p>
+            监控每个 epoch 的 $\text{KL}(\pi_\theta \| \pi_{\theta_{\text{old}}})$，超过阈值就停止当前 batch 的更新。
+            PPO 原始实现有这个机制。Anthropic 的实践中也常用。
+        </p>
+    </div>
+</div>
+<p>
+    <strong>一个常被忽略的点——KL 方向的选择</strong>：
+</p>
+<div class="formula">
+    $$\text{Forward KL: } \text{KL}(\pi_{\text{ref}} \| \pi_\theta) = \mathbb{E}_{a \sim \pi_{\text{ref}}}\left[\log\frac{\pi_{\text{ref}}(a)}{\pi_\theta(a)}\right] \quad \text{(mode-covering, mean-seeking)}$$
+    $$\text{Reverse KL: } \text{KL}(\pi_\theta \| \pi_{\text{ref}}) = \mathbb{E}_{a \sim \pi_\theta}\left[\log\frac{\pi_\theta(a)}{\pi_{\text{ref}}(a)}\right] \quad \text{(mode-seeking, zero-forcing)}$$
+    <div class="formula-note">
+        大多数 LLM RL 用 <strong>reverse KL</strong>（从 $\pi_\theta$ 采样），这会导致 mode-seeking 行为：
+        $\pi_\theta$ 倾向于集中在 $\pi_{\text{ref}}$ 的高概率区域，丢弃低概率的 mode。
+        这对 generation diversity 有负面影响——RL 训练后模型的生成多样性通常下降。
+        DAPO 的 clip-higher 和 entropy bonus 某种程度上是在对抗这个效应。
+    </div>
+</div>
+
+<div class="subsection">3.7 连接到后续算法</div>
+<p>有了上面的推导基础，后面的算法差异可以一目了然：</p>
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr><th>算法</th><th>Advantage 构造</th><th>Ratio 粒度</th><th>Clipping 方式</th><th>需要 Value Model</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>PPO</td><td>GAE（需要 $V_\phi$）</td><td>Token-level</td><td>对称 clip $[1-\epsilon, 1+\epsilon]$</td><td>是</td></tr>
+            <tr><td>RLOO</td><td>Leave-one-out baseline</td><td>Token-level</td><td>通常无 clip</td><td>否</td></tr>
+            <tr><td>GRPO</td><td>组内归一化 $\frac{R_i - \mu}{\sigma}$</td><td>Token-level</td><td>对称 clip</td><td>否</td></tr>
+            <tr><td>DAPO</td><td>组内归一化（改进）</td><td>Token-level</td><td><strong>不对称 clip</strong> (clip-higher)</td><td>否</td></tr>
+            <tr><td>GSPO</td><td>组内归一化</td><td><strong>Sequence-level</strong></td><td>Sequence-level clip</td><td>否</td></tr>
+        </tbody>
+    </table>
+</div>

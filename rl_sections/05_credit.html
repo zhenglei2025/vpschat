@@ -1,0 +1,144 @@
+<div class="panel-head">
+    <div>
+        <div class="panel-kicker">Credit Assignment</div>
+        <h2>Credit Assignment：Agentic RL 的核心理论难题</h2>
+    </div>
+</div>
+<p class="panel-intro">
+    当一个 coding agent 在第 15 步成功修复了 bug，真正关键的决策可能是第 3 步的搜索策略选择。
+    如何把最终成功的信用正确分配到中间步骤，是 Agentic RL 区别于普通 LLM RL 的核心理论问题。
+</p>
+
+<div class="subsection">5.1 三个粒度层级的形式化</div>
+<div class="card-grid">
+    <div class="card">
+        <strong>Token-level Credit Assignment</strong>
+        <p>
+            每个 token 位置 $t$ 有自己的 advantage $A_t$。需要 value model $V(s_t)$ 或 dense reward signal。
+            <br><strong>Pro</strong>：最细粒度，理论上最精确。
+            <br><strong>Con</strong>：需要训练 value model；LLM 的 state space 巨大导致 value function 泛化困难。
+        </p>
+    </div>
+    <div class="card">
+        <strong>Turn-level Credit Assignment</strong>
+        <p>
+            每个 agent turn（一段完整输出）作为 macro-action，advantage 定义在 turn 上。
+            <br><strong>Pro</strong>：匹配 agent 交互的自然粒度。
+            <br><strong>Con</strong>：turn 内的 token 共享同一 advantage，丢失细粒度信息。
+        </p>
+    </div>
+    <div class="card">
+        <strong>Trajectory-level Credit Assignment</strong>
+        <p>
+            整条轨迹共享一个 scalar reward，所有 token 用相同的（归一化后）advantage。
+            <br><strong>Pro</strong>：最简单，只需要 outcome reward。GRPO 本质上是这个层级。
+            <br><strong>Con</strong>：信用分配最粗糙——好决策和坏决策中间的无关决策都分到相同权重。
+        </p>
+    </div>
+</div>
+
+<div class="formula">
+    $$\text{Bias-Variance Tradeoff: } \quad \underbrace{A_t^{\text{token}} \; (\text{最低 bias, 最高 variance})}_{\text{需要 value model}} \quad \leftrightarrow \quad \underbrace{A^{\text{trajectory}} \; (\text{最高 bias, 最低 variance})}_{\text{不需要 value model}}$$
+    <div class="formula-note">GRPO/RLOO 选择了 trajectory-level（低方差但高 bias），PPO 选择了 token-level（低 bias 但高方差 + 高成本）。这不是对错问题，而是资源约束下的最优权衡。</div>
+</div>
+
+<div class="subsection">5.2 ORM vs PRM：结果奖励与过程奖励</div>
+<p>
+    信用分配问题的另一个切面是奖励的密度。
+    Outcome Reward Model (ORM) 只在轨迹末端给奖励，Process Reward Model (PRM) 在每一步都给反馈。
+</p>
+
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr><th></th><th>ORM（结果奖励）</th><th>PRM（过程奖励）</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><strong>定义</strong></td><td>$R = R(x, y_{\text{final}})$</td><td>$R_t = R(x, y_{\leq t})$ 对每步 $t$</td></tr>
+            <tr><td><strong>信号密度</strong></td><td>Sparse（只在结尾）</td><td>Dense（每步都有）</td></tr>
+            <tr><td><strong>Bias</strong></td><td>无偏（ground truth）</td><td>可能有偏（取决于 PRM 质量）</td></tr>
+            <tr><td><strong>Variance</strong></td><td>高（所有 token 共享同一信号）</td><td>低（每步有独立信号）</td></tr>
+            <tr><td><strong>获取成本</strong></td><td>低（自动验证 final answer）</td><td>高（需要人工标注或 MC rollout 估计）</td></tr>
+            <tr><td><strong>Credit Assignment</strong></td><td>差（无法区分好步骤和坏步骤）</td><td>好（直接对每步评估）</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="callout">
+    <strong>PRM 的 Monte Carlo 估计方法</strong>
+    如果没有人工标注，PRM 可以用 MC rollout 近似：给定前缀 $y_{\leq t}$，多次继续生成直到结束，
+    统计最终正确率作为该步骤的 process reward 估计：
+    $$\hat{R}_t = \frac{1}{N}\sum_{j=1}^{N} \mathbb{1}[\text{rollout}_j(y_{\leq t}) \text{ is correct}]$$
+    这本质上是在用 Monte Carlo return 来估计每一步的 state value。
+    代价是：每个 step 需要 $N$ 次完整 rollout，计算量 = 原始 rollout × 步数 × $N$。
+    <br>关键引用：Math-Shepherd（Wang et al. 2024）、OmegaPRM（Luo et al. 2024）。
+</div>
+
+<p><strong>Lightman et al. 2023 的关键实验结论</strong>（"Let's Verify Step by Step"）：</p>
+<ul>
+    <li>在数学推理任务上，PRM-guided best-of-N 比 ORM-guided best-of-N 显著更好。</li>
+    <li>PRM 可以定位第一个出错的步骤，而 ORM 只知道最终答案错了。</li>
+    <li>但 PRM 的获取成本远高于 ORM——OpenAI 用人工标注了 ~75K 步骤级别的标签。</li>
+</ul>
+
+<div class="subsection">5.3 TD Learning 在 LLM RL 中的困境</div>
+<p>
+    经典 RL 中，TD learning 是 credit assignment 的主要工具——通过 bootstrapping $V(s_{t+1})$ 来回传信用。
+    但在 LLM 场景下，TD learning 的有效性受到严峻挑战：
+</p>
+<ul>
+    <li><strong>State space 巨大且稀疏</strong>：每个 token prefix 几乎只被访问一次。value function 必须完全依赖泛化，而非记忆。</li>
+    <li><strong>泛化困难</strong>：$V([\text{"The answer is 4"}])$ 和 $V([\text{"The answer is 42"}])$ 可能完全不同，但 prefix embedding 可能相近。</li>
+    <li><strong>高维连续空间</strong>：LLM 的 hidden state 是高维连续向量，value function approximation error 可能很大。</li>
+    <li><strong>只训练一个 epoch</strong>：on-policy 数据只用一次或几次，value model 来不及充分拟合。</li>
+</ul>
+
+<div class="callout warn">
+    <strong>这解释了 GRPO 的流行</strong>
+    GRPO/RLOO 之所以在 LLM RL 中击败了 PPO（至少在研究可复现性上），
+    核心原因不是它们的理论更优雅，而是它们避免了 value function 估计这个在 LLM 场景下特别困难的子问题。
+    用组内相对奖励替代 value baseline，虽然 credit assignment 更粗糙，但避免了 value function approximation error 的累积。
+</div>
+
+<div class="subsection">5.4 Agent 场景的特殊困难</div>
+<div class="card-grid">
+    <div class="card">
+        <strong>环境反馈的随机性</strong>
+        <p>
+            Agent 调用搜索引擎、执行代码、访问网页——这些操作的返回结果有随机性（搜索结果排序、网页内容变化、执行超时等）。
+            同一个动作在不同时间执行可能得到不同的 observation，导致"同一策略，不同轨迹，不同奖励"，增加了方差。
+        </p>
+    </div>
+    <div class="card">
+        <strong>长轨迹中的 Vanishing Advantage</strong>
+        <p>
+            当轨迹长达 50+ turns 时，最终 reward 的信号被分摊到所有步骤——每个步骤的 advantage 趋近于均值（接近 0）。
+            模型很难学到"第 3 步的搜索比第 7 步的搜索更关键"。
+        </p>
+    </div>
+    <div class="card">
+        <strong>Action Space 的混合性</strong>
+        <p>
+            Agent 的 action 既包含自由文本生成（推理思考），也包含结构化操作（tool call, API request）。
+            这两类 action 的 reward signal 和 exploration 策略可能需要不同处理。
+        </p>
+    </div>
+    <div class="card">
+        <strong>Hindsight 方法的潜力</strong>
+        <p>
+            受 Hindsight Experience Replay (HER, Andrychowicz et al. 2017) 启发：
+            失败轨迹的前半段可能是好的（只是后面出了意外），可以用 hindsight relabeling 把部分片段变成正样本。
+            在 agent 场景下，这意味着"任务失败但搜索策略正确"的轨迹仍然有训练价值。
+            目前在 LLM agent 领域的应用尚不成熟。
+        </p>
+    </div>
+</div>
+
+<div class="subsection">5.5 研究方向提示</div>
+<p>Credit assignment 是 Agentic RL 中最有理论深度的研究方向之一。几个可能的切入点：</p>
+<ol>
+    <li><strong>自适应粒度</strong>：根据 reward signal 的密度自动选择 token-level / turn-level / trajectory-level credit assignment。</li>
+    <li><strong>Scalable PRM 构建</strong>：降低 MC rollout 估计 process reward 的样本复杂度（参见 Panel 9 Open Problem 1）。</li>
+    <li><strong>LLM-specific value function architectures</strong>：利用 LLM 本身作为 value function（而非独立训练），减少参数和训练成本。</li>
+    <li><strong>因果推断方法</strong>：用 counterfactual reasoning 识别关键步骤（"如果第 3 步做了不同的选择，结果会怎样"）。</li>
+</ol>

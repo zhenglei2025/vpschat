@@ -1,0 +1,109 @@
+<div class="panel-head">
+    <div>
+        <div class="panel-kicker">Evaluation</div>
+        <h2>评测方法论：如何正确衡量 Agentic RL 的效果</h2>
+    </div>
+</div>
+<p class="panel-intro">
+    "我的 GRPO 训练后 MATH pass@1 提了 5 个点"——这个 claim 可能是真的，也可能完全是 artifact。
+    评测方法论在 Agentic RL 研究中是被低估的环节：temperature 设置、采样次数、benchmark 选择、metric 计算方式，
+    都可能让同一个模型在不同报告中表现出 10%+ 的差异。
+</p>
+
+<div class="subsection">8.1 Pass@k 的正确计算</div>
+<p>
+    Pass@k 要回答的问题是：采样 $k$ 次，至少有一次正确的概率是多少？
+    <strong>正确的无偏估计</strong>（Chen et al. 2021, Codex 论文）：
+</p>
+<div class="formula">
+    $$\text{pass@}k = 1 - \frac{\binom{n-c}{k}}{\binom{n}{k}}$$
+    <div class="formula-note">
+        其中 $n$ 是总采样次数（$n \geq k$），$c$ 是其中正确的次数。
+        这个公式的含义是：从 $n$ 个样本中随机选 $k$ 个，全都不正确（都从 $n-c$ 个错误样本中选）的概率的补。
+    </div>
+</div>
+
+<div class="callout warn">
+    <strong>常见错误做法</strong>
+    <p>错误 1：直接采样 $k$ 次看有没有对的。这是有偏估计——当 $k$ 接近 $n$ 时偏差尤其大。</p>
+    <p>错误 2：用 $1 - (1 - \text{pass@1})^k$ 近似。这假设每次采样独立同分布（i.i.d.），忽略了同一个模型对同一问题的采样之间的相关性。</p>
+    <p>正确做法：先采样足够多次（如 200 次），然后用组合公式计算 pass@k。</p>
+</div>
+
+<p><strong>Pass@1 vs Pass@k 的语义差异</strong>：</p>
+<ul>
+    <li><strong>Pass@1</strong> 衡量的是 greedy/low-temperature policy 的质量——"模型的最佳单次尝试有多好"。与 temperature 强相关（通常用 $T=0$ 或 $T=0.2$）。</li>
+    <li><strong>Pass@k</strong>（$k > 1$）衡量的是 exploration + coverage——"模型有没有能力生成正确答案，哪怕不是每次都对"。通常用更高 temperature（$T=0.8$ ~ $1.0$）采样。</li>
+    <li>RL 训练可能提升 pass@1（集中策略到好的 mode）但降低 pass@k（减少 diversity，丢失边缘模式）。反之也可能。</li>
+</ul>
+
+<div class="subsection">8.2 Benchmark 的局限性</div>
+<div class="card-grid">
+    <div class="card">
+        <strong>Data Contamination</strong>
+        <p>
+            训练数据可能包含测试集的问题或答案。在 math benchmark（如 GSM8K, MATH）上尤其严重，
+            因为这些数据集在网上广泛传播。处理方式：(1) 用 held-out 变体（如 MATH-500 新版本）；
+            (2) 做 contamination analysis（检测训练集与测试集的 N-gram overlap）。
+        </p>
+    </div>
+    <div class="card">
+        <strong>Benchmark Saturation</strong>
+        <p>
+            当 state-of-the-art 在 GSM8K 上已经 >95%，这个 benchmark 几乎无法区分模型能力差异。
+            需要转向更难的 benchmark（MATH Level 5, AIME, Codeforces）或构造 dynamic 评测集。
+        </p>
+    </div>
+    <div class="card">
+        <strong>Distribution Shift</strong>
+        <p>
+            Benchmark 是静态的、精心构造的问题，和真实世界的任务分布不同。
+            模型在 benchmark 上表现好不代表在真实场景下同样好。
+            Agent 评测尤其如此——SWE-Bench 的 repo 是固定的，而真实开发环境不断变化。
+        </p>
+    </div>
+    <div class="card">
+        <strong>Goodhart on Benchmarks</strong>
+        <p>
+            如果整个社区都针对同一个 benchmark 优化，benchmark 本身就成了 Goodhart 意义上的 proxy。
+            模型在 benchmark 上的"进步"可能不反映真正的能力提升。
+        </p>
+    </div>
+</div>
+
+<div class="subsection">8.3 多维评测框架（Agent 场景）</div>
+<p>Agent 场景下单一 metric 特别危险。推荐多维评测：</p>
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr><th>维度</th><th>指标</th><th>衡量什么</th><th>为什么重要</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><strong>任务</strong></td><td>Task success rate, Pass@1, Pass@k</td><td>最终任务是否完成</td><td>核心指标</td></tr>
+            <tr><td><strong>效率</strong></td><td>平均步数, Token 消耗, 工具调用次数</td><td>完成任务的代价</td><td>线上可用性</td></tr>
+            <tr><td><strong>过程</strong></td><td>无效操作率, 重复搜索率, 空转率</td><td>轨迹质量</td><td>用户体验</td></tr>
+            <tr><td><strong>稳定性</strong></td><td>方差, 失败模式分布, worst-case 表现</td><td>可靠性</td><td>安全部署</td></tr>
+            <tr><td><strong>泛化</strong></td><td>OOD 任务表现, 跨领域迁移</td><td>是否过拟合特定 benchmark</td><td>真实价值</td></tr>
+            <tr><td><strong>成本</strong></td><td>每任务 API 调用数, GPU hours, $ cost</td><td>经济可行性</td><td>落地可能性</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="subsection">8.4 训练过程中的监控指标</div>
+<p>RL 训练过程中需要持续监控的指标（不只是 eval 时才看）：</p>
+<ul>
+    <li><strong>Reward 均值和方差</strong>：均值应该上升但不要太快（太快可能是 hacking）；方差应该先升后稳（方差为 0 意味着无有效梯度）。</li>
+    <li><strong>KL divergence</strong>：$\text{KL}(\pi_\theta \| \pi_{\text{ref}})$ 应该缓慢增长并稳定在合理范围（0.5 - 15 nats）。</li>
+    <li><strong>Entropy</strong>：$H[\pi_\theta]$ 不应该持续下降到接近 0（entropy collapse = mode collapse）。</li>
+    <li><strong>有效样本比例</strong>：dynamic sampling（DAPO）中，被过滤掉的全对/全错 group 的比例。如果 >80% 被过滤，说明数据难度不匹配。</li>
+    <li><strong>Ratio 分布</strong>：importance ratio $r_t$ 应该集中在 1 附近。如果大量 $r_t$ 被 clip，说明 policy 更新太激进或 data staleness 严重。</li>
+    <li><strong>Advantage 分布</strong>：应该近似均值为 0。如果显著偏移，说明 baseline 有问题。</li>
+</ul>
+
+<div class="callout">
+    <strong>实验复现性 checklist</strong>
+    <p>在你的论文中报告以下信息，以确保实验可复现：</p>
+    <p>(1) 精确的 base model 版本和 SFT checkpoint；(2) rollout temperature 和 eval temperature；
+    (3) 采样次数 $n$ 和 pass@k 的 $k$；(4) 所有超参数值；(5) 随机种子（至少 3 个种子的均值和标准差）；
+    (6) 训练 step 数和 wall-clock time；(7) 具体的 prompt template 和 verifier 实现。</p>
+</div>

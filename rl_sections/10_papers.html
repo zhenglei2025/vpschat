@@ -1,0 +1,148 @@
+<div class="panel-head">
+    <div>
+        <div class="panel-kicker">Papers</div>
+        <h2>论文剖析：核心工作的技术深度分析</h2>
+    </div>
+</div>
+<p class="panel-intro">
+    这一节不是论文列表，而是对每篇关键论文的 <strong>Problem → Insight → Method → Assumption → Limitation → Connection</strong> 结构化分析。
+    按三条主线组织：Agent 架构线、Reasoning RL 线、搜索与自训练线。
+</p>
+
+<div class="paper-section-title">A. Agent 架构与任务接口</div>
+<div class="paper-analysis">
+    <div class="pa-head">
+        <span class="paper-badge">2022</span>
+        <span class="paper-badge">Reason + Act</span>
+    </div>
+    <strong><a href="https://arxiv.org/abs/2210.03629" target="_blank" rel="noopener noreferrer">ReAct: Synergizing Reasoning and Acting in Language Models</a></strong>
+    <div class="pa-field"><div class="pa-label">Problem</div><p>LLM 单纯 reasoning（CoT）缺乏与环境交互的能力，单纯 acting 缺乏推理深度。</p></div>
+    <div class="pa-field"><div class="pa-label">Key Insight</div><p>在同一条轨迹中交错 Thought token（不执行，用于推理）和 Action token（执行环境操作），让 reasoning 和 grounding 互相增强。</p></div>
+    <div class="pa-field"><div class="pa-label">Method</div><p>Prompt 设计：Thought → Action → Observation → Thought → ...。不修改模型参数，纯 in-context learning。</p></div>
+    <div class="pa-field"><div class="pa-label">Assumption</div><p>模型有足够的 in-context learning 能力来遵循 thought-action 格式；环境提供结构化的 text observation。</p></div>
+    <div class="pa-field"><div class="pa-label">Limitation</div><p>完全依赖 prompt，无训练——轨迹质量受模型 base 能力限制；不能自我改进。</p></div>
+    <div class="pa-field"><div class="pa-label">Connection</div><p>定义了现代 Agent 轨迹的标准格式。后续所有 agent 训练（Agent Q, RAGEN, Search-R1）都沿用了 ReAct 的 thought-action-observation 结构。</p></div>
+</div>
+
+<div class="paper-analysis">
+    <div class="pa-head">
+        <span class="paper-badge">2024</span>
+        <span class="paper-badge">Software Agent</span>
+    </div>
+    <strong><a href="https://arxiv.org/abs/2405.15793" target="_blank" rel="noopener noreferrer">SWE-agent: Agent-Computer Interfaces Enable Automated Software Engineering</a></strong>
+    <div class="pa-field"><div class="pa-label">Problem</div><p>LLM 能否在真实代码仓库中自主定位、理解和修复 bug？</p></div>
+    <div class="pa-field"><div class="pa-label">Key Insight</div><p>Agent-Computer Interface (ACI) 的设计比模型选择更重要——好的接口能让小模型超过大模型。</p></div>
+    <div class="pa-field"><div class="pa-label">Method</div><p>设计了一套 shell-like 命令接口（搜索文件、查看代码、编辑文件、运行测试），模型通过这些命令与代码仓库交互。</p></div>
+    <div class="pa-field"><div class="pa-label">Limitation</div><p>纯 inference-time agent（无训练）。在 SWE-Bench 上解决率有限（~12% with GPT-4）。轨迹长且成本高。</p></div>
+    <div class="pa-field"><div class="pa-label">Connection</div><p>SWE-agent 定义了 "coding agent" 的标准任务设置和接口。直接推动了 "能否用 RL 训练一个 coding agent" 的研究问题。</p></div>
+</div>
+
+<div class="paper-section-title">B. Reasoning RL 热潮</div>
+<div class="paper-analysis">
+    <div class="pa-head">
+        <span class="paper-badge">2024</span>
+        <span class="paper-badge">GRPO Origin</span>
+    </div>
+    <strong><a href="https://arxiv.org/abs/2402.03300" target="_blank" rel="noopener noreferrer">DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open Language Models</a></strong>
+    <div class="pa-field"><div class="pa-label">Key Insight</div><p>数学推理不需要 value model——同 prompt 采样多条回答，用相对好坏做 advantage，比 PPO 更简单且效果相当。</p></div>
+    <div class="pa-field"><div class="pa-label">Method</div><p>GRPO：组采样 → 组内归一化 advantage → token-level clipped update + KL regularization。细节见 Panel 4.3。</p></div>
+    <div class="pa-field"><div class="pa-label">Assumption</div><p>可以对每条回答自动评判对错（数学有标准答案）；同一 prompt 的多次采样有足够多样性。</p></div>
+    <div class="pa-field"><div class="pa-label">Limitation</div><p>组内归一化不是 state-dependent baseline，理论上引入 bias；对 $G$ 大小和奖励尺度敏感。</p></div>
+    <div class="pa-field"><div class="pa-label">Connection</div><p>GRPO 成为后续 DeepSeek-R1、DAPO、GSPO 的共同基础。是当前 reasoning RL 的 de facto baseline。</p></div>
+</div>
+
+<div class="paper-analysis">
+    <div class="pa-head">
+        <span class="paper-badge">2025.01</span>
+        <span class="paper-badge">Milestone</span>
+    </div>
+    <strong><a href="https://arxiv.org/abs/2501.12948" target="_blank" rel="noopener noreferrer">DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning</a></strong>
+    <div class="pa-field"><div class="pa-label">Key Insight</div><p>纯 RL（不经过 SFT 冷启动）可以让 LLM 自发展现出 step-by-step reasoning、self-correction 等行为（R1-Zero 的 "aha moment"）。</p></div>
+    <div class="pa-field"><div class="pa-label">Method</div><p>两阶段：R1-Zero（纯 GRPO on base model）→ R1（SFT cold start + GRPO + rejection sampling + 多阶段 RL）。</p></div>
+    <div class="pa-field"><div class="pa-label">Critical Analysis</div>
+    <p>
+        "aha moment" 的 claim 需要审慎理解：(1) R1-Zero 的绝对性能弱于 R1（有 SFT 冷启动），说明纯 RL 仍然不如 SFT+RL；
+        (2) 所谓 "emergent reasoning" 可能部分来自 base model 的预训练数据中已有的推理模式被 RL 放大，而非真正的从零创造。
+        Open Reasoner Zero (2025) 的消融实验对此有更细致的分析。
+    </p></div>
+    <div class="pa-field"><div class="pa-label">Connection</div><p>引爆了整个社区对 reasoning RL 的关注。催生了 DAPO、GSPO、SimpleRL、STILL-ALIVE 等后续工作。</p></div>
+</div>
+
+<div class="paper-analysis">
+    <div class="pa-head">
+        <span class="paper-badge">2025.03</span>
+        <span class="paper-badge">System + Algorithm</span>
+    </div>
+    <strong><a href="https://arxiv.org/abs/2503.14476" target="_blank" rel="noopener noreferrer">DAPO: An Open-Source LLM Reinforcement Learning System at Scale</a></strong>
+    <div class="pa-field"><div class="pa-label">Key Insight</div><p>Reasoning RL 的瓶颈不在 loss 公式，而在于长度偏差、clip 耦合、exploration 坍缩和采样效率等系统-算法耦合问题。</p></div>
+    <div class="pa-field"><div class="pa-label">Method</div><p>四个改进：Clip-Higher, Dynamic Sampling, Token-level Loss, Overlong Reward Shaping。详见 Panel 4.4。</p></div>
+    <div class="pa-field"><div class="pa-label">Uniqueness</div><p>DAPO 不是纯算法论文，而是算法-系统 co-design 的范例。它的 contribution 部分来自大规模实验的 engineering insight。</p></div>
+    <div class="pa-field"><div class="pa-label">Limitation</div><p>很多设计选择是 task-specific（针对 math reasoning），迁移到 agent 场景的 generality 未验证。去掉 KL penalty 的长期稳定性有待观察。</p></div>
+</div>
+
+<div class="paper-section-title">C. 搜索、轨迹合成与 Agent 自训练</div>
+<div class="paper-analysis">
+    <div class="pa-head">
+        <span class="paper-badge">2024</span>
+        <span class="paper-badge">MCTS + Agent</span>
+    </div>
+    <strong><a href="https://arxiv.org/abs/2408.07199" target="_blank" rel="noopener noreferrer">Agent Q: Advanced Reasoning and Learning for Autonomous AI Agents</a></strong>
+    <div class="pa-field"><div class="pa-label">Key Insight</div><p>MCTS 不仅能做 test-time enhancement，还能生成偏好数据用于 DPO 训练，从而让 agent 自我改进。</p></div>
+    <div class="pa-field"><div class="pa-label">Method</div><p>Guided MCTS 搜索 agent 轨迹 → 按搜索结果构造 preference pairs → DPO fine-tuning → 更强的 agent → 更好的 MCTS。</p></div>
+    <div class="pa-field"><div class="pa-label">Limitation</div><p>MCTS 需要 environment simulator（需要能回退状态），在很多真实 agent 环境中不可行。DPO 的 offline 限制可能制约 self-improvement 的上限。</p></div>
+</div>
+
+<div class="paper-analysis">
+    <div class="pa-head">
+        <span class="paper-badge">2024</span>
+        <span class="paper-badge">MCTS + Self-Train</span>
+    </div>
+    <strong><a href="https://arxiv.org/abs/2406.03816" target="_blank" rel="noopener noreferrer">ReST-MCTS*: LLM Self-Training via Process Reward Guided Tree Search</a></strong>
+    <div class="pa-field"><div class="pa-label">Key Insight</div><p>用 PRM 引导 MCTS 搜索出高质量 reasoning 轨迹，然后用这些轨迹做 SFT 自训练，iteratively 提升模型。</p></div>
+    <div class="pa-field"><div class="pa-label">Method</div><p>PRM score 作为 MCTS 的 value function → 搜索最优路径 → 收集成功轨迹 → SFT 训练 → 更新 PRM → repeat。</p></div>
+    <div class="pa-field"><div class="pa-label">Connection</div><p>和 rStar-Math、Agent Q 形成"搜索如何反哺训练"的研究脉络。区别在于 ReST-MCTS* 用 SFT，Agent Q 用 DPO，RAGEN 用 GRPO。</p></div>
+</div>
+
+<div class="paper-section-title">D. 2025 前沿工作</div>
+<div class="paper-analysis">
+    <div class="pa-head">
+        <span class="paper-badge">2025</span>
+        <span class="paper-badge">Search + RL</span>
+    </div>
+    <strong><a href="https://arxiv.org/abs/2503.09516" target="_blank" rel="noopener noreferrer">Search-R1: Training LLMs to Reason and Leverage Search Engines with Reinforcement Learning</a></strong>
+    <div class="pa-field"><div class="pa-label">Key Insight</div><p>把搜索引擎调用直接嵌入 RL 训练循环——模型在 reasoning 过程中学会"什么时候搜索、搜什么"，搜索结果被 inline 到上下文中继续推理。</p></div>
+    <div class="pa-field"><div class="pa-label">Method</div><p>GRPO + 特殊 token 标记搜索 action → 搜索结果注入上下文 → 继续生成 → 最终答案的 verifiable reward 回传到整条轨迹。</p></div>
+    <div class="pa-field"><div class="pa-label">Limitation</div><p>搜索引擎的非平稳性（结果随时间变化）；搜索 query 的优化只能通过 RL exploration 间接学习（non-differentiable）。</p></div>
+</div>
+
+<div class="paper-analysis">
+    <div class="pa-head">
+        <span class="paper-badge">2025</span>
+        <span class="paper-badge">Agent RL Framework</span>
+    </div>
+    <strong><a href="https://arxiv.org/abs/2504.20073" target="_blank" rel="noopener noreferrer">RAGEN: Training Agents by Reinforcing Reasoning</a></strong>
+    <div class="pa-field"><div class="pa-label">Key Insight</div><p>Agent RL 需要一套标准化的训练框架——统一 environment interface, trajectory format, reward pipeline, 和 RL algorithm。</p></div>
+    <div class="pa-field"><div class="pa-label">Method</div><p>基于 veRL 构建 task-agnostic 的 agent RL 框架。ReAct-style 轨迹 + 可插拔 environment + GRPO/PPO 训练。</p></div>
+    <div class="pa-field"><div class="pa-label">Contribution</div><p>首个试图建立 agent RL 标准接口的工作。提出了"agent RL 相比 reasoning RL 难在哪里"的系统性实验分析。</p></div>
+</div>
+
+<div class="paper-analysis">
+    <div class="pa-head">
+        <span class="paper-badge">2025</span>
+        <span class="paper-badge">Zero Human Data</span>
+    </div>
+    <strong><a href="https://arxiv.org/abs/2505.04889" target="_blank" rel="noopener noreferrer">Absolute Zero: Reinforced Self-play Reasoning with Zero Data</a></strong>
+    <div class="pa-field"><div class="pa-label">Key Insight</div><p>能否完全不用人类数据来训练 reasoning 能力？通过让模型自己生成问题、自己解决、自己验证，构成闭环 self-play。</p></div>
+    <div class="pa-field"><div class="pa-label">Method</div><p>模型生成数学/代码问题（proposer）→ 模型解决问题（solver）→ code execution 验证 → 双向 RL reward。</p></div>
+    <div class="pa-field"><div class="pa-label">Implication</div><p>如果成立，这意味着 reasoning 能力可以 bootstrapped from zero——对 scalable oversight 和 AI safety 有深远意义。但目前仅在 code/math 上验证。</p></div>
+</div>
+
+<div class="paper-analysis">
+    <div class="pa-head">
+        <span class="paper-badge">2025</span>
+        <span class="paper-badge">Reproducible Baseline</span>
+    </div>
+    <strong><a href="https://arxiv.org/abs/2503.24290" target="_blank" rel="noopener noreferrer">Open Reasoner Zero: An Open Reproduction of DeepSeek-R1-Zero</a></strong>
+    <div class="pa-field"><div class="pa-label">Value</div><p>提供了可复现的 R1-Zero 训练 baseline。关键消融：(1) base model 质量对 "aha moment" 的影响；(2) reward type 的影响；(3) 训练规模的影响。</p></div>
+    <div class="pa-field"><div class="pa-label">For Researchers</div><p>如果你要做 reasoning RL 实验，这篇论文的 codebase 和 training recipe 是一个很好的起点，比直接魔改 DeepSeek-R1 的代码更 clean。</p></div>
+</div>

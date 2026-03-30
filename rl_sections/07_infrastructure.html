@@ -1,0 +1,202 @@
+<div class="panel-head">
+    <div>
+        <div class="panel-kicker">Infrastructure</div>
+        <h2>训练系统：从 Rollout 架构到 Failure Mode 诊断</h2>
+    </div>
+</div>
+<p class="panel-intro">
+    "我的 GRPO reward 不涨"——80% 的原因不在 loss 公式，而在训练系统。
+    Rollout 延迟、on-policy staleness、显存不足、advantage normalization 的 micro-batch 实现 bug，
+    都可能让一个正确的算法跑不出结果。
+</p>
+
+<div class="subsection">7.1 Rollout 系统架构</div>
+<p>
+    LLM RL 训练的瓶颈通常在 rollout（采样）而非 gradient update。
+    核心架构决策是 <strong>Actor-Learner 分离</strong>的程度：
+</p>
+<div class="card-grid">
+    <div class="card">
+        <strong>同步架构（TRL 默认）</strong>
+        <p>
+            同一组 GPU 交替进行 rollout 和 training。
+            <br><strong>Pro</strong>：实现简单，rollout 策略和训练策略完全同步（on-policy）。
+            <br><strong>Con</strong>：GPU 利用率低——rollout 时不训练、训练时不 rollout。
+        </p>
+    </div>
+    <div class="card">
+        <strong>异步架构（veRL, OpenRLHF）</strong>
+        <p>
+            Rollout workers 和 Learner workers 分离，通过 Ray 调度。
+            <br><strong>Pro</strong>：吞吐量高，GPU 利用率好。
+            <br><strong>Con</strong>：引入 policy staleness——rollout 用 $\pi_{\theta_k}$ 采样，learner 已更新到 $\pi_{\theta_{k+n}}$，importance ratio 偏离。
+        </p>
+    </div>
+</div>
+
+<div class="callout">
+    <strong>On-policy Staleness 的量化</strong>
+    设 rollout 用 $\pi_{\theta_k}$ 采样，learner 在 $n$ 次更新后变为 $\pi_{\theta_{k+n}}$。
+    此时 importance ratio 的偏离程度 $\approx \exp(n \cdot \eta \cdot \|\nabla\mathcal{L}\|)$（一阶近似），
+    其中 $\eta$ 是学习率。当 $n$ 较大或 $\eta$ 较大时，clipping 机制可能不足以纠正这个偏离。
+    实践中通常控制 $n \leq 1$（即每轮 rollout 后只做 1-4 epoch 更新）。
+</div>
+
+<div class="subsection">7.2 开源框架对比</div>
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr><th>框架</th><th>核心架构</th><th>RL 算法</th><th>关键设计</th><th>适合场景</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>veRL</strong><br>(Volcengine)</td>
+                <td>FSDP / Megatron + Ray<br>Actor-Learner 分离</td>
+                <td>PPO, GRPO, DAPO</td>
+                <td>Megatron 兼容的 3D 并行；<br>支持大规模分布式 RL</td>
+                <td>大规模 RL 训练研究<br>（64+ GPU）</td>
+            </tr>
+            <tr>
+                <td><strong>OpenRLHF</strong></td>
+                <td>Ray + vLLM<br>推理加速</td>
+                <td>PPO, GRPO, RLOO,<br>DPO, KTO</td>
+                <td>vLLM 加速 rollout；<br>算法覆盖面广</td>
+                <td>中等规模实验<br>（8-32 GPU）</td>
+            </tr>
+            <tr>
+                <td><strong>TRL</strong><br>(HuggingFace)</td>
+                <td>单机 / DeepSpeed<br>同步架构</td>
+                <td>PPO, DPO, GRPO,<br>KTO, ORPO</td>
+                <td>集成 transformers 生态；<br>快速上手</td>
+                <td>快速原型验证<br>（1-8 GPU）</td>
+            </tr>
+            <tr>
+                <td><strong>LLaMA-Factory</strong></td>
+                <td>多后端<br>(DeepSpeed / FSDP)</td>
+                <td>DPO, PPO, GRPO</td>
+                <td>一站式训练平台；<br>WebUI 操作</td>
+                <td>工程落地<br>快速实验</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="subsection">7.3 关键超参数的理论指导</div>
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr><th>超参数</th><th>典型范围</th><th>理论直觉</th><th>过大的后果</th><th>过小的后果</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Learning Rate</strong></td>
+                <td>$1\times10^{-6}$ ~ $5\times10^{-6}$<br>（SFT 的 1/5 ~ 1/10）</td>
+                <td>RL 阶段需要小步逼近，避免策略突变</td>
+                <td>KL 爆炸、reward hacking</td>
+                <td>学不动、reward 不涨</td>
+            </tr>
+            <tr>
+                <td><strong>$\beta$（KL 系数）</strong></td>
+                <td>0.01 ~ 0.1<br>（GRPO 常用 0.04）</td>
+                <td>平衡优化和约束</td>
+                <td>约束太强，学不到新策略</td>
+                <td>策略坍缩、diversity 丢失</td>
+            </tr>
+            <tr>
+                <td><strong>$\epsilon$（clip 范围）</strong></td>
+                <td>0.1 ~ 0.3<br>（GRPO 常用 0.2）</td>
+                <td>trust region 大小</td>
+                <td>更新太激进，训练不稳</td>
+                <td>更新太保守，效率低</td>
+            </tr>
+            <tr>
+                <td><strong>$G$（group size）</strong></td>
+                <td>8 ~ 64<br>（常用 16）</td>
+                <td>baseline 精度 vs 计算成本</td>
+                <td>计算贵、组内多样性要求高</td>
+                <td>baseline 方差大，训练噪声大</td>
+            </tr>
+            <tr>
+                <td><strong>Temperature</strong></td>
+                <td>0.7 ~ 1.0（rollout）<br>0.0 ~ 0.6（eval）</td>
+                <td>探索-利用权衡</td>
+                <td>采样太随机、无效探索多</td>
+                <td>多样性不足、exploration 不够</td>
+            </tr>
+            <tr>
+                <td><strong>训练 epoch 数</strong></td>
+                <td>1 ~ 4<br>（每批 rollout）</td>
+                <td>数据复用 vs on-policy 偏离</td>
+                <td>数据过拟合、ratio 偏离</td>
+                <td>数据利用率低</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="subsection">7.4 分布式训练的 Subtle Issues</div>
+<ul>
+    <li>
+        <strong>Advantage Normalization 在 Micro-batch 中的 Bug</strong>：
+        如果在 micro-batch 内做 advantage normalization（减均值除标准差），
+        不同 micro-batch 的 normalization 统计量不同，导致梯度不一致。
+        正确做法是在<strong>全局 batch</strong> 上计算 normalization 统计量，然后分发到各 micro-batch。
+    </li>
+    <li>
+        <strong>Reference Model 的显存管理</strong>：
+        KL 计算需要 $\pi_{\text{ref}}$，但额外加载一个 full-size model 很贵。
+        常见优化：(1) 共享 backbone 只冻结 ref model 的部分层；(2) 每隔 $N$ 步才更新 ref model；(3) 将 ref model offload 到 CPU/NVMe。
+    </li>
+    <li>
+        <strong>vLLM Rollout 与 Training 的切换开销</strong>：
+        使用 vLLM 加速 rollout 时，需要在 continuous batching 推理模式和 training 模式之间切换，
+        涉及权重同步和 GPU 内存重分配。veRL 的 weight synchronization protocol 是解决这个问题的关键设计。
+    </li>
+</ul>
+
+<div class="subsection">7.5 训练 Failure Mode 诊断</div>
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr><th>症状</th><th>可能原因</th><th>诊断方法</th><th>解决方案</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Reward 上升但 eval 不涨</td>
+                <td>Reward hacking</td>
+                <td>人工检查生成样本质量；对比 held-out 评测集</td>
+                <td>加强 verifier / 多样化评测 / 加 KL 约束</td>
+            </tr>
+            <tr>
+                <td>KL 快速增大</td>
+                <td>lr 过高 / $\beta$ 过小 / 数据异常</td>
+                <td>画 KL vs training step 曲线</td>
+                <td>降 lr / 提高 $\beta$ / 加 KL early stopping</td>
+            </tr>
+            <tr>
+                <td>Entropy 迅速坍缩</td>
+                <td>Mode collapse</td>
+                <td>监控 entropy / 检查生成多样性（unique N-grams）</td>
+                <td>加 entropy bonus / 用 DAPO clip-higher / 增大 $G$</td>
+            </tr>
+            <tr>
+                <td>Loss spike</td>
+                <td>异常样本 / 数值不稳定</td>
+                <td>检查 ratio 分布（是否有极端值）</td>
+                <td>Gradient clipping / 过滤 extreme ratio / 降 lr</td>
+            </tr>
+            <tr>
+                <td>Reward 不涨</td>
+                <td>任务太难 / 探索不足 / lr 太小</td>
+                <td>检查 reward 分布、有效样本比例</td>
+                <td>升 temperature / 简化任务 / curriculum / 升 lr</td>
+            </tr>
+            <tr>
+                <td>训练初期 reward 骤降</td>
+                <td>SFT 冷启动不足</td>
+                <td>对比 SFT model 的 pass@1</td>
+                <td>加强 SFT 阶段 / 先跑 rejection sampling</td>
+            </tr>
+        </tbody>
+    </table>
+</div>

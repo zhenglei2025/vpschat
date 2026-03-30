@@ -961,6 +961,19 @@ async def agentic_rl_guide_page():
         return HTMLResponse(content=f.read())
 
 
+@app.get("/rl_sections/{filename}")
+async def rl_section_file(filename: str):
+    """Serve Agentic RL guide section HTML fragments"""
+    safe_name = os.path.basename(filename)
+    if not safe_name.endswith(".html"):
+        return JSONResponse(status_code=400, content={"error": "仅支持 HTML 文件"})
+    filepath = os.path.join("rl_sections", safe_name)
+    if not os.path.isfile(filepath):
+        return JSONResponse(status_code=404, content={"error": "文件不存在"})
+    with open(filepath, "r", encoding="utf-8") as f:
+        return HTMLResponse(content=f.read())
+
+
 @app.get("/gufeng-xiqiang-tutorial")
 async def gufeng_xiqiang_tutorial_page():
     """通用唱歌教程页面，侧重流行唱法和古风戏腔"""

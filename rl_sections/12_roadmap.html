@@ -1,0 +1,159 @@
+<div class="panel-head">
+    <div>
+        <div class="panel-kicker">Roadmap</div>
+        <h2>研究路线：从理论到能跑实验、能发论文</h2>
+    </div>
+</div>
+<p class="panel-intro">
+    如果你是博士生或刚开始做 Agentic RL 研究，这是一份按时间线组织的学习和研究路线。
+    每个阶段附带必读论文、推荐代码库和验证 milestone。
+</p>
+
+<div class="subsection">Phase 1: 理论基础（第 1-2 周）</div>
+<div class="roadmap-grid">
+    <div class="roadmap-card">
+        <strong>RL 基础理论</strong>
+        <p>
+            必读：Sutton &amp; Barto Ch. 13 (Policy Gradient Methods)<br>
+            推荐：Schulman 2015 (TRPO), Schulman 2017 (PPO) 原始论文<br>
+            博客：<a href="https://lilianweng.github.io/posts/2018-04-08-policy-gradient/" target="_blank">Lilian Weng "Policy Gradient Algorithms"</a><br>
+            <strong>Milestone</strong>：能手推 Policy Gradient Theorem 和 PPO clipping objective。
+        </p>
+    </div>
+    <div class="roadmap-card">
+        <strong>动手实验</strong>
+        <p>
+            用 TRL 的 PPO trainer 训练一个小 LLM（如 Qwen2.5-0.5B）做简单数学题。
+            目标不是做出好结果，而是理解 rollout → reward → advantage → update 的完整流程。
+            <br>推荐代码：<a href="https://github.com/huggingface/trl" target="_blank">TRL (HuggingFace)</a>
+        </p>
+    </div>
+</div>
+
+<div class="subsection">Phase 2: LLM 对齐 RL（第 3-4 周）</div>
+<div class="roadmap-grid">
+    <div class="roadmap-card">
+        <strong>RLHF Pipeline</strong>
+        <p>
+            必读：InstructGPT (Ouyang et al. 2022) — RLHF 的工业化实践<br>
+            必读：DPO (Rafailov et al. 2023) — 理解 offline vs online RL 的 tradeoff<br>
+            推荐：Ziegler et al. 2019 "Fine-Tuning LMs from Human Preferences"<br>
+            <strong>Milestone</strong>：能画出 SFT → RM → PPO → DPO 的完整技术关系图。
+        </p>
+    </div>
+    <div class="roadmap-card">
+        <strong>深度理解</strong>
+        <p>
+            DPO = RL 的 closed-form 解？理解其 Bradley-Terry assumption。<br>
+            Preference 数据 vs Verifiable reward 的区别和联系。<br>
+            博客：<a href="https://huggingface.co/blog/rlhf" target="_blank">HuggingFace "RLHF: Aligning LLMs"</a>
+        </p>
+    </div>
+</div>
+
+<div class="subsection">Phase 3: Reasoning RL（第 5-8 周）</div>
+<div class="roadmap-grid">
+    <div class="roadmap-card">
+        <strong>核心论文精读</strong>
+        <p>
+            精读（逐节、逐公式）：<br>
+            1. DeepSeekMath (Shao et al. 2024) — GRPO 完整理解<br>
+            2. DeepSeek-R1 (2025.01) — RL for reasoning 的 milestone<br>
+            3. DAPO (2025.03) — 算法-系统 co-design<br>
+            4. Open Reasoner Zero (2025) — 可复现 baseline<br>
+            <strong>Milestone</strong>：能复述 GRPO 的完整 pipeline 并指出和 PPO 的 3 个关键差异。
+        </p>
+    </div>
+    <div class="roadmap-card">
+        <strong>复现实验</strong>
+        <p>
+            用 veRL 或 OpenRLHF 复现 GRPO 数学推理实验。<br>
+            目标 benchmark：MATH-500 或 GSM8K。<br>
+            验证：SFT baseline → GRPO training → 观察 reward/KL/entropy 曲线 → eval pass@1 是否提升。<br>
+            推荐代码：<a href="https://github.com/volcengine/verl" target="_blank">veRL</a>,
+            <a href="https://github.com/OpenRLHF/OpenRLHF" target="_blank">OpenRLHF</a>
+        </p>
+    </div>
+</div>
+
+<div class="subsection">Phase 4: Agent RL 前沿（第 9-12 周）</div>
+<div class="roadmap-grid">
+    <div class="roadmap-card">
+        <strong>Agent RL 论文</strong>
+        <p>
+            精读：Agent Q (2024), RAGEN (2025), Search-R1 (2025)<br>
+            泛读：ReST-MCTS* (2024), rStar-Math (2025), Absolute Zero (2025)<br>
+            PRM 方向：Math-Shepherd (2024), PRIME (2024), OmegaPRM (2024)<br>
+            <strong>Milestone</strong>：能画出"Agent 轨迹如何变成 RL 训练信号"的完整 pipeline。
+        </p>
+    </div>
+    <div class="roadmap-card">
+        <strong>确定研究方向</strong>
+        <p>
+            候选方向（按理论/实验偏好选择）：<br>
+            <strong>A. Credit Assignment</strong>：理论创新，分析/改进多步 agent RL 的信用分配<br>
+            <strong>B. Reward Design</strong>：PRM 构建、reward composition、verifier robustness<br>
+            <strong>C. Training System</strong>：效率、稳定性、可扩展性的系统研究<br>
+            <strong>D. New Domains</strong>：将 RL 训练扩展到新 agent 领域（web, robotics, science）<br>
+            <strong>E. Theory</strong>：sample complexity、convergence guarantees、exploration theory
+        </p>
+    </div>
+</div>
+
+<div class="subsection">必读论文清单（按优先级排序）</div>
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr><th>优先级</th><th>论文</th><th>读什么</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>★★★</td><td>PPO (Schulman 2017)</td><td>理论基础：clip, ratio, GAE</td></tr>
+            <tr><td>★★★</td><td>DeepSeekMath (Shao 2024)</td><td>GRPO 完整定义</td></tr>
+            <tr><td>★★★</td><td>DeepSeek-R1 (2025.01)</td><td>Reasoning RL 的 milestone</td></tr>
+            <tr><td>★★★</td><td>DAPO (2025.03)</td><td>算法-系统 co-design</td></tr>
+            <tr><td>★★☆</td><td>DPO (Rafailov 2023)</td><td>Offline vs Online RL 对比</td></tr>
+            <tr><td>★★☆</td><td>ReAct (Yao 2022)</td><td>Agent 轨迹格式的原点</td></tr>
+            <tr><td>★★☆</td><td>Agent Q (2024)</td><td>MCTS + agent 自训练</td></tr>
+            <tr><td>★★☆</td><td>Search-R1 (2025)</td><td>搜索 + reasoning RL</td></tr>
+            <tr><td>★★☆</td><td>RAGEN (2025)</td><td>Agent RL 框架设计</td></tr>
+            <tr><td>★☆☆</td><td>Absolute Zero (2025)</td><td>Zero-data reasoning RL</td></tr>
+            <tr><td>★☆☆</td><td>GSPO (2025)</td><td>Sequence-level ratio</td></tr>
+            <tr><td>★☆☆</td><td>Let's Verify Step by Step (Lightman 2023)</td><td>PRM 的价值论证</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="subsection">推荐代码仓库</div>
+<div class="card-grid">
+    <div class="card">
+        <strong><a href="https://github.com/volcengine/verl" target="_blank">veRL</a></strong>
+        <p>字节跳动出品的大规模 RL 训练框架。支持 FSDP/Megatron + Ray，适合做大规模 reasoning RL 实验。如果你的实验室有 64+ GPU，首选。</p>
+    </div>
+    <div class="card">
+        <strong><a href="https://github.com/OpenRLHF/OpenRLHF" target="_blank">OpenRLHF</a></strong>
+        <p>社区驱动的 RLHF 框架，集成 vLLM 加速 rollout。算法覆盖全（PPO, GRPO, RLOO, DPO, KTO），适合中等规模实验。</p>
+    </div>
+    <div class="card">
+        <strong><a href="https://github.com/huggingface/trl" target="_blank">TRL</a></strong>
+        <p>HuggingFace 官方出品，集成 transformers 生态，最容易上手。适合快速原型验证和教学。</p>
+    </div>
+    <div class="card">
+        <strong><a href="https://github.com/openreasoner/openreasoner" target="_blank">Open Reasoner Zero</a></strong>
+        <p>可复现的 R1-Zero 训练 baseline。代码 clean，适合作为论文实验的 starting point。</p>
+    </div>
+</div>
+
+<div class="subsection">推荐关注的研究组</div>
+<ul>
+    <li><strong>DeepSeek</strong>：GRPO, R1, DeepSeekMath — reasoning RL 的核心推动者</li>
+    <li><strong>ByteDance Seed</strong>：DAPO, veRL — 大规模 RL 系统</li>
+    <li><strong>Qwen (Alibaba)</strong>：Qwen 系列模型的 RL post-training 经验</li>
+    <li><strong>Allen AI (Ai2)</strong>：Open RL 研究，Tülu 系列</li>
+    <li><strong>Meta FAIR</strong>：Llama RL post-training, RLOO 相关工作</li>
+    <li><strong>UC Berkeley (BAIR)</strong>：Agent Q, RL theory</li>
+    <li><strong>THU NLP (清华)</strong>：Agent 评测和 benchmark</li>
+</ul>
+
+<div class="formula">
+    $$\text{一句话总结：Agentic RL} = \text{强先验模型} + \text{可验证奖励} + \text{稳定 rollout 基建} + \text{合适的策略更新} + \text{你的研究贡献}$$
+</div>

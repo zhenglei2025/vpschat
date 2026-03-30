@@ -1,0 +1,139 @@
+<div class="panel-head">
+    <div>
+        <div class="panel-kicker">History</div>
+        <h2>演化谱系：两条线的汇合</h2>
+    </div>
+</div>
+<p class="panel-intro">
+    Agentic RL 不是凭空出现的。它是两条独立发展了多年的技术线——test-time agent 和 training-time RL——在 2024-2025 年的交汇。
+    理解这条谱系对定位你的研究贡献很重要：你是在改进 agent 架构，还是在改进 RL 训练算法，还是在连接两者？
+</p>
+
+<div class="subsection">2.1 技术演化链</div>
+<p>下面用两条显式的技术链来呈现这个演化，每个节点标注其<strong>关键技术贡献</strong>和<strong>改变的 assumption</strong>：</p>
+
+<div class="callout">
+    <strong>RL 算法线（Training-time）</strong>
+    <p style="margin:8px 0 0;">
+        REINFORCE (Williams 1992) → 引入 log-trick 使策略梯度可计算<br>
+        → Policy Gradient Theorem (Sutton et al. 2000) → 形式化了 $\nabla J = \mathbb{E}[\nabla\log\pi \cdot Q^\pi]$<br>
+        → A2C/A3C (Mnih et al. 2016) → Advantage + 并行 actor 架构<br>
+        → TRPO (Schulman 2015) → Trust region 保证单调改进<br>
+        → PPO (Schulman 2017) → Clipped surrogate 简化 TRPO<br>
+        → InstructGPT (Ouyang et al. 2022) → PPO 首次大规模用于 LLM RLHF<br>
+        → DPO (Rafailov et al. 2023) → 绕过 RL 直接优化偏好（offline）<br>
+        → DeepSeekMath (Shao et al. 2024) → <strong>GRPO</strong>：去掉 value model，组相对优势<br>
+        → DeepSeek-R1 (2025.01) → 纯 RL 训练出 reasoning（aha moment claim）<br>
+        → DAPO (2025.03) → Decoupled clip + dynamic sampling + 大规模系统<br>
+        → GSPO (2025) → Sequence-level ratio + clipping
+    </p>
+</div>
+
+<div class="callout">
+    <strong>Agent 架构线（Test-time / Inference-time）</strong>
+    <p style="margin:8px 0 0;">
+        Chain-of-Thought (Wei et al. 2022) → 证明 step-by-step 推理有效<br>
+        → ReAct (Yao et al. 2022) → Thought-Action 交错，定义 agent 轨迹格式<br>
+        → Tree of Thoughts (Yao et al. 2023) → 从链到树，引入 deliberate search<br>
+        → Toolformer (Schick et al. 2023) → LLM 自主学习使用工具（SFT-based）<br>
+        → SWE-agent (Yang et al. 2024) → 真实软件环境中的长轨迹 agent<br>
+        → Agent Q (Putta et al. 2024) → <strong>MCTS + DPO 用于 agent 自我训练</strong><br>
+        → Search-R1 / R1-Searcher (2025) → 搜索 action 嵌入 reasoning RL 循环<br>
+        → RAGEN (2025) → 通用 agent RL 框架
+    </p>
+</div>
+
+<div class="subsection">2.2 关键转折点分析</div>
+<div class="timeline">
+    <div class="timeline-item">
+        <div class="timeline-year">InstructGPT<br>(2022.03)</div>
+        <div>
+            <strong>首次把 PPO 工业化用于 LLM。</strong>
+            技术贡献：证明 RM + PPO pipeline 可以显著改善 helpfulness/safety。
+            Assumption：奖励来自人类偏好标注，目标是 alignment（对齐），不是 reasoning 或 task completion。
+            <br><em>局限：PPO 需要和 policy 同规模的 value model，训练成本高。单轮问答，不涉及 agent 交互。</em>
+        </div>
+    </div>
+    <div class="timeline-item">
+        <div class="timeline-year">DPO<br>(2023.05)</div>
+        <div>
+            <strong>绕过在线 RL，直接从偏好对优化。</strong>
+            核心 insight：closed-form 求解 RL objective → implicit reward → 只需 SFT-style loss。
+            <br><em>代价：失去了 online exploration 能力。如果 SFT 数据分布覆盖不好，DPO 无法发现新策略。
+            这就是为什么 reasoning 和 agent 场景后来回归了 on-policy RL。</em>
+        </div>
+    </div>
+    <div class="timeline-item">
+        <div class="timeline-year">DeepSeekMath<br>(2024.02)</div>
+        <div>
+            <strong>GRPO 的诞生。</strong>
+            关键改动：去掉 value model，改用 group relative advantage（同 prompt 采样多条回答，用组内相对奖励做 baseline）。
+            <br><em>意义：大幅降低了 LLM RL 的实现复杂度和训练成本，使得中等规模团队也能做 reasoning RL。
+            此后 GRPO 成为 reasoning RL 的 de facto standard baseline。</em>
+        </div>
+    </div>
+    <div class="timeline-item">
+        <div class="timeline-year">DeepSeek-R1<br>(2025.01)</div>
+        <div>
+            <strong>"aha moment" 与纯 RL reasoning 的可能性。</strong>
+            DeepSeek-R1-Zero（无 SFT 冷启动，纯 RL）展示了 "emergent reasoning" 的现象——模型在 RL 过程中自发出现分步推理、反思纠错等行为。
+            <br><em>学术影响：引爆了整个社区对 "RL for reasoning" 的关注。但需注意：R1-Zero 的效果弱于 R1（有 SFT 冷启动），
+            "aha moment" 是否真的是 emergent 还是 SFT 数据中已有模式的放大，仍有争议（参见 Open Reasoner Zero 的消融实验）。</em>
+        </div>
+    </div>
+    <div class="timeline-item">
+        <div class="timeline-year">DAPO / GSPO<br>(2025.03+)</div>
+        <div>
+            <strong>从算法到系统的 co-design。</strong>
+            DAPO 的核心不是提出新 loss，而是识别并解决了大规模 reasoning RL 训练中的实操问题（长度偏差、clip 耦合、exploration 坍缩、采样效率）。
+            GSPO 则从另一个角度切入：token-level ratio 在长序列下的数值不稳定性，提出 sequence-level alternative。
+            <br><em>研究启示：2025 年之后，纯算法创新的空间在收窄，更多的 contribution 来自算法-系统协同设计。</em>
+        </div>
+    </div>
+</div>
+
+<div class="subsection">2.3 RLHF → RLAIF → Verifiable Rewards 的演化逻辑</div>
+<p>
+    奖励信号的来源经历了三代演化，这个趋势对你选研究方向有直接影响：
+</p>
+<div class="card-grid">
+    <div class="card">
+        <strong>第一代：Human Reward (RLHF)</strong>
+        <p>
+            人工标注偏好对 → 训练 reward model → 用 RM 分数做 RL 奖励。
+            瓶颈：标注成本高、标注一致性差、RM 会被 hack（Goodhart's Law）。
+            代表：InstructGPT, Llama-2-Chat。
+        </p>
+    </div>
+    <div class="card">
+        <strong>第二代：AI Reward (RLAIF)</strong>
+        <p>
+            用另一个（通常更强的）LLM 做 judge 替代人类标注。
+            瓶颈：judge LLM 自身的 bias（verbosity bias, position bias, self-preference bias）。
+            代表：Constitutional AI (Anthropic), Self-Rewarding LLM。
+        </p>
+    </div>
+    <div class="card">
+        <strong>第三代：Verifiable Reward (Rule-based)</strong>
+        <p>
+            直接用规则判定：数学答案对不对、代码测试过不过、格式合不合规。
+            优势：无需训练 RM、不会被 hack（除非 verifier 本身有 bug）、scalable。
+            瓶颈：只适用于有可验证答案的任务。
+            代表：DeepSeek-R1, GRPO for math。
+        </p>
+    </div>
+    <div class="card">
+        <strong>趋势：Hybrid + Scalable Oversight</strong>
+        <p>
+            未来方向可能是三者的混合：可验证的部分用 rule-based、不可验证的部分用 AI judge、关键场景引入人类审核。
+            这与 Scalable Oversight（可扩展监督）问题直接相关——当模型能力超过人类时，如何提供可靠的训练信号？
+        </p>
+    </div>
+</div>
+
+<div class="tag-row">
+    <span class="tag">从偏好学习 → 在线策略优化</span>
+    <span class="tag">从 learned reward → verifiable reward</span>
+    <span class="tag">从单轮对齐 → 多步任务求解</span>
+    <span class="tag">从算法创新 → 算法-系统 co-design</span>
+</div>

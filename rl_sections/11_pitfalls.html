@@ -1,0 +1,80 @@
+<div class="panel-head">
+    <div>
+        <div class="panel-kicker">Pitfalls</div>
+        <h2>研究陷阱：让你的实验少走弯路</h2>
+    </div>
+</div>
+<p class="panel-intro">
+    以下陷阱不是"常识性错误"，而是在实际研究中经常出现、容易忽略、且可能浪费几周实验时间的问题。
+    每个陷阱附带"在你的实验中怎么检测"的具体建议。
+</p>
+
+<div class="card-grid">
+    <div class="card">
+        <strong>陷阱 1：Reward 上升 ≠ 能力提升</strong>
+        <p>
+            RL 训练中 reward curve 上升是最 misleading 的信号。模型可能在 hack verifier 而不是学会推理。
+            <br><strong>检测方法</strong>：每 N 步采样 50 条生成结果，人工检查推理过程（不只是 final answer）。
+            如果推理过程明显退化或变得模式化，说明在 hacking。
+        </p>
+    </div>
+    <div class="card">
+        <strong>陷阱 2：忽略轨迹质量</strong>
+        <p>
+            Agent 场景中 100% success rate 背后可能是极低效的策略（重复搜索 20 次碰巧命中）。
+            <br><strong>检测方法</strong>：统计平均步数、重复 action 率、token 消耗。画"成功率 vs 效率"的 Pareto 图。
+        </p>
+    </div>
+    <div class="card">
+        <strong>陷阱 3：把缩写当创新</strong>
+        <p>
+            看到新方法时，第一件事不是记住全称，而是画一张表：它改了 advantage 构造、ratio 粒度、clipping 方式、采样策略中的哪一项？
+            <br><strong>检测方法</strong>：能否在两句话内说清楚该方法与 GRPO 的数学区别？如果不能，再读一遍。
+        </p>
+    </div>
+    <div class="card">
+        <strong>陷阱 4：忽略长度偏差</strong>
+        <p>
+            Sequence-level reward 天然偏向某类长度的回答。per-token 平均 loss 会偏好短回答（每个 token 权重更大），
+            sum loss 会偏好长回答（更多 token 贡献梯度）。
+            <br><strong>检测方法</strong>：画"输出长度 vs reward"的散点图和"训练步数 vs 平均长度"的曲线。如果长度单调增长或缩短，说明有 length bias。
+        </p>
+    </div>
+    <div class="card">
+        <strong>陷阱 5：没有 SFT baseline 就上 RL</strong>
+        <p>
+            如果 SFT model 在目标任务上 pass@16 就很低（&lt;5%），说明模型还不具备基本能力，RL 很难从无到有创造能力。
+            <br><strong>检测方法</strong>：先跑 SFT model 的 pass@k（k=1,4,16,64）。如果 pass@64 &gt; 50% 但 pass@1 低，说明 RL 有很大优化空间。
+        </p>
+    </div>
+    <div class="card">
+        <strong>陷阱 6：环境/数据漂移</strong>
+        <p>
+            真实环境（网页、API、搜索引擎）在训练过程中可能变化，导致 reward 分布漂移。
+            <br><strong>检测方法</strong>：用固定的 benchmark prompt 定期 eval（daily/weekly），如果 eval 结果波动但模型没变，说明环境变了。
+        </p>
+    </div>
+    <div class="card">
+        <strong>陷阱 7：忽略 Entropy 维护</strong>
+        <p>
+            最优策略通常是 deterministic 的，但训练过程中需要 stochasticity 来探索。如果 entropy 快速坍缩，
+            模型会陷入 mode collapse——只生成少数几种固定模式的回答。
+            <br><strong>检测方法</strong>：监控 token-level entropy 曲线。如果训练 1000 步内 entropy 下降超过 50%，需要加 entropy bonus 或用 clip-higher。
+        </p>
+    </div>
+    <div class="card">
+        <strong>陷阱 8：不做消融就 claim</strong>
+        <p>
+            "我加了 X 和 Y 两个改动后提了 3 个点"——但到底是 X 还是 Y 在起作用？
+            <br><strong>检测方法</strong>：必须跑 ablation（去掉 X 只加 Y，去掉 Y 只加 X）。如果改了 reward function，baseline 也必须换同样的 reward。
+        </p>
+    </div>
+    <div class="card">
+        <strong>陷阱 9：混淆 Test-time Scaling 和 Training Improvement</strong>
+        <p>
+            "我的 RL 训练后模型 pass@64 从 70 提到 85"——但如果你用了更高 temperature 或更多 tokens budget，
+            提升可能来自 test-time scaling 而非 training improvement。
+            <br><strong>检测方法</strong>：控制 inference budget（相同 temperature、相同 max tokens、相同采样次数）后再比较。特别注意：RL 后 model 可能学会生成更长的 CoT，导致 implicit test-time scaling。
+        </p>
+    </div>
+</div>

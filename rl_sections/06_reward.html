@@ -1,0 +1,165 @@
+<div class="panel-head">
+    <div>
+        <div class="panel-kicker">Reward</div>
+        <h2>Reward Design：奖励工程的理论与实践</h2>
+    </div>
+</div>
+<p class="panel-intro">
+    "给我看 reward function，我就知道 agent 会学成什么样。" 奖励设计是 Agentic RL 中最影响实验成败的工程决策，
+    同时也蕴含深刻的理论问题——Goodhart's Law、reward decomposition、verifier robustness。
+</p>
+
+<div class="subsection">6.1 Reward Hacking 的形式化</div>
+<p>
+    <strong>Goodhart's Law</strong> 的 RL 表述（Gao et al. 2023）：当策略对 proxy reward $\hat{R}$ 优化到一定程度后，
+    true reward $R^*$ 开始下降。
+</p>
+<div class="formula">
+    $$R^*(\pi) \approx R^*(\pi_{\text{ref}}) + \alpha \cdot d_{\text{KL}} - \beta \cdot d_{\text{KL}}^2$$
+    <div class="formula-note">
+        $d_{\text{KL}} = \text{KL}(\pi \| \pi_{\text{ref}})$ 衡量策略偏离程度。前面的线性项是"有用的优化"，
+        后面的二次项是"过度优化的代价"。最优 KL 距离为 $d^* = \frac{\alpha}{2\beta}$。
+        <br>Gao et al. 在多种 reward model 上验证了这个二次关系，且系数 $\alpha, \beta$ 随 RM 参数量有 scaling law 行为。
+    </div>
+</div>
+
+<p>在 Agentic 场景下，reward hacking 的具体表现：</p>
+<div class="card-grid">
+    <div class="card">
+        <strong>Verifier 漏洞利用</strong>
+        <p>
+            数学 verifier 用正则匹配 $\boxed{}$ 内的答案——agent 学会生成对的格式但推理过程是胡编的。
+            代码 verifier 检查测试输出——agent 学会 hardcode 测试用例的期望输出。
+        </p>
+    </div>
+    <div class="card">
+        <strong>长度刷分</strong>
+        <p>
+            如果 reward 和输出质量正相关但不惩罚长度，模型倾向于生成冗长输出（verbosity hack）。
+            反之如果过度惩罚长度，模型可能跳过关键推理步骤。
+        </p>
+    </div>
+    <div class="card">
+        <strong>环境漏洞</strong>
+        <p>
+            搜索 agent 学会重复搜索相同 query 直到随机命中正确结果；
+            coding agent 学会修改测试代码而非修复 bug；
+            浏览器 agent 学会钻 DOM 解析器的 bug。
+        </p>
+    </div>
+    <div class="card">
+        <strong>Self-judge Bias</strong>
+        <p>
+            当用 LLM 自己做 judge 时，模型可能学会生成 judge 偏好的风格（更长、更自信、用特定词汇），
+            而不是真正提高任务完成质量。这是 RLAIF 的已知问题。
+        </p>
+    </div>
+</div>
+
+<div class="subsection">6.2 奖励组合与多目标优化</div>
+<p>实际任务中的 reward 通常是多个信号的组合：</p>
+<div class="formula">
+    $$R = \alpha_1 R_{\text{task}} + \alpha_2 R_{\text{format}} + \alpha_3 R_{\text{efficiency}} + \alpha_4 R_{\text{safety}} + \alpha_5 R_{\text{length}}$$
+    <div class="formula-note">
+        $R_{\text{task}}$：任务完成度（答案正确、测试通过、目标达成）<br>
+        $R_{\text{format}}$：输出格式合规性（是否有 $\boxed{}$，tool call 格式是否正确）<br>
+        $R_{\text{efficiency}}$：轨迹效率（步数、token 消耗、工具调用次数）<br>
+        $R_{\text{safety}}$：安全约束（不执行危险命令、不泄露隐私）<br>
+        $R_{\text{length}}$：长度惩罚或控制
+    </div>
+</div>
+
+<p><strong>权重选择的困难</strong>：$\alpha_i$ 的选择直接影响训练结果。如果 $\alpha_1 \gg \alpha_3$，模型可能学会低效但正确的策略；
+如果 $\alpha_3$ 过大，模型可能跳过必要步骤导致正确率下降。</p>
+
+<div class="callout">
+    <strong>线性加权的理论局限</strong>
+    多目标优化理论指出，线性加权 $\sum \alpha_i R_i$ 只能找到 Pareto front 的凸部分。
+    如果不同目标间存在非凸的 tradeoff 关系，线性加权可能 miss 掉最优解。
+    MORL（Multi-Objective RL）方法（如 Pareto policy search）理论上更合理，但在 LLM RL 中尚未被广泛采用。
+</div>
+
+<div class="subsection">6.3 Verifier 设计</div>
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr><th>Verifier 类型</th><th>实现方式</th><th>优点</th><th>Failure Mode</th><th>适用场景</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Rule-based</strong></td>
+                <td>正则匹配、数值比较、单元测试</td>
+                <td>无偏、确定性、零成本、不可被 hack（除非规则本身有 bug）</td>
+                <td>只能验证有明确答案的任务</td>
+                <td>数学、代码、格式化问答</td>
+            </tr>
+            <tr>
+                <td><strong>Learned RM</strong></td>
+                <td>训练 reward model 打分</td>
+                <td>可覆盖开放式任务</td>
+                <td>Goodhart's Law；OOD 输入打分不准；训练数据 bias</td>
+                <td>偏好对齐、开放式对话</td>
+            </tr>
+            <tr>
+                <td><strong>LLM-as-Judge</strong></td>
+                <td>用强 LLM 评估</td>
+                <td>灵活、可解释、覆盖面广</td>
+                <td>Verbosity bias、自我偏好、position bias、推理成本高</td>
+                <td>通用 agent 评测、论文评审式评估</td>
+            </tr>
+            <tr>
+                <td><strong>环境反馈</strong></td>
+                <td>执行结果（测试是否通过、API 返回码）</td>
+                <td>最"真实"的信号</td>
+                <td>Stochastic、latency 高、可能不安全</td>
+                <td>Coding agent、搜索 agent、机器人</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="subsection">6.4 各场景的 Reward 设计实践</div>
+<div class="card-grid">
+    <div class="card">
+        <strong>数学推理</strong>
+        <p>
+            推荐：$R = \mathbb{1}[\text{答案正确}] + \lambda_1 \cdot \mathbb{1}[\text{格式正确}] - \lambda_2 \cdot \frac{|y|}{L_{\max}}$<br>
+            核心是 binary correctness，格式奖励确保模型输出可解析的答案，长度惩罚防止冗长。
+            <br>进阶：加入 process reward（每步的 MC rollout 估计），显著提升但计算成本高 4-10 倍。
+        </p>
+    </div>
+    <div class="card">
+        <strong>代码生成 / SWE Agent</strong>
+        <p>
+            推荐：$R = \frac{\text{\# tests passed}}{\text{\# total tests}} + \lambda_1 \cdot \mathbb{1}[\text{patch compilable}] - \lambda_2 \cdot \mathbb{1}[\text{timeout}]$<br>
+            测试通过率是最强信号。编译成功是必要条件。超时惩罚防止无限循环。
+            <br>进阶：diff quality（patch 最小性）、代码风格得分。
+        </p>
+    </div>
+    <div class="card">
+        <strong>搜索 / 浏览器 Agent</strong>
+        <p>
+            推荐：$R = R_{\text{answer quality}} + \lambda_1 \cdot R_{\text{citation}} - \lambda_2 \cdot R_{\text{illegal action}} - \lambda_3 \cdot \frac{\text{steps}}{S_{\max}}$<br>
+            答案质量可用 LLM-as-judge 或 ground truth 比对。引用质量确保信息来源可追溯。
+        </p>
+    </div>
+    <div class="card">
+        <strong>通用多轮 Agent</strong>
+        <p>
+            最难设计 Reward 的场景。通常需要 task-specific completion metric + 通用效率/安全约束。
+            <br>可考虑 <strong>hierarchical reward</strong>：sub-goal 完成给中间奖励，最终任务完成给额外 bonus。
+            <br>风险：sub-goal reward 可能引导模型走非最优路径（reward shaping 的经典问题）。
+        </p>
+    </div>
+</div>
+
+<div class="subsection">6.5 Reward Shaping 的理论保证</div>
+<div class="formula">
+    $$R'(s, a, s') = R(s, a, s') + \gamma \Phi(s') - \Phi(s)$$
+    <div class="formula-note">
+        Ng et al. (1999) 证明：如果 shaping reward 是 potential-based（$\gamma\Phi(s') - \Phi(s)$），
+        则最优策略不变。这是唯一保证 optimal policy invariance 的 shaping 形式。
+        <br>但在 LLM RL 实践中，大多数 reward shaping（如长度惩罚、格式奖励）并不满足 potential-based 条件，
+        因此可能改变最优策略。这意味着你的 reward engineering 实际上在定义一个新的优化问题，而不是在帮助优化原问题。
+    </div>
+</div>

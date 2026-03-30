@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Agentic RL 学习教材</title>
+    <title>Agentic RL 研究指南 — 从形式化建模到开放问题</title>
+    <meta name="description" content="面向研究者的 Agentic RL 深度教程：形式化建模、完整推导、算法剖析、开放问题与前沿论文分析。">
     <script>
         window.MathJax = {
             tex: {
@@ -15,6 +16,7 @@
     </script>
     <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
     <style>
+        /* ── Design Tokens ── */
         :root {
             --bg: #f4f7fb;
             --panel: rgba(255, 255, 255, 0.92);
@@ -28,540 +30,183 @@
             --hero-b: #1d4ed8;
             --shadow: 0 20px 60px rgba(15, 23, 42, 0.10);
             --radius: 22px;
+            --code-bg: #1e293b;
+            --code-text: #e2e8f0;
         }
-
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
 
         body {
-            margin: 0;
-            color: var(--text);
-            font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+            margin: 0; color: var(--text);
+            font-family: "PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;
             background:
-                radial-gradient(circle at top left, rgba(29, 78, 216, 0.16), transparent 28%),
-                radial-gradient(circle at top right, rgba(15, 118, 110, 0.18), transparent 30%),
+                radial-gradient(circle at top left, rgba(29,78,216,0.16), transparent 28%),
+                radial-gradient(circle at top right, rgba(15,118,110,0.18), transparent 30%),
                 linear-gradient(180deg, #eef6ff 0%, var(--bg) 28%, #f8fafc 100%);
         }
+        a { color: inherit; }
 
-        a {
-            color: inherit;
+        /* ── Topbar ── */
+        .topbar { position:sticky; top:0; z-index:20; backdrop-filter:blur(18px); background:rgba(244,247,251,0.84); border-bottom:1px solid var(--line); }
+        .topbar-inner, .hero, .layout, .footer { width:min(1180px, calc(100% - 32px)); margin:0 auto; }
+        .topbar-inner { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:14px 0; }
+        .brand { font-size:0.95rem; font-weight:700; letter-spacing:0.02em; }
+        .nav-links { display:flex; gap:10px; flex-wrap:wrap; }
+        .nav-links a { text-decoration:none; padding:9px 14px; border-radius:999px; background:rgba(255,255,255,0.9); border:1px solid var(--line); color:var(--primary-strong); font-size:0.9rem; font-weight:600; }
+
+        /* ── Hero ── */
+        .hero { padding:34px 0 24px; }
+        .hero-card { position:relative; overflow:hidden; border-radius:34px; padding:36px; background:radial-gradient(circle at 10% 20%, rgba(255,255,255,0.25), transparent 20%), radial-gradient(circle at 90% 0%, rgba(245,158,11,0.28), transparent 24%), linear-gradient(135deg, var(--hero-a) 0%, var(--hero-b) 56%, #1e3a8a 100%); color:white; box-shadow:var(--shadow); }
+        .hero-card::after { content:""; position:absolute; right:-80px; top:-60px; width:260px; height:260px; border-radius:50%; background:radial-gradient(circle, rgba(255,255,255,0.22), transparent 68%); }
+        .eyebrow { display:inline-flex; padding:7px 12px; border-radius:999px; background:rgba(255,255,255,0.14); border:1px solid rgba(255,255,255,0.18); font-size:0.82rem; font-weight:700; letter-spacing:0.03em; }
+        h1 { margin:16px 0 14px; font-size:clamp(2rem,5vw,3.5rem); line-height:1.06; }
+        .hero p { max-width:860px; font-size:1.05rem; line-height:1.9; margin:0; color:rgba(255,255,255,0.92); }
+        .hero-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-top:24px; }
+        .hero-pill { padding:14px 16px; border-radius:18px; background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.18); font-size:0.95rem; line-height:1.55; }
+
+        /* ── Layout ── */
+        .layout { display:grid; grid-template-columns:300px minmax(0,1fr); gap:22px; padding-bottom:36px; align-items:start; }
+        .toc, .panel { background:var(--panel); border:1px solid var(--line); box-shadow:var(--shadow); }
+        .toc { position:sticky; top:82px; align-self:start; border-radius:var(--radius); padding:22px; }
+        .toc h2 { margin:0 0 12px; font-size:1.35rem; }
+        .toc-subtitle { color:var(--muted); line-height:1.75; font-size:0.92rem; margin-bottom:16px; }
+        .toc-list { display:grid; gap:6px; }
+        .toc-link { width:100%; border:1px solid transparent; text-align:left; padding:10px 14px; border-radius:14px; background:rgba(15,118,110,0.05); color:#5b708e; font-size:0.9rem; font-weight:700; cursor:pointer; transition:all 0.2s ease; }
+        .toc-link:hover { background:rgba(15,118,110,0.10); color:var(--primary-strong); }
+        .toc-link.active { color:#fff; background:linear-gradient(135deg,#0f766e 0%,#1d4ed8 100%); border-color:rgba(255,255,255,0.18); box-shadow:0 12px 28px rgba(29,78,216,0.18); }
+        .toc-note { margin-top:14px; padding:12px; border-radius:14px; background:linear-gradient(135deg,rgba(15,118,110,0.10),rgba(29,78,216,0.08)); color:var(--muted); font-size:0.88rem; line-height:1.8; word-break:break-word; overflow-wrap:break-word; }
+
+        /* ── Content Area ── */
+        .content { min-width:0; }
+        .panel { display:none; border-radius:26px; padding:28px; animation:panelFade 0.22s ease; }
+        .panel.active { display:block; }
+        @keyframes panelFade { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+        .panel-head { display:flex; align-items:end; justify-content:space-between; gap:12px; margin-bottom:18px; }
+        .panel-kicker { color:var(--primary-strong); font-size:0.85rem; font-weight:800; letter-spacing:0.05em; text-transform:uppercase; }
+        .panel h2, .panel h3 { margin:0; font-size:2rem; line-height:1.15; }
+        .panel-intro { margin:10px 0 0; color:var(--muted); line-height:1.85; font-size:1rem; }
+
+        /* ── Cards & Grids ── */
+        .summary-grid, .card-grid, .compare-grid, .roadmap-grid, .paper-grid { display:grid; gap:14px; }
+        .summary-grid { grid-template-columns:repeat(3,minmax(0,1fr)); margin-top:18px; }
+        .card-grid, .compare-grid, .roadmap-grid, .paper-grid { grid-template-columns:repeat(2,minmax(0,1fr)); margin-top:16px; }
+        .mini-card, .card, .compare-card, .roadmap-card, .paper-card { border-radius:18px; background:var(--panel-strong); border:1px solid var(--line); padding:18px; }
+        .mini-card strong, .card strong, .compare-card strong, .roadmap-card strong, .paper-card strong { display:block; margin-bottom:10px; font-size:1rem; }
+        .mini-card p, .card p, .compare-card p, .roadmap-card p, .paper-card p { margin:0; color:var(--muted); line-height:1.8; }
+        .panel p, .panel li { color:var(--muted); line-height:1.9; font-size:1rem; }
+        .panel ul, .panel ol { margin:12px 0 0; padding-left:22px; }
+
+        /* ── Tables ── */
+        .table-wrap { overflow-x:auto; margin-top:16px; border-radius:18px; border:1px solid var(--line); }
+        table { width:100%; border-collapse:collapse; background:#fff; }
+        th, td { text-align:left; padding:14px 16px; border-bottom:1px solid var(--line); vertical-align:top; }
+        th { background:#f8fafc; font-size:0.92rem; }
+
+        /* ── Formula ── */
+        .formula { margin:18px 0; padding:16px 18px; border-radius:18px; background:linear-gradient(135deg,rgba(15,118,110,0.06),rgba(29,78,216,0.05)); border:1px solid rgba(15,118,110,0.10); overflow-x:auto; }
+        .formula-note { margin-top:10px; color:var(--muted); font-size:0.95rem; }
+
+        /* ── Tags ── */
+        .tag-row { display:flex; flex-wrap:wrap; gap:10px; margin-top:16px; }
+        .tag { padding:8px 12px; border-radius:999px; background:rgba(217,119,6,0.10); color:#9a3412; font-size:0.9rem; font-weight:700; }
+
+        /* ── Timeline ── */
+        .timeline { display:grid; gap:14px; margin-top:16px; }
+        .timeline-item { display:grid; grid-template-columns:120px minmax(0,1fr); gap:16px; align-items:start; padding:16px 18px; border-radius:18px; background:#fff; border:1px solid var(--line); }
+        .timeline-year { font-weight:800; color:var(--primary-strong); }
+
+        /* ── Paper ── */
+        .paper-section-title { margin-top:24px; margin-bottom:10px; font-size:1.15rem; font-weight:800; color:var(--text); }
+        .paper-meta { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
+        .paper-badge { display:inline-flex; align-items:center; padding:5px 10px; border-radius:999px; background:rgba(29,78,216,0.08); color:#1d4ed8; font-size:0.82rem; font-weight:700; }
+        .paper-card a { color:var(--primary-strong); text-decoration:none; }
+        .paper-card a:hover { text-decoration:underline; }
+
+        /* ── NEW: Code Block ── */
+        .code-block { margin:18px 0; padding:20px; border-radius:16px; background:var(--code-bg); color:var(--code-text); font-family:"JetBrains Mono","Fira Code","SF Mono",monospace; font-size:0.88rem; line-height:1.8; overflow-x:auto; white-space:pre; border:1px solid rgba(255,255,255,0.06); }
+        .code-block .kw { color:#c084fc; }
+        .code-block .fn { color:#67e8f9; }
+        .code-block .cm { color:#94a3b8; font-style:italic; }
+        .code-block .st { color:#86efac; }
+        .code-block .nu { color:#fbbf24; }
+
+        /* ── NEW: Derivation ── */
+        .derivation { margin:18px 0; padding:20px; border-radius:18px; background:linear-gradient(135deg,rgba(29,78,216,0.04),rgba(15,118,110,0.04)); border-left:4px solid var(--primary); }
+        .derivation-title { font-weight:800; font-size:1.05rem; color:var(--text); margin-bottom:12px; }
+        .derivation-step { margin:8px 0; padding:8px 0; }
+        .derivation-step .step-num { display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:50%; background:var(--primary); color:white; font-size:0.75rem; font-weight:800; margin-right:8px; flex-shrink:0; }
+        .derivation-step p { margin:4px 0 4px 32px; color:var(--muted); font-size:0.95rem; }
+
+        /* ── NEW: Open Problem ── */
+        .open-problem { margin:14px 0; padding:20px; border-radius:18px; background:linear-gradient(135deg,rgba(245,158,11,0.08),rgba(239,68,68,0.05)); border:1px solid rgba(245,158,11,0.18); }
+        .open-problem strong { color:#b45309; display:block; margin-bottom:8px; font-size:1.05rem; }
+        .open-problem p { margin:0; }
+        .open-problem .refs { margin-top:10px; font-size:0.88rem; color:var(--primary-strong); }
+
+        /* ── NEW: Paper Analysis ── */
+        .paper-analysis { margin:14px 0; padding:20px; border-radius:18px; background:var(--panel-strong); border:1px solid var(--line); }
+        .paper-analysis .pa-head { display:flex; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap; }
+        .paper-analysis .pa-field { margin:8px 0; }
+        .paper-analysis .pa-label { font-weight:800; font-size:0.82rem; text-transform:uppercase; letter-spacing:0.04em; color:var(--primary-strong); margin-bottom:4px; }
+        .paper-analysis .pa-field p { margin:0; }
+
+        /* ── NEW: Subsection Title ── */
+        .subsection { margin-top:28px; margin-bottom:12px; font-size:1.2rem; font-weight:800; color:var(--text); border-bottom:2px solid var(--line); padding-bottom:8px; }
+
+        /* ── NEW: Callout ── */
+        .callout { margin:16px 0; padding:16px 18px; border-radius:16px; border-left:4px solid var(--primary); background:rgba(15,118,110,0.04); }
+        .callout.warn { border-left-color:#d97706; background:rgba(217,119,6,0.04); }
+        .callout strong { display:block; margin-bottom:6px; }
+
+        /* ── Footer ── */
+        .footer { padding:0 0 42px; }
+        .footer-card { border-radius:24px; padding:24px; background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 100%); color:rgba(255,255,255,0.9); box-shadow:var(--shadow); }
+        .footer-card p { margin:0; line-height:1.9; }
+
+        /* ── Loading ── */
+        .panel-loading { text-align:center; padding:60px 20px; color:var(--muted); }
+        .panel-loading::after { content:""; display:block; width:32px; height:32px; margin:16px auto 0; border:3px solid var(--line); border-top-color:var(--primary); border-radius:50%; animation:spin 0.6s linear infinite; }
+        @keyframes spin { to{transform:rotate(360deg)} }
+
+        /* ── Responsive ── */
+        @media(max-width:980px){
+            .layout{grid-template-columns:1fr;} .toc{position:static;}
+            .hero-grid,.summary-grid,.card-grid,.compare-grid,.roadmap-grid,.paper-grid{grid-template-columns:1fr;}
         }
-
-        .topbar {
-            position: sticky;
-            top: 0;
-            z-index: 20;
-            backdrop-filter: blur(18px);
-            background: rgba(244, 247, 251, 0.84);
-            border-bottom: 1px solid var(--line);
-        }
-
-        .topbar-inner,
-        .hero,
-        .layout,
-        .footer {
-            width: min(1180px, calc(100% - 32px));
-            margin: 0 auto;
-        }
-
-        .topbar-inner {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            padding: 14px 0;
-        }
-
-        .brand {
-            font-size: 0.95rem;
-            font-weight: 700;
-            letter-spacing: 0.02em;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .nav-links a {
-            text-decoration: none;
-            padding: 9px 14px;
-            border-radius: 999px;
-            background: rgba(255, 255, 255, 0.9);
-            border: 1px solid var(--line);
-            color: var(--primary-strong);
-            font-size: 0.9rem;
-            font-weight: 600;
-        }
-
-        .hero {
-            padding: 34px 0 24px;
-        }
-
-        .hero-card {
-            position: relative;
-            overflow: hidden;
-            border-radius: 34px;
-            padding: 36px;
-            background:
-                radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.25), transparent 20%),
-                radial-gradient(circle at 90% 0%, rgba(245, 158, 11, 0.28), transparent 24%),
-                linear-gradient(135deg, var(--hero-a) 0%, var(--hero-b) 56%, #1e3a8a 100%);
-            color: white;
-            box-shadow: var(--shadow);
-        }
-
-        .hero-card::after {
-            content: "";
-            position: absolute;
-            right: -80px;
-            top: -60px;
-            width: 260px;
-            height: 260px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(255,255,255,0.22), transparent 68%);
-        }
-
-        .eyebrow {
-            display: inline-flex;
-            padding: 7px 12px;
-            border-radius: 999px;
-            background: rgba(255, 255, 255, 0.14);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            font-size: 0.82rem;
-            font-weight: 700;
-            letter-spacing: 0.03em;
-        }
-
-        h1 {
-            margin: 16px 0 14px;
-            font-size: clamp(2rem, 5vw, 3.5rem);
-            line-height: 1.06;
-        }
-
-        .hero p {
-            max-width: 860px;
-            font-size: 1.05rem;
-            line-height: 1.9;
-            margin: 0;
-            color: rgba(255, 255, 255, 0.92);
-        }
-
-        .hero-grid {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 12px;
-            margin-top: 24px;
-        }
-
-        .hero-pill {
-            padding: 14px 16px;
-            border-radius: 18px;
-            background: rgba(255,255,255,0.12);
-            border: 1px solid rgba(255,255,255,0.18);
-            font-size: 0.95rem;
-            line-height: 1.55;
-        }
-
-        .layout {
-            display: grid;
-            grid-template-columns: 300px minmax(0, 1fr);
-            gap: 22px;
-            padding-bottom: 36px;
-            align-items: start;
-        }
-
-        .toc,
-        .panel {
-            background: var(--panel);
-            border: 1px solid var(--line);
-            box-shadow: var(--shadow);
-        }
-
-        .toc {
-            position: sticky;
-            top: 82px;
-            align-self: start;
-            border-radius: var(--radius);
-            padding: 22px;
-        }
-
-        .toc h2 {
-            margin: 0 0 12px;
-            font-size: 1.35rem;
-        }
-
-        .toc-subtitle {
-            color: var(--muted);
-            line-height: 1.75;
-            font-size: 0.95rem;
-            margin-bottom: 16px;
-        }
-
-        .toc-list {
-            display: grid;
-            gap: 10px;
-        }
-
-        .toc-link {
-            width: 100%;
-            border: 1px solid transparent;
-            text-align: left;
-            padding: 12px 14px;
-            border-radius: 16px;
-            background: rgba(15, 118, 110, 0.05);
-            color: #5b708e;
-            font-size: 0.98rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .toc-link:hover {
-            background: rgba(15, 118, 110, 0.10);
-            color: var(--primary-strong);
-        }
-
-        .toc-link.active {
-            color: #ffffff;
-            background: linear-gradient(135deg, #0f766e 0%, #1d4ed8 100%);
-            border-color: rgba(255, 255, 255, 0.18);
-            box-shadow: 0 12px 28px rgba(29, 78, 216, 0.18);
-        }
-
-        .toc-note {
-            margin-top: 16px;
-            padding: 14px;
-            border-radius: 16px;
-            background: linear-gradient(135deg, rgba(15, 118, 110, 0.10), rgba(29, 78, 216, 0.08));
-            color: var(--muted);
-            font-size: 0.92rem;
-            line-height: 1.8;
-        }
-
-        .content {
-            min-width: 0;
-        }
-
-        .panel {
-            display: none;
-            border-radius: 26px;
-            padding: 28px;
-            animation: panelFade 0.22s ease;
-        }
-
-        .panel.active {
-            display: block;
-        }
-
-        @keyframes panelFade {
-            from {
-                opacity: 0;
-                transform: translateY(8px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .panel-head {
-            display: flex;
-            align-items: end;
-            justify-content: space-between;
-            gap: 12px;
-            margin-bottom: 18px;
-        }
-
-        .panel-kicker {
-            color: var(--primary-strong);
-            font-size: 0.85rem;
-            font-weight: 800;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
-        }
-
-        .panel h2,
-        .panel h3 {
-            margin: 0;
-            font-size: 2rem;
-            line-height: 1.15;
-        }
-
-        .panel-intro {
-            margin: 10px 0 0;
-            color: var(--muted);
-            line-height: 1.85;
-            font-size: 1rem;
-        }
-
-        .summary-grid,
-        .card-grid,
-        .compare-grid,
-        .roadmap-grid,
-        .paper-grid {
-            display: grid;
-            gap: 14px;
-        }
-
-        .summary-grid {
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            margin-top: 18px;
-        }
-
-        .card-grid,
-        .compare-grid,
-        .roadmap-grid,
-        .paper-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            margin-top: 16px;
-        }
-
-        .mini-card,
-        .card,
-        .compare-card,
-        .roadmap-card,
-        .paper-card {
-            border-radius: 18px;
-            background: var(--panel-strong);
-            border: 1px solid var(--line);
-            padding: 18px;
-        }
-
-        .mini-card strong,
-        .card strong,
-        .compare-card strong,
-        .roadmap-card strong,
-        .paper-card strong {
-            display: block;
-            margin-bottom: 10px;
-            font-size: 1rem;
-        }
-
-        .mini-card p,
-        .card p,
-        .compare-card p,
-        .roadmap-card p,
-        .paper-card p {
-            margin: 0;
-            color: var(--muted);
-            line-height: 1.8;
-        }
-
-        .panel p,
-        .panel li {
-            color: var(--muted);
-            line-height: 1.9;
-            font-size: 1rem;
-        }
-
-        .panel ul,
-        .panel ol {
-            margin: 12px 0 0;
-            padding-left: 22px;
-        }
-
-        .timeline {
-            display: grid;
-            gap: 14px;
-            margin-top: 16px;
-        }
-
-        .timeline-item {
-            display: grid;
-            grid-template-columns: 120px minmax(0, 1fr);
-            gap: 16px;
-            align-items: start;
-            padding: 16px 18px;
-            border-radius: 18px;
-            background: #fff;
-            border: 1px solid var(--line);
-        }
-
-        .timeline-year {
-            font-weight: 800;
-            color: var(--primary-strong);
-        }
-
-        .formula {
-            margin: 18px 0;
-            padding: 16px 18px;
-            border-radius: 18px;
-            background: linear-gradient(135deg, rgba(15, 118, 110, 0.06), rgba(29, 78, 216, 0.05));
-            border: 1px solid rgba(15, 118, 110, 0.10);
-            overflow-x: auto;
-        }
-
-        .formula-note {
-            margin-top: 10px;
-            color: var(--muted);
-            font-size: 0.95rem;
-        }
-
-        .table-wrap {
-            overflow-x: auto;
-            margin-top: 16px;
-            border-radius: 18px;
-            border: 1px solid var(--line);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: #fff;
-        }
-
-        th,
-        td {
-            text-align: left;
-            padding: 14px 16px;
-            border-bottom: 1px solid var(--line);
-            vertical-align: top;
-        }
-
-        th {
-            background: #f8fafc;
-            font-size: 0.92rem;
-        }
-
-        .tag-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 16px;
-        }
-
-        .tag {
-            padding: 8px 12px;
-            border-radius: 999px;
-            background: rgba(217, 119, 6, 0.10);
-            color: #9a3412;
-            font-size: 0.9rem;
-            font-weight: 700;
-        }
-
-        .paper-section-title {
-            margin-top: 24px;
-            margin-bottom: 10px;
-            font-size: 1.15rem;
-            font-weight: 800;
-            color: var(--text);
-        }
-
-        .paper-meta {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 10px;
-        }
-
-        .paper-badge {
-            display: inline-flex;
-            align-items: center;
-            padding: 5px 10px;
-            border-radius: 999px;
-            background: rgba(29, 78, 216, 0.08);
-            color: #1d4ed8;
-            font-size: 0.82rem;
-            font-weight: 700;
-        }
-
-        .paper-card a {
-            color: var(--primary-strong);
-            text-decoration: none;
-        }
-
-        .paper-card a:hover {
-            text-decoration: underline;
-        }
-
-        .footer {
-            padding: 0 0 42px;
-        }
-
-        .footer-card {
-            border-radius: 24px;
-            padding: 24px;
-            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
-            color: rgba(255,255,255,0.9);
-            box-shadow: var(--shadow);
-        }
-
-        .footer-card p {
-            margin: 0;
-            line-height: 1.9;
-        }
-
-        @media (max-width: 980px) {
-            .layout {
-                grid-template-columns: 1fr;
-            }
-
-            .toc {
-                position: static;
-            }
-
-            .hero-grid,
-            .summary-grid,
-            .card-grid,
-            .compare-grid,
-            .roadmap-grid,
-            .paper-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 640px) {
-            .topbar-inner {
-                align-items: flex-start;
-                flex-direction: column;
-            }
-
-            .hero-card,
-            .panel {
-                padding: 22px;
-            }
-
-            .timeline-item {
-                grid-template-columns: 1fr;
-            }
-
-            .panel h2,
-            .panel h3 {
-                font-size: 1.6rem;
-            }
+        @media(max-width:640px){
+            .topbar-inner{align-items:flex-start;flex-direction:column;}
+            .hero-card,.panel{padding:22px;}
+            .timeline-item{grid-template-columns:1fr;}
+            .panel h2,.panel h3{font-size:1.6rem;}
         }
     </style>
 </head>
 <body>
     <header class="topbar">
         <div class="topbar-inner">
-            <div class="brand">Agentic RL 学习教材</div>
+            <div class="brand">Agentic RL 研究指南</div>
             <nav class="nav-links">
                 <a href="/news">返回新闻页</a>
                 <a href="/chat">进入聊天</a>
-                <a href="#roadmap" data-panel-target-link="roadmap">学习路线</a>
+                <a href="#frontiers" data-panel-target-link="frontiers">开放问题</a>
             </nav>
         </div>
     </header>
 
     <section class="hero">
         <div class="hero-card">
-            <span class="eyebrow">LLM + RL + Agent Systems</span>
-            <h1>从 ReAct 到 DeepSeek-R1，系统理解 Agentic RL</h1>
+            <span class="eyebrow">LLM × Reinforcement Learning × Agent Systems</span>
+            <h1>Agentic RL：从形式化建模到开放研究问题</h1>
             <p>
-                这份教材把“大模型强化学习”拆成一张能真正拿来学习和落地的知识地图。我们会从
-                ReAct、Tree of Thoughts、SWE Agent 这类 test-time agent 方法讲起，再连接到
-                DeepSeek-R1 之后迅速升温的 RL 训练范式，梳理 GRPO、GSPO、DAPO 一类方法背后的共性：
-                它们本质上都在回答一个问题，如何让大模型在多步推理、工具调用和环境交互中学会更稳定、更长程、更可验证的决策。
+                这份研究指南面向对 Agentic RL 方向有系统学习或研究需求的读者。我们不满足于罗列缩写和一句话介绍，
+                而是从 MDP/POMDP 的形式化建模出发，给出策略梯度的完整推导链，对 PPO、RLOO、GRPO、DAPO、GSPO 
+                做严格的数学定义与理论对比，深入讨论 credit assignment、reward design、training infrastructure 
+                等核心工程-理论交叉问题，并系统梳理 6 个尚未解决的开放研究问题和 2025 年前沿论文的技术剖析。
             </p>
             <div class="hero-grid">
-                <div class="hero-pill">发展脉络：从提示驱动 agent 到训练驱动 agent</div>
-                <div class="hero-pill">数学基础：策略梯度、优势函数、KL 约束、组相对奖励</div>
-                <div class="hero-pill">算法家族：PPO、RLOO、GRPO、GSPO、DAPO</div>
-                <div class="hero-pill">论文补充：ReST-MCTS*、rStar-Math、Agent Q 等代表工作</div>
+                <div class="hero-pill">形式化建模：Token-MDP、Turn-level POMDP、三范式对比</div>
+                <div class="hero-pill">完整推导：Policy Gradient → GAE → PPO → GRPO → DAPO</div>
+                <div class="hero-pill">理论分析：Credit Assignment、Variance Reduction、Reward Hacking</div>
+                <div class="hero-pill">研究前沿：6 个 Open Problems + 2025 论文技术剖析</div>
             </div>
         </div>
     </section>
@@ -569,571 +214,51 @@
     <main class="layout">
         <aside class="toc">
             <h2>目录</h2>
-            <div class="toc-subtitle">点击左侧标签切换内容，右侧正文只展示当前激活标签对应的面板。</div>
+            <div class="toc-subtitle">12 个研究专题。点击切换，右侧展示对应内容。</div>
             <div class="toc-list">
-                <button class="toc-link active" type="button" data-panel-target="overview">1. 一张总览图</button>
-                <button class="toc-link" type="button" data-panel-target="history">2. 为什么 Agentic RL 会爆发</button>
+                <button class="toc-link active" type="button" data-panel-target="formulation">1. 形式化问题定义</button>
+                <button class="toc-link" type="button" data-panel-target="history">2. 演化谱系</button>
                 <button class="toc-link" type="button" data-panel-target="math">3. 数学基础</button>
-                <button class="toc-link" type="button" data-panel-target="taxonomy">4. 算法分类</button>
-                <button class="toc-link" type="button" data-panel-target="agent">5. Agent 训练要素</button>
-                <button class="toc-link" type="button" data-panel-target="practice">6. 训练与评测实践</button>
-                <button class="toc-link" type="button" data-panel-target="papers">7. 代表论文</button>
-                <button class="toc-link" type="button" data-panel-target="pitfalls">8. 常见误区</button>
-                <button class="toc-link" type="button" data-panel-target="roadmap">9. 学习路线</button>
+                <button class="toc-link" type="button" data-panel-target="algorithms">4. 算法族</button>
+                <button class="toc-link" type="button" data-panel-target="credit">5. Credit Assignment</button>
+                <button class="toc-link" type="button" data-panel-target="reward">6. Reward Design</button>
+                <button class="toc-link" type="button" data-panel-target="infrastructure">7. 训练系统</button>
+                <button class="toc-link" type="button" data-panel-target="evaluation">8. 评测方法论</button>
+                <button class="toc-link" type="button" data-panel-target="frontiers">9. 开放问题</button>
+                <button class="toc-link" type="button" data-panel-target="papers">10. 论文剖析</button>
+                <button class="toc-link" type="button" data-panel-target="pitfalls">11. 研究陷阱</button>
+                <button class="toc-link" type="button" data-panel-target="roadmap">12. 研究路线</button>
             </div>
             <div class="toc-note">
-                阅读建议：
-                先抓住“状态-动作-轨迹-奖励-更新”这条主线，再看每个算法到底是在奖励估计、优势构造、裁剪方式还是采样机制上做了变化。
+                主线：先抓 "state→action→trajectory→reward→advantage→update"，再看每个算法改了哪一层。
+                推导部分建议手推一遍。
             </div>
         </aside>
 
         <div class="content" id="content-panels">
-            <section class="panel active" id="overview" data-panel-content="overview">
-                <div class="panel-head">
-                    <div>
-                        <div class="panel-kicker">Overview</div>
-                        <h2>一张总览图</h2>
-                    </div>
-                </div>
-                <p class="panel-intro">
-                    先把 Agentic RL 当成一张系统图，而不是一堆缩写。它关注的核心对象不是单轮回答，而是多步轨迹；
-                    它优化的不只是“回答像不像人喜欢的样子”，而是“能不能在复杂环境里完成任务”。
-                </p>
-                <div class="summary-grid">
-                    <div class="mini-card">
-                        <strong>Agentic RL 的核心对象</strong>
-                        <p>不是单轮回复，而是多步轨迹。模型需要在观察、思考、调用工具、执行动作、接收反馈之间循环前进。</p>
-                    </div>
-                    <div class="mini-card">
-                        <strong>为什么 2024 之后明显升温</strong>
-                        <p>因为单纯的 SFT 很难让模型在长链推理、复杂搜索和真实环境交互里持续优化，RL 提供了“按结果回传信用”的机制。</p>
-                    </div>
-                    <div class="mini-card">
-                        <strong>和传统 RLHF 的区别</strong>
-                        <p>传统 RLHF 更像对回答风格与偏好的微调；Agentic RL 更强调过程质量、工具使用、任务成功率和多步决策稳定性。</p>
-                    </div>
-                </div>
-            </section>
-
-            <section class="panel" id="history" data-panel-content="history">
-                <div class="panel-head">
-                    <div>
-                        <div class="panel-kicker">Momentum</div>
-                        <h3>为什么 Agentic RL 会爆发</h3>
-                    </div>
-                </div>
-                <p class="panel-intro">
-                    可以把近几年的路径看成两条线逐渐汇合。第一条线是 test-time agent，第二条线是 training-time RL。
-                    前者告诉我们“推理时可以像 agent 一样搜索和行动”，后者告诉我们“这些行为模式可以被训练进去，而不只是靠 prompt 临时诱导”。
-                </p>
-                <div class="timeline">
-                    <div class="timeline-item">
-                        <div class="timeline-year">早期 RLHF</div>
-                        <div>重点是对齐回答风格、帮助性与安全性。单位样本通常是一轮回答，奖励更偏向偏好模型或人工反馈。</div>
-                    </div>
-                    <div class="timeline-item">
-                        <div class="timeline-year">ReAct / ToT</div>
-                        <div>让模型在推理时显式地产生“思考 + 行动”结构，证明多步推理和搜索可以显著改善复杂任务表现。</div>
-                    </div>
-                    <div class="timeline-item">
-                        <div class="timeline-year">SWE-agent</div>
-                        <div>模型开始进入真实软件环境，面对文件系统、测试反馈、命令执行和长序列决策，agent 训练需求迅速清晰。</div>
-                    </div>
-                    <div class="timeline-item">
-                        <div class="timeline-year">DeepSeek-R1 之后</div>
-                        <div>社区开始集中关注“推理能力能否被 RL 系统性放大”，于是 GRPO、DAPO、GSPO、verifier-driven RL 等路线快速升温。</div>
-                    </div>
-                </div>
-                <div class="tag-row">
-                    <span class="tag">从提示工程走向策略学习</span>
-                    <span class="tag">从单轮回答走向多步轨迹</span>
-                    <span class="tag">从偏好对齐走向任务求解</span>
-                </div>
-            </section>
-
-            <section class="panel" id="math" data-panel-content="math">
-                <div class="panel-head">
-                    <div>
-                        <div class="panel-kicker">Math</div>
-                        <h3>数学基础：先把主干公式吃透</h3>
-                    </div>
-                </div>
-                <p class="panel-intro">
-                    无论名字叫 PPO、GRPO、GSPO 还是 DAPO，底层都离不开策略优化。很多差异看起来像新缩写，
-                    但本质上通常是在“优势怎么构造、ratio 怎么裁剪、KL 怎么限制、序列怎么聚合”上做变化。
-                </p>
-
-                <p>
-                    令轨迹为 $\tau = (s_1, a_1, r_1, \dots, s_T, a_T, r_T)$，策略为 $\pi_\theta(a_t \mid s_t)$，
-                    我们希望最大化总期望回报：
-                </p>
-                <div class="formula">
-                    $$J(\theta) = \mathbb{E}_{\tau \sim \pi_\theta}[R(\tau)]$$
-                    <div class="formula-note">这里的 $R(\tau)$ 可以是最终答案是否正确，也可以是过程奖励、格式奖励、工具调用奖励、代码测试通过率等组合。</div>
-                </div>
-
-                <p>经典策略梯度写成：</p>
-                <div class="formula">
-                    $$\nabla_\theta J(\theta) = \mathbb{E}_{\tau \sim \pi_\theta}\left[\sum_{t=1}^{T} \nabla_\theta \log \pi_\theta(a_t \mid s_t) \cdot A_t\right]$$
-                    <div class="formula-note">$A_t$ 是优势函数，表示这个动作比“平均水平”好多少。大模型 RL 里，如何构造 $A_t$，就是很多算法差异的来源。</div>
-                </div>
-
-                <p>如果使用 value baseline，常见定义是：</p>
-                <div class="formula">
-                    $$A_t = Q(s_t, a_t) - V(s_t)$$
-                </div>
-
-                <p>为了避免策略更新过猛，现代方法几乎都会加入参考策略约束，最常见的是 KL 正则：</p>
-                <div class="formula">
-                    $$\mathcal{L} = \mathbb{E}\left[\log \pi_\theta(a_t \mid s_t)\cdot A_t\right] - \beta \, \mathrm{KL}\left(\pi_\theta \parallel \pi_{\mathrm{ref}}\right)$$
-                </div>
-
-                <p>PPO 的代表性形式是裁剪比率：</p>
-                <div class="formula">
-                    $$r_t(\theta) = \frac{\pi_\theta(a_t \mid s_t)}{\pi_{\theta_{\mathrm{old}}}(a_t \mid s_t)}$$
-                    $$\mathcal{L}_{\mathrm{PPO}} = \mathbb{E}\left[\min\left(r_t(\theta) A_t, \mathrm{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon) A_t\right)\right]$$
-                    <div class="formula-note">裁剪的意义是：奖励好的方向可以继续推，但不能一下推得太离谱，否则训练很容易炸掉。</div>
-                </div>
-
-                <p>组相对优势是 reasoning RL 常见套路，一个常见写法是：</p>
-                <div class="formula">
-                    $$A_i = \frac{r_i - \bar{r}}{\sigma(r_1, \dots, r_G) + \epsilon}$$
-                    <div class="formula-note">其中 $G$ 是组大小，$\bar{r}$ 是组内平均奖励。这个想法非常适合没有稳定 value model、但能拿到相对好坏信号的场景。</div>
-                </div>
-
-                <p>GSPO 这类序列级方法更强调整条回答的概率比率，直觉上是在把 token-level 更新改成 sequence-level 更新，从而让序列级奖励和优化粒度更一致。</p>
-            </section>
-
-            <section class="panel" id="taxonomy" data-panel-content="taxonomy">
-                <div class="panel-head">
-                    <div>
-                        <div class="panel-kicker">Taxonomy</div>
-                        <h3>算法分类：别被缩写吓到，先看它改了哪一层</h3>
-                    </div>
-                </div>
-                <p class="panel-intro">
-                    大模型 RL 算法很多，但你可以从四个问题去分类：奖励怎么来、优势怎么估、更新怎么裁剪、采样怎么组织。
-                    这样看，PPO、RLOO、GRPO、GSPO、DAPO 就不会是散乱的缩写，而是一族可比较的方法。
-                </p>
-
-                <div class="table-wrap">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>方法族</th>
-                                <th>核心想法</th>
-                                <th>优点</th>
-                                <th>常见痛点</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>PPO / PPO-style</td>
-                                <td>显式 ratio clipping，常配 value model 与 KL penalty</td>
-                                <td>框架成熟，理论和工程经验丰富</td>
-                                <td>value 训练重，长序列成本高，调参复杂</td>
-                            </tr>
-                            <tr>
-                                <td>RLOO / REINFORCE-family</td>
-                                <td>弱化 value 依赖，用 leave-one-out 或 baseline 降低方差</td>
-                                <td>实现更轻，适合序列级奖励</td>
-                                <td>方差仍可能较大，对采样质量敏感</td>
-                            </tr>
-                            <tr>
-                                <td>GRPO-family</td>
-                                <td>同 prompt 采样一组回答，利用组内相对奖励做优势归一化</td>
-                                <td>不强依赖 value model，适合 reasoning 场景</td>
-                                <td>对组大小、奖励尺度、长度偏差敏感</td>
-                            </tr>
-                            <tr>
-                                <td>GSPO</td>
-                                <td>使用 sequence-level importance ratio 与 sequence-level clipping</td>
-                                <td>更贴近序列级奖励，训练 MoE reasoning 模型更稳</td>
-                                <td>细粒度 credit assignment 会变弱</td>
-                            </tr>
-                            <tr>
-                                <td>DAPO</td>
-                                <td>强调 decoupled clip、dynamic sampling 与大规模 RL 系统工程</td>
-                                <td>更关注真实大规模训练可复现性</td>
-                                <td>算法与系统细节强耦合，必须结合实现理解</td>
-                            </tr>
-                            <tr>
-                                <td>DPO / ORPO / KTO</td>
-                                <td>直接从偏好对构造优化目标，不显式 rollout RL</td>
-                                <td>训练简单、稳定，适合偏好数据</td>
-                                <td>对真实环境回报和长程 credit assignment 支持有限</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="card-grid">
-                    <div class="card">
-                        <strong>PPO 是“标准教科书”</strong>
-                        <p>如果你想先搭一个可解释的 RL 训练闭环，PPO 很适合入门。它让你看清 ratio、clip、value、GAE、KL 等核心部件怎么协同工作。</p>
-                    </div>
-                    <div class="card">
-                        <strong>GRPO 很适合 reasoning-style LLM</strong>
-                        <p>很多推理任务不容易给出精准 token-level value，但很容易判断多个候选答案谁更好，于是组相对优势就很自然。</p>
-                    </div>
-                    <div class="card">
-                        <strong>GSPO 代表“序列粒度优化”</strong>
-                        <p>它把更新单位往整条回答上抬，试图让“序列级奖励”与“策略更新粒度”对齐，减少 token 粒度和 sequence 粒度之间的错位。</p>
-                    </div>
-                    <div class="card">
-                        <strong>DAPO 更像工程增强包</strong>
-                        <p>它不是推翻策略梯度，而是针对长度偏置、裁剪耦合、采样效率、RL 系统可扩展性这些现实问题做强化。</p>
-                    </div>
-                </div>
-
-                <div class="compare-grid">
-                    <div class="compare-card">
-                        <strong>如何理解 GRPO</strong>
-                        <p>同一个问题采样多条回答，奖励高的回答相对抬高概率，奖励低的回答相对压低概率。重点是“相对排序”而不是绝对分数。</p>
-                    </div>
-                    <div class="compare-card">
-                        <strong>如何理解 GSPO / DAPO</strong>
-                        <p>前者更强调 sequence-level 优化的稳定性，后者更强调大规模 reasoning RL 训练中的实操可复现性与系统细节。</p>
-                    </div>
-                </div>
-            </section>
-
-            <section class="panel" id="agent" data-panel-content="agent">
-                <div class="panel-head">
-                    <div>
-                        <div class="panel-kicker">Agent</div>
-                        <h3>Agent 训练要素：为什么它比普通回答式 RL 更难</h3>
-                    </div>
-                </div>
-                <p class="panel-intro">
-                    Agentic RL 的难点不在“会不会求梯度”，而在于环境更复杂。状态不仅是用户问题，
-                    还包括工具输出、历史上下文、执行日志、观察结果和外部世界变化。
-                </p>
-                <div class="card-grid">
-                    <div class="card">
-                        <strong>状态 State</strong>
-                        <p>当前对话、已执行动作、工具返回、文件系统快照、网页内容、测试结果，都可能进入状态表示。</p>
-                    </div>
-                    <div class="card">
-                        <strong>动作 Action</strong>
-                        <p>不仅是输出 token，也可能是调用搜索、执行 shell、编辑文件、发起 API、结束任务等结构化动作。</p>
-                    </div>
-                    <div class="card">
-                        <strong>奖励 Reward</strong>
-                        <p>可以是最终任务成功率，也可以混合答案正确性、格式合法性、调用成本、步数惩罚、测试通过率、verifier 分数。</p>
-                    </div>
-                    <div class="card">
-                        <strong>信用分配 Credit Assignment</strong>
-                        <p>当最后一步成功时，真正关键的也许是前面某次搜索、某次回退或某次工具选择。长轨迹信用分配是 agent RL 的核心难题。</p>
-                    </div>
-                </div>
-
-                <p>很多 agent 训练可抽象成一个 POMDP：</p>
-                <div class="formula">
-                    $$o_t \rightarrow h_t \rightarrow a_t \rightarrow o_{t+1}, r_t$$
-                    <div class="formula-note">$o_t$ 是观察，$h_t$ 是历史或隐状态，$a_t$ 是动作。大模型经常通过上下文窗口近似地维护这个历史。</div>
-                </div>
-
-                <p>如果是多步推理或工具使用场景，你还需要同时关心下面几件事：</p>
-                <ol>
-                    <li>探索是否足够。采样太保守，模型学不到新策略；采样太激进，训练信号又会噪声很大。</li>
-                    <li>奖励是否可验证。能自动判分的任务最适合做大规模 RL，比如数学、代码、结构化问答。</li>
-                    <li>轨迹是否太长。上下文越长，训练成本越高，梯度越容易受到无关 token 干扰。</li>
-                    <li>工具观察是否稳定。真实 API 波动、网页变化、执行环境差异都会让奖励分布漂移。</li>
-                </ol>
-            </section>
-
-            <section class="panel" id="practice" data-panel-content="practice">
-                <div class="panel-head">
-                    <div>
-                        <div class="panel-kicker">Practice</div>
-                        <h3>训练与评测实践：把理论落到系统设计上</h3>
-                    </div>
-                </div>
-                <p class="panel-intro">
-                    真正的瓶颈通常不只在算法，还在 rollout、验证器、并发采样、环境控制和评测指标体系。
-                    很多实验结果不稳定，根源不是 loss 公式，而是训练系统没有把轨迹质量和奖励质量管住。
-                </p>
-
-                <div class="roadmap-grid">
-                    <div class="roadmap-card">
-                        <strong>冷启动</strong>
-                        <p>先用高质量 SFT 给模型打一个可执行的行为先验，否则 RL 阶段会把大量预算浪费在无意义探索上。</p>
-                    </div>
-                    <div class="roadmap-card">
-                        <strong>奖励系统</strong>
-                        <p>优先选择可自动验证的奖励。数学看答案，代码看测试，搜索看命中率，agent 任务看任务完成度与轨迹合法性。</p>
-                    </div>
-                    <div class="roadmap-card">
-                        <strong>Rollout 系统</strong>
-                        <p>准备好并发采样、工具沙箱、超时控制、日志记录和轨迹回放能力。很多训练瓶颈其实不在模型，而在 rollout 基建。</p>
-                    </div>
-                    <div class="roadmap-card">
-                        <strong>评测体系</strong>
-                        <p>不能只看平均 reward。还要看 pass@k、步骤长度、工具调用成功率、重复率、格式错误率、越狱率和成本。</p>
-                    </div>
-                </div>
-
-                <p>一个典型的 Agentic RL 闭环可以总结为：</p>
-                <div class="formula">
-                    $$\text{Prompt} \rightarrow \text{Sample Trajectories} \rightarrow \text{Verifier / Reward} \rightarrow \text{Advantage} \rightarrow \text{Policy Update}$$
-                </div>
-
-                <p>如果你自己搭实验，最建议盯住这几类指标：</p>
-                <ul>
-                    <li>任务指标：最终正确率、pass@1、pass@k、任务完成率。</li>
-                    <li>过程指标：平均步数、平均输出长度、工具调用次数、重复搜索率、空转率。</li>
-                    <li>训练指标：KL 漂移、reward 均值/方差、有效样本比例、loss spike 次数。</li>
-                    <li>成本指标：每条轨迹 token 数、每轮 rollout 耗时、验证器成本、GPU 利用率。</li>
-                </ul>
-
-                <div class="table-wrap">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>场景</th>
-                                <th>奖励最好怎么设计</th>
-                                <th>为什么</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>数学推理</td>
-                                <td>最终答案正确 + 过程格式约束 + 长度轻惩罚</td>
-                                <td>自动判分容易，适合大规模探索</td>
-                            </tr>
-                            <tr>
-                                <td>代码生成 / SWE Agent</td>
-                                <td>测试通过率 + patch 可执行性 + 超时惩罚</td>
-                                <td>结果验证直接，轨迹长但反馈明确</td>
-                            </tr>
-                            <tr>
-                                <td>搜索 / 浏览器 Agent</td>
-                                <td>目标命中 + 引用质量 + 非法动作惩罚</td>
-                                <td>需要兼顾结果正确和过程合规</td>
-                            </tr>
-                            <tr>
-                                <td>通用聊天</td>
-                                <td>偏好模型 + 安全规则 + 人工抽检</td>
-                                <td>真值难定义，更接近传统 RLHF</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-
-            <section class="panel" id="papers" data-panel-content="papers">
-                <div class="panel-head">
-                    <div>
-                        <div class="panel-kicker">Papers</div>
-                        <h3>代表论文：把 Agent RL 读成一张图</h3>
-                    </div>
-                </div>
-                <p class="panel-intro">
-                    这一页把“Agentic RL 热潮”拆成几组代表论文。你可以把它们理解成三条主线：
-                    先是 ReAct / ToT / SWE-agent 把 agent 交互问题定义清楚，再是 DeepSeekMath / DeepSeek-R1 / DAPO / GSPO 把 reasoning RL 推热，
-                    最后是 ReST-MCTS*、rStar-Math、Agent Q 这类工作把搜索、轨迹合成和训练闭环接起来。
-                </p>
-
-                <div class="paper-section-title">A. Agent 形态与任务接口</div>
-                <div class="paper-grid">
-                    <article class="paper-card">
-                        <div class="paper-meta">
-                            <span class="paper-badge">2022</span>
-                            <span class="paper-badge">Reason + Act</span>
-                        </div>
-                        <strong><a href="https://arxiv.org/abs/2210.03629" target="_blank" rel="noopener noreferrer">ReAct: Synergizing Reasoning and Acting in Language Models</a></strong>
-                        <p>ReAct 把“推理 token”和“环境动作”交错在同一条轨迹里，是现代 Agent 轨迹格式和 action-observation 循环的重要起点。</p>
-                    </article>
-                    <article class="paper-card">
-                        <div class="paper-meta">
-                            <span class="paper-badge">2023</span>
-                            <span class="paper-badge">Search</span>
-                        </div>
-                        <strong><a href="https://arxiv.org/abs/2305.10601" target="_blank" rel="noopener noreferrer">Tree of Thoughts: Deliberate Problem Solving with Large Language Models</a></strong>
-                        <p>ToT 把推理过程从单链条扩展为树搜索，是后续 MCTS、best-of-n、deliberate inference 和 search-based agent 方法的关键前导工作。</p>
-                    </article>
-                    <article class="paper-card">
-                        <div class="paper-meta">
-                            <span class="paper-badge">2024</span>
-                            <span class="paper-badge">Software Agent</span>
-                        </div>
-                        <strong><a href="https://arxiv.org/abs/2405.15793" target="_blank" rel="noopener noreferrer">SWE-agent: Agent-Computer Interfaces Enable Automated Software Engineering</a></strong>
-                        <p>SWE-agent 让模型在代码仓库、测试命令和文件编辑环境里执行长轨迹任务，直接推动了“面向真实环境的 agent 训练”讨论。</p>
-                    </article>
-                    <article class="paper-card">
-                        <div class="paper-meta">
-                            <span class="paper-badge">2024</span>
-                            <span class="paper-badge">GRPO 起点</span>
-                        </div>
-                        <strong><a href="https://arxiv.org/abs/2402.03300" target="_blank" rel="noopener noreferrer">DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open Language Models</a></strong>
-                        <p>DeepSeekMath 是公开语境里理解 GRPO 的重要入口，它把组相对奖励与数学 reasoning 训练直接连接起来。</p>
-                    </article>
-                </div>
-
-                <div class="paper-section-title">B. DeepSeek-R1 之后的 reasoning RL 热潮</div>
-                <div class="paper-grid">
-                    <article class="paper-card">
-                        <div class="paper-meta">
-                            <span class="paper-badge">2025</span>
-                            <span class="paper-badge">Reasoning RL</span>
-                        </div>
-                        <strong><a href="https://arxiv.org/abs/2501.12948" target="_blank" rel="noopener noreferrer">DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning</a></strong>
-                        <p>DeepSeek-R1 让“先冷启动再强化学习”的 reasoning 路线被更多人看见，也是你理解 2025 年社区为何集体转向 RL reasoning 的代表论文。</p>
-                    </article>
-                    <article class="paper-card">
-                        <div class="paper-meta">
-                            <span class="paper-badge">2025</span>
-                            <span class="paper-badge">System + Algorithm</span>
-                        </div>
-                        <strong><a href="https://arxiv.org/abs/2503.14476" target="_blank" rel="noopener noreferrer">DAPO: An Open-Source LLM Reinforcement Learning System at Scale</a></strong>
-                        <p>DAPO 重点不是只讲一个 loss，而是把 decoupled clipping、dynamic sampling 和大规模 RL 系统工程一起开源，适合从“怎么真跑起来”角度读。</p>
-                    </article>
-                    <article class="paper-card">
-                        <div class="paper-meta">
-                            <span class="paper-badge">2025</span>
-                            <span class="paper-badge">Sequence-Level RL</span>
-                        </div>
-                        <strong><a href="https://arxiv.org/abs/2507.18071" target="_blank" rel="noopener noreferrer">Group Sequence Policy Optimization</a></strong>
-                        <p>GSPO 代表一种序列级更新视角：直接基于 sequence likelihood 和 sequence clipping 来优化，更贴近 sequence-level reward 的粒度。</p>
-                    </article>
-                    <article class="paper-card">
-                        <div class="paper-meta">
-                            <span class="paper-badge">2024</span>
-                            <span class="paper-badge">Offline Step-Level RL</span>
-                        </div>
-                        <strong><a href="https://arxiv.org/abs/2412.18279" target="_blank" rel="noopener noreferrer">Improving Multi-Step Reasoning Abilities of Large Language Models with Direct Advantage Policy Optimization</a></strong>
-                        <p>DAPO 这篇方法论文强调 step-level offline RL，用 critic 产生更密的优势信号，适合和大规模系统版 DAPO 一起对照阅读。</p>
-                    </article>
-                </div>
-
-                <div class="paper-section-title">C. MCTS 合成成功轨迹与搜索驱动自训练</div>
-                <div class="paper-grid">
-                    <article class="paper-card">
-                        <div class="paper-meta">
-                            <span class="paper-badge">2024</span>
-                            <span class="paper-badge">MCTS + Self-Training</span>
-                        </div>
-                        <strong><a href="https://arxiv.org/abs/2406.03816" target="_blank" rel="noopener noreferrer">ReST-MCTS*: LLM Self-Training via Process Reward Guided Tree Search</a></strong>
-                        <p>这篇非常贴近你说的“MCTS 合成成功轨迹”。它用 process reward 引导树搜索，收集更高质量的 reasoning traces，并把这些轨迹继续喂回模型做自训练。</p>
-                    </article>
-                    <article class="paper-card">
-                        <div class="paper-meta">
-                            <span class="paper-badge">2025</span>
-                            <span class="paper-badge">Verified Trajectories</span>
-                        </div>
-                        <strong><a href="https://arxiv.org/abs/2501.04519" target="_blank" rel="noopener noreferrer">rStar-Math: Small LLMs Can Master Math Reasoning with Self-Evolved Deep Thinking</a></strong>
-                        <p>rStar-Math 使用 MCTS rollout 生成逐步验证过的 reasoning trajectories，再用这些轨迹训练策略模型和过程偏好模型，是“搜索合成成功样本”的代表工作。</p>
-                    </article>
-                    <article class="paper-card">
-                        <div class="paper-meta">
-                            <span class="paper-badge">2024</span>
-                            <span class="paper-badge">MCTS + Agent Learning</span>
-                        </div>
-                        <strong><a href="https://arxiv.org/abs/2408.07199" target="_blank" rel="noopener noreferrer">Agent Q: Advanced Reasoning and Learning for Autonomous AI Agents</a></strong>
-                        <p>Agent Q 把 guided MCTS、self-critique 和基于 agent interaction 的偏好优化结合起来，说明搜索不仅能做 test-time enhancement，也能反过来产生训练数据。</p>
-                    </article>
-                    <article class="paper-card">
-                        <div class="paper-meta">
-                            <span class="paper-badge">阅读提示</span>
-                            <span class="paper-badge">推荐顺序</span>
-                        </div>
-                        <strong>怎么读这组论文</strong>
-                        <p>先读 ReAct 和 ToT 理解“轨迹长什么样”，再读 ReST-MCTS* 和 rStar-Math 理解“搜索如何合成优质轨迹”，最后读 Agent Q 看“这些轨迹如何反馈到 agent 学习闭环”。</p>
-                    </article>
-                </div>
-            </section>
-
-            <section class="panel" id="pitfalls" data-panel-content="pitfalls">
-                <div class="panel-head">
-                    <div>
-                        <div class="panel-kicker">Pitfalls</div>
-                        <h3>常见误区：很多实验不是算法输，而是系统没搭对</h3>
-                    </div>
-                </div>
-                <div class="card-grid">
-                    <div class="card">
-                        <strong>误区 1：reward 高了就等于能力强了</strong>
-                        <p>如果奖励设计得太窄，模型会 reward hack。比如学会钻 verifier 漏洞，而不是真会推理。</p>
-                    </div>
-                    <div class="card">
-                        <strong>误区 2：只看最终答案，不看轨迹质量</strong>
-                        <p>Agent 场景里，成功背后可能伴随大量无效搜索、重复工具调用和高成本路径，这会直接影响线上可用性。</p>
-                    </div>
-                    <div class="card">
-                        <strong>误区 3：把缩写当创新本身</strong>
-                        <p>看到新方法时，第一件事不是背全称，而是问它到底修改了奖励、优势、裁剪、采样还是归一化。</p>
-                    </div>
-                    <div class="card">
-                        <strong>误区 4：忽略长度偏置</strong>
-                        <p>长推理场景里，sequence-level reward 容易偏向更长或更短回答，必须检查是否需要长度归一化、token weighting 或 decoupled clipping。</p>
-                    </div>
-                    <div class="card">
-                        <strong>误区 5：没有强基线就直接上 RL</strong>
-                        <p>如果 SFT、best-of-n、test-time search 都没跑稳，直接上 RL 往往只会把问题放大，不会神奇解决一切。</p>
-                    </div>
-                    <div class="card">
-                        <strong>误区 6：忽略数据与环境漂移</strong>
-                        <p>Agent 往往连接真实环境。网页结构变了、测试集变了、API 限流了，奖励分布就会变化，必须监控数据管线。</p>
-                    </div>
-                </div>
-            </section>
-
-            <section class="panel" id="roadmap" data-panel-content="roadmap">
-                <div class="panel-head">
-                    <div>
-                        <div class="panel-kicker">Roadmap</div>
-                        <h3>学习路线：从入门到能读论文、能搭实验</h3>
-                    </div>
-                </div>
-                <p class="panel-intro">
-                    如果你的目标是把 Agentic RL 真正学会，而不是只背术语，最有效的方法是按“数学基础 → 对齐方法 → 推理 RL → agent 环境 → 搜索与轨迹合成”去推进。
-                </p>
-                <div class="roadmap-grid">
-                    <div class="roadmap-card">
-                        <strong>阶段 1：打地基</strong>
-                        <p>先学马尔可夫决策过程、策略梯度、baseline、KL、PPO。目标是看懂“为什么要 clip，为什么要 regularize”。</p>
-                    </div>
-                    <div class="roadmap-card">
-                        <strong>阶段 2：理解 LLM 对齐</strong>
-                        <p>把 SFT、RM、PPO、DPO 的关系弄清楚，知道什么时候是偏好学习，什么时候是真正的在线 RL。</p>
-                    </div>
-                    <div class="roadmap-card">
-                        <strong>阶段 3：进入 reasoning RL</strong>
-                        <p>重点理解组采样、相对优势、序列级奖励、verifier、拒绝采样与 best-of-n 的关系。</p>
-                    </div>
-                    <div class="roadmap-card">
-                        <strong>阶段 4：进入 agent RL</strong>
-                        <p>关注工具调用、多步轨迹、环境状态、长上下文、信用分配和 rollout 基础设施。</p>
-                    </div>
-                </div>
-
-                <p>一个很实用的阅读顺序是：</p>
-                <ol>
-                    <li>先看 PPO 和 REINFORCE，把公式真正写明白。</li>
-                    <li>再看 RLHF / DPO，弄懂“偏好优化”和“在线策略优化”差在哪。</li>
-                    <li>然后看 ReAct、ToT、SWE-agent，理解 agent 到底把问题复杂化在什么地方。</li>
-                    <li>最后回来看 GRPO、GSPO、DAPO、ReST-MCTS*、Agent Q，你会发现它们大多是在为“长推理、多样采样、稳定更新”服务。</li>
-                </ol>
-
-                <div class="formula">
-                    $$\text{真正的能力增长} \approx \text{强先验模型} + \text{可验证奖励} + \text{稳定 rollout} + \text{合适的策略更新}$$
-                </div>
-
-                <p>
-                    如果把这页教材压缩成一句话，那就是：
-                    <strong>Agentic RL 不是某个缩写的胜利，而是把大模型从“会说”推向“会做、会试、会修正”的系统工程。</strong>
-                </p>
-            </section>
+            <!-- Panels are dynamically loaded from rl_sections/*.html -->
+            <section class="panel active" id="formulation" data-panel-content="formulation" data-src="rl_sections/01_formulation.html"><div class="panel-loading">加载中…</div></section>
+            <section class="panel" id="history" data-panel-content="history" data-src="rl_sections/02_history.html"><div class="panel-loading">加载中…</div></section>
+            <section class="panel" id="math" data-panel-content="math" data-src="rl_sections/03_math.html"><div class="panel-loading">加载中…</div></section>
+            <section class="panel" id="algorithms" data-panel-content="algorithms" data-src="rl_sections/04_algorithms.html"><div class="panel-loading">加载中…</div></section>
+            <section class="panel" id="credit" data-panel-content="credit" data-src="rl_sections/05_credit.html"><div class="panel-loading">加载中…</div></section>
+            <section class="panel" id="reward" data-panel-content="reward" data-src="rl_sections/06_reward.html"><div class="panel-loading">加载中…</div></section>
+            <section class="panel" id="infrastructure" data-panel-content="infrastructure" data-src="rl_sections/07_infrastructure.html"><div class="panel-loading">加载中…</div></section>
+            <section class="panel" id="evaluation" data-panel-content="evaluation" data-src="rl_sections/08_evaluation.html"><div class="panel-loading">加载中…</div></section>
+            <section class="panel" id="frontiers" data-panel-content="frontiers" data-src="rl_sections/09_frontiers.html"><div class="panel-loading">加载中…</div></section>
+            <section class="panel" id="papers" data-panel-content="papers" data-src="rl_sections/10_papers.html"><div class="panel-loading">加载中…</div></section>
+            <section class="panel" id="pitfalls" data-panel-content="pitfalls" data-src="rl_sections/11_pitfalls.html"><div class="panel-loading">加载中…</div></section>
+            <section class="panel" id="roadmap" data-panel-content="roadmap" data-src="rl_sections/12_roadmap.html"><div class="panel-loading">加载中…</div></section>
         </div>
     </main>
 
     <footer class="footer">
         <div class="footer-card">
             <p>
-                继续扩展这份教材时，可以沿三条线往下挖：一条是“公式线”，深入到 GAE、importance sampling、variance reduction；
-                一条是“系统线”，深入到 rollout engine、verifier pipeline、tool sandbox；
-                一条是“论文线”，沿 ReAct → ToT → ReST-MCTS* → rStar-Math → Agent Q 追踪“搜索生成轨迹如何反哺训练”。
+                这份指南沿三条线延伸：<strong>理论线</strong>（策略梯度 → 方差缩减 → credit assignment → sample complexity）、
+                <strong>系统线</strong>（rollout engine → verifier pipeline → distributed training）、
+                <strong>前沿线</strong>（Search-R1 → RAGEN → Absolute Zero → 下一个 open problem）。
+                如果你是博士生，建议从 Panel 3 的推导手推一遍开始，然后跳到 Panel 9 看哪些问题还没人解决。
             </p>
         </div>
     </footer>
@@ -1142,39 +267,45 @@
         const panelButtons = Array.from(document.querySelectorAll('[data-panel-target]'));
         const navPanelLinks = Array.from(document.querySelectorAll('[data-panel-target-link]'));
         const panels = Array.from(document.querySelectorAll('[data-panel-content]'));
-        const validPanels = new Set(panels.map((panel) => panel.dataset.panelContent));
+        const validPanels = new Set(panels.map(p => p.dataset.panelContent));
+        const loadedPanels = new Set();
 
-        function renderMathIfNeeded(panel) {
-            if (!panel || !window.MathJax || typeof window.MathJax.typesetPromise !== 'function' || panel.dataset.mathRendered === 'true') {
-                return;
+        async function loadPanelContent(panel) {
+            const key = panel.dataset.panelContent;
+            if (loadedPanels.has(key)) return;
+            const src = panel.dataset.src;
+            if (!src) return;
+            try {
+                const resp = await fetch(src);
+                if (!resp.ok) throw new Error(resp.status);
+                const html = await resp.text();
+                panel.innerHTML = html;
+                loadedPanels.add(key);
+            } catch (e) {
+                panel.innerHTML = '<div class="panel-loading" style="color:#b91c1c">加载失败：' + e.message + '</div>';
             }
-            window.MathJax.typesetPromise([panel]).then(() => {
-                panel.dataset.mathRendered = 'true';
-            }).catch(() => {});
         }
 
-        function activatePanel(panelKey, options = {}) {
+        function renderMathIfNeeded(panel) {
+            if (!panel || !window.MathJax || typeof window.MathJax.typesetPromise !== 'function' || panel.dataset.mathRendered === 'true') return;
+            window.MathJax.typesetPromise([panel]).then(() => { panel.dataset.mathRendered = 'true'; }).catch(() => {});
+        }
+
+        async function activatePanel(panelKey, options = {}) {
             const { updateHash = true, scrollIntoView = true } = options;
-            if (!validPanels.has(panelKey)) {
-                return;
-            }
+            if (!validPanels.has(panelKey)) return;
 
-            panelButtons.forEach((button) => {
-                button.classList.toggle('active', button.dataset.panelTarget === panelKey);
-            });
-
-            panels.forEach((panel) => {
+            panelButtons.forEach(b => b.classList.toggle('active', b.dataset.panelTarget === panelKey));
+            for (const panel of panels) {
                 const isActive = panel.dataset.panelContent === panelKey;
                 panel.classList.toggle('active', isActive);
                 if (isActive) {
+                    await loadPanelContent(panel);
                     renderMathIfNeeded(panel);
                 }
-            });
-
-            if (updateHash) {
-                history.replaceState(null, '', '#' + panelKey);
             }
 
+            if (updateHash) history.replaceState(null, '', '#' + panelKey);
             if (scrollIntoView) {
                 const content = document.getElementById('content-panels');
                 const top = content.getBoundingClientRect().top + window.scrollY - 84;
@@ -1182,28 +313,18 @@
             }
         }
 
-        panelButtons.forEach((button) => {
-            button.addEventListener('click', () => activatePanel(button.dataset.panelTarget));
-        });
-
-        navPanelLinks.forEach((link) => {
-            link.addEventListener('click', (event) => {
-                const panelKey = link.dataset.panelTargetLink;
-                if (!validPanels.has(panelKey)) {
-                    return;
-                }
-                event.preventDefault();
-                activatePanel(panelKey);
+        panelButtons.forEach(b => b.addEventListener('click', () => activatePanel(b.dataset.panelTarget)));
+        navPanelLinks.forEach(link => {
+            link.addEventListener('click', e => {
+                const k = link.dataset.panelTargetLink;
+                if (!validPanels.has(k)) return;
+                e.preventDefault();
+                activatePanel(k);
             });
         });
 
-        const initialPanel = validPanels.has(location.hash.slice(1)) ? location.hash.slice(1) : 'overview';
+        const initialPanel = validPanels.has(location.hash.slice(1)) ? location.hash.slice(1) : 'formulation';
         activatePanel(initialPanel, { updateHash: false, scrollIntoView: false });
-
-        window.addEventListener('load', () => {
-            const activePanel = document.querySelector('[data-panel-content].active');
-            renderMathIfNeeded(activePanel);
-        });
     </script>
 </body>
 </html>

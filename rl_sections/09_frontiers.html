@@ -1,0 +1,119 @@
+<div class="panel-head">
+    <div>
+        <div class="panel-kicker">Frontiers</div>
+        <h2>开放研究问题：6 个还没有好答案的核心问题</h2>
+    </div>
+</div>
+<p class="panel-intro">
+    如果你在选博士课题，这一节可能是整个指南中最有价值的部分。
+    以下 6 个问题在 2025 年初仍然没有被 satisfactorily 解决，每个都有足够的深度和 impact 支撑一篇好论文。
+</p>
+
+<div class="open-problem">
+    <strong>Open Problem 1: Scalable Process Supervision</strong>
+    <p>
+        PRM 在数学推理上效果显著（Lightman et al. 2023），但获取高质量 process reward 的成本极高。
+        核心问题：<strong>如何低成本、高质量地生成 step-level reward signal？</strong>
+    </p>
+    <p>
+        已有探索方向：
+    </p>
+    <ul>
+        <li><strong>Monte Carlo Rollout Estimation</strong>：给定前缀，多次 rollout 看最终正确率。但 sample complexity 高——每个 step 需要 $N$ 次完整 rollout，$N$ 取 16-64 才有合理精度。</li>
+        <li><strong>Self-evolved PRM</strong>（rStar-Math, 2025）：用 MCTS rollout 自动筛选出逐步正确的 reasoning paths，用这些 paths 训练 PRM。初始 PRM 质量可能较低，通过迭代提升。</li>
+        <li><strong>Implicit PRM</strong>（PRIME, 2024）：不单独训练 PRM，而是利用 policy model 本身在 inference 中的行为来隐式提取 process reward signal。</li>
+        <li><strong>OmegaPRM</strong>（Luo et al. 2024）：结合 divide-and-conquer 和 MC estimation，降低估计 process reward 所需的 rollout 数量。</li>
+    </ul>
+    <p>
+        <strong>Open question</strong>：是否存在一种方法能在 $O(1)$ 额外 rollout 成本下获得和 MC 估计同等精度的 process reward？
+        这需要从 value function approximation 或 causal inference 的理论角度去分析。
+    </p>
+    <div class="refs">关键引用：Lightman 2023, Math-Shepherd (Wang 2024), OmegaPRM (Luo 2024), PRIME (Yuan 2024), rStar-Math (Guan 2025)</div>
+</div>
+
+<div class="open-problem">
+    <strong>Open Problem 2: RL for Multi-turn Agent without Dense Reward</strong>
+    <p>
+        当 agent 轨迹长达数十个 turn、只有最终任务成功/失败信号时，如何有效训练？
+        这是 Agentic RL 区别于 Reasoning RL 的核心挑战——Reasoning RL 的轨迹虽然长但结构相对简单（线性 CoT），
+        而 Agent 轨迹涉及分支决策、环境交互、错误回退等复杂结构。
+    </p>
+    <ul>
+        <li><strong>Sub-goal Decomposition</strong>：自动将复杂任务分解为 sub-goal 序列，每个 sub-goal 完成时给中间奖励。但 sub-goal 的定义本身需要任务知识。</li>
+        <li><strong>Hindsight Relabeling</strong>：将失败轨迹的部分前缀重新标记为"完成了一个不同的（更简单的）任务"，从而变成正样本。在 goal-conditioned RL 中成熟，但在 LLM agent 中应用尚少。</li>
+        <li><strong>Automatic Curriculum</strong>：根据当前模型能力动态调整任务难度，避免"太难全部失败"或"太简单无梯度"。</li>
+        <li><strong>Trajectory Compression</strong>：把长轨迹压缩为关键决策点的摘要，减少无关 token 对 credit assignment 的干扰。</li>
+    </ul>
+    <div class="refs">关键引用：RAGEN (2025), AgentTrek (2024), HER (Andrychowicz 2017), SWE-agent (2024)</div>
+</div>
+
+<div class="open-problem">
+    <strong>Open Problem 3: Exploration in Large Action Space</strong>
+    <p>
+        LLM 的 action space 是整个词表的序列空间——指数级大。经典 exploration 策略（ε-greedy, UCB, count-based）
+        不能直接应用。<strong>如何在这个巨大空间中做有效探索？</strong>
+    </p>
+    <ul>
+        <li><strong>Temperature-based Exploration</strong>：通过调高 sampling temperature 增加随机性。简单但盲目——不区分"有信息量的探索"和"纯随机噪声"。</li>
+        <li><strong>Best-of-N / Rejection Sampling</strong>：采样 $N$ 条，选最好的做更新。不是探索 per se，但通过大量采样覆盖更多可能性。</li>
+        <li><strong>MCTS 给出 Guided Exploration</strong>（Agent Q, ReST-MCTS*）：用 tree search 在 test-time 系统性地探索不同路径，再用搜索结果做训练数据。</li>
+        <li><strong>Entropy Bonus</strong>：在 loss 中加 $H[\pi_\theta]$ 项鼓励多样性（PPO 标准做法）。但 entropy 在 LLM 的高维空间中怎么正确计算是个问题——词表级 entropy 是否足够？</li>
+        <li><strong>DAPO Clip-Higher</strong>：通过不对称 clipping 间接鼓励正方向的大步更新，增加"好方向的探索幅度"。</li>
+    </ul>
+    <p>
+        <strong>Open question</strong>：是否存在 LLM-specific 的 exploration strategy 能利用模型的 semantic understanding 来做 directed exploration
+        （而非 random perturbation）？例如：模型能否学会"我在这个问题上不确定，所以我应该尝试不同的推理路径"？
+    </p>
+    <div class="refs">关键引用：Agent Q (2024), ReST-MCTS* (2024), DAPO (2025), Absolute Zero (2025)</div>
+</div>
+
+<div class="open-problem">
+    <strong>Open Problem 4: Catastrophic Forgetting in RL Post-training</strong>
+    <p>
+        RL 训练改善 reasoning / agent 能力，但常常损害 general capability——这是所谓的 <strong>alignment tax</strong>。
+        模型在 math 上变强了，但在 commonsense QA、creative writing 上可能变弱。
+    </p>
+    <ul>
+        <li><strong>KL 约束是否足够？</strong>KL 小并不保证 capability 保持——模型可能在保持 generation distribution 相似的同时，丢失了特定能力的 internal representation。</li>
+        <li><strong>Multi-task RL</strong>：同时在多种任务上做 RL，但多任务间可能存在 gradient conflict。</li>
+        <li><strong>Replay Buffer</strong>：在 RL 训练中混入 SFT 数据做 rehearsal，防止遗忘。</li>
+        <li><strong>Post-RL Distillation</strong>：RL 训练的 model 作为 teacher，蒸馏回 base model，可能部分保留 general capability。</li>
+        <li><strong>Parameter-efficient RL</strong>：只用 LoRA 做 RL（冻结大部分参数），天然减少对 general capability 的干扰。但可能限制 RL 的优化空间。</li>
+    </ul>
+    <div class="refs">关键引用：DeepSeek-R1 (2025), Qwen2.5 observations, EWC (Kirkpatrick 2017)</div>
+</div>
+
+<div class="open-problem">
+    <strong>Open Problem 5: RL for Tool-augmented LLM</strong>
+    <p>
+        工具调用引入了 <strong>non-differentiable 操作</strong>——搜索引擎的返回、代码执行的结果、API 的响应——
+        都是外部黑盒。如何在这种混合 action space 中做有效的梯度估计？
+    </p>
+    <ul>
+        <li><strong>当前做法</strong>：把工具返回当作 observation（环境状态的一部分），不对工具本身求梯度。RL 只优化"什么时候调用什么工具"的决策策略。</li>
+        <li><strong>固有局限</strong>：模型无法通过 gradient 学习"搜索 query 的最优措辞"——因为搜索引擎是黑盒。只能通过 exploration + reward signal 间接学习。</li>
+        <li><strong>工具环境的不稳定性</strong>：网页变了、API rate limit 了、搜索引擎算法更新了——同样的 action 在不同时间得到不同结果。这破坏了 MDP 的 stationary assumption。</li>
+        <li><strong>潜在方向</strong>：differentiable tools（如 differentiable search index）、tool abstraction layer（统一化工具接口以减少环境噪声）、simulated environments（用模拟环境替代真实环境做训练）。</li>
+    </ul>
+    <div class="refs">关键引用：Toolformer (2023), Gorilla (2023), Search-R1 (2025), R1-Searcher (2025)</div>
+</div>
+
+<div class="open-problem">
+    <strong>Open Problem 6: Sample Complexity of LLM RL</strong>
+    <p>
+        这是最理论的一个问题：<strong>LLM RL 的 sample complexity bound 是什么？</strong>
+        经典 RL 理论给出了 tabular MDP 的 sample complexity 是 $\tilde{O}(|\mathcal{S}||\mathcal{A}|/\epsilon^2)$（polynomial in state/action space size）。
+        但 LLM 的 state space 是所有可能的 token 前缀（指数级大），action space 是词表大小（32K-128K）。
+    </p>
+    <ul>
+        <li>现有的 function approximation RL 理论（如 neural FA bounds）能否被 specifically applied to transformer-based policies？</li>
+        <li>Token-level MDP 的 deterministic transition 是否从根本上使 LLM RL 比一般 RL 更 sample-efficient？</li>
+        <li>GRPO 和 RLOO 相对于 PPO 的 sample efficiency 差异，是否可以理论量化？</li>
+        <li>LLM 的 inductive bias（预训练 prior）如何影响 RL fine-tuning 的 sample complexity？</li>
+    </ul>
+    <p>
+        <strong>这个问题几乎完全 open</strong>。截至 2025 年初，没有任何论文给出过 LLM RL 的 non-trivial sample complexity bound。
+        这是理论导向的博士生可以长期投入的方向。
+    </p>
+    <div class="refs">关键引用：Agarwal et al. 2021 (Theory of RL with Function Approximation), Kakade 2003 (Sample Complexity of RL)</div>
+</div>
