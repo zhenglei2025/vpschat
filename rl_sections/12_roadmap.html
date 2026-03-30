@@ -169,52 +169,154 @@
     <div class="locked-content-blur">
         <div class="roadmap-grid">
             <div class="roadmap-card">
-                <strong>1. MCTS-Enhanced Training-Time Exploration for Agent RL</strong>
-                <p>
-                    <strong>动机</strong>: DeepSearch (TreeRL) 证明了在训练循环中嵌入 MCTS 能打破 RLVR 性能瓶颈。然而，Agentic 轨迹（如网页操作、代码调优）远比线性计算复杂。<br>
-                    <strong>挑战</strong>: 针对开放探索环境，如何在缺乏 Dense Reward 时进行可靠的 Node 扩展和 Quality 估计？<br>
-                    <strong>预期实验</strong>: 移植 Global Frontier Selection 与 Tree-GRPO 算法到 RAGEN 或类似 Agent 环境中，验证 Training-Time Exploration 相比于 Direct Rollout 的大幅效率提升。
-                </p>
+                <strong class="roadmap-card-title">1. MCTS-Enhanced Training-Time Exploration for Agent RL</strong>
+                <div class="roadmap-stack">
+                    <div class="roadmap-detail">
+                        <div class="roadmap-detail-title">灵感来源</div>
+                        <p>DeepSearch 说明了“训练时搜索”不仅是 inference trick，而是可以直接改变 RL 数据分布和 credit assignment 质量的核心机制。但它主要验证在 math reasoning 上，状态空间相对干净、动作形式也更接近线性 chain-of-thought；一旦切到 web browsing、代码修复、tool-use 这类 agent 任务，单条轨迹会变成长时程、带外部环境反馈、且包含大量不可逆操作的非对称决策链。</p>
+                    </div>
+                    <div class="roadmap-detail">
+                        <div class="roadmap-detail-title">核心问题</div>
+                        <p>Agent 场景下的 search node 不再只是“下一句推理”，而可能是一次点击、一次 API 调用、一次 patch 提交，甚至一个小型 plan。于是要重新回答三个问题：tree 的节点究竟按 token、operation 还是 subgoal 切分；在 sparse reward 和 delayed feedback 下如何评估节点价值；以及如何控制搜索成本，避免 MCTS 本身比训练还贵。</p>
+                    </div>
+                    <div class="roadmap-detail">
+                        <div class="roadmap-detail-title">方法设计</div>
+                        <p>一个自然方案是把 DeepSearch 的 global frontier selection 扩展为“heterogeneous frontier scheduler”：优先扩展那些既高价值又高不确定性的 agent state，并把环境观测、工具返回值、执行副作用一起编码进 node representation。配合 Tree-GRPO，可以让策略更新不只依赖 final success/failure，而是利用搜索树里多条候选轨迹的相对比较信号，形成更稳定的 advantage。</p>
+                    </div>
+                    <div class="roadmap-detail">
+                        <div class="roadmap-detail-title">实验路径</div>
+                        <p>可以先从可验证的 agent benchmark 做分层迁移：在 RAGEN、WebShop、MiniWoB 或 SWE-agent 的可复现实验上，对比 direct rollout、beam search rollout、浅层 MCTS、完整 Tree-GRPO 四组设置。重点观测是否能在相同 rollout budget 下提升 success rate、缩短有效探索深度，并减少因 early mistake 导致的整轨迹坍塌。</p>
+                    </div>
+                    <div class="roadmap-detail">
+                        <div class="roadmap-detail-title">预期贡献</div>
+                        <p>如果这个方向成立，它回答的是一个很硬的问题：training-time search 是否能够从“数学题特例”推广为 agent RL 的通用训练范式。真正的贡献不只是指标提升，而是给出一套适用于开放环境的 tree construction、value estimation 与 policy update 设计原则。</p>
+                    </div>
+                </div>
             </div>
             <div class="roadmap-card">
-                <strong>2. Memory-Augmented MCTS: Persistent Experience for Tree Search</strong>
-                <p>
-                    <strong>动机</strong>: 现有 MCTS 每次遇到新问题多从零开始，而人类专家擅长检索历史经验。<br>
-                    <strong>挑战</strong>: 如何构建一套能在不同推理任务或轮次间复用的检索记忆系统（Cross-problem Replay Buffer），辅助 Tree Search？<br>
-                    <strong>预期实验</strong>: 构建 Embedding-based Experience Memory，使搜索初期便能通过 Retriever 提供先验的 Frontier Scoring 或 Subgoal 方向，显著降低 MCTS 步数。
-                </p>
+                <strong class="roadmap-card-title">2. Memory-Augmented MCTS: Persistent Experience for Tree Search</strong>
+                <div class="roadmap-stack">
+                    <div class="roadmap-detail">
+                        <div class="roadmap-detail-title">灵感来源</div>
+                        <p>DeepSearch 已经在 replay buffer 里展示了“缓存成功经验”能提升训练效率，但这种缓存仍然偏近场，只服务于当前训练循环。相比之下，人类做复杂任务时会显式回忆过去类似问题的失败模式、有效子策略与捷径，这提示我们 MCTS 不应每次都 cold start，而应拥有可跨 episode、跨任务复用的长期记忆。</p>
+                    </div>
+                    <div class="roadmap-detail">
+                        <div class="roadmap-detail-title">核心问题</div>
+                        <p>关键不只是“存什么”，而是“检索什么”和“何时用”。如果记忆库只保存完整正确轨迹，覆盖会很窄；如果保存所有搜索树节点，又会带来噪声和 retrieval drift。因此需要定义 experience unit，例如 state-action chunk、subgoal completion pattern、失败原因标签、value trajectory 片段，并解决如何对这些异构记忆做统一索引。</p>
+                    </div>
+                    <div class="roadmap-detail">
+                        <div class="roadmap-detail-title">方法设计</div>
+                        <p>可以设计一个 embedding-based experience memory：把当前 frontier state 映射到向量空间，检索历史上语义相近且价值较高的搜索片段，再把这些片段转化为 frontier prior、action prior 或 subgoal hint。进一步还可以做 memory-aware UCB，让 retrieval score 直接参与 node selection，而不是只在 prompt 中做软提示。</p>
+                    </div>
+                    <div class="roadmap-detail">
+                        <div class="roadmap-detail-title">实验路径</div>
+                        <p>实验上可比较四种记忆注入方式：无记忆、只缓存成功轨迹、检索增强的 prompt-only memory、直接作用于 tree policy 的 scoring memory。任务上选择有明显跨任务共性的 benchmark，例如相似网页导航模板、重复出现的 coding bug pattern、或相同工具 API 的多样化调用任务，观察搜索步数、首个可行解时间以及 success@budget 的变化。</p>
+                    </div>
+                    <div class="roadmap-detail">
+                        <div class="roadmap-detail-title">预期贡献</div>
+                        <p>这个方向的上限很高，因为它尝试把“记忆系统”从外挂式 RAG 提升为 search-time inductive bias。若成功，就能把一次性的树搜索升级成持续积累经验的 search agent，为后续的 lifelong agent RL 打下方法论基础。</p>
+                    </div>
+                </div>
             </div>
             <div class="roadmap-card">
-                <strong>3. Guided Subgoal Discovery via MCTS Backpropagation</strong>
-                <p>
-                    <strong>动机</strong>: Guided-ReST (Search Adapter) 依赖 Oracle 提供的 Optimal Solutions 作为 Landmark；而 MCTS 可以自动返回每个中间节点的 Q-Value。<br>
-                    <strong>挑战</strong>: 能否基于 Tree Search 中反向传播的高置信度 Q-Value 分布，纯自动地挖掘并标注出高质量的推理里程碑（Subgoals）？<br>
-                    <strong>预期实验</strong>: 自动提取搜索树中价值跃升的节点作为 Subgoal，以此作为 Jump-Start 或 ReST 的锚点，进而完全摆脱 Oracle 监督的强依赖。
-                </p>
+                <strong class="roadmap-card-title">3. Guided Subgoal Discovery via MCTS Backpropagation</strong>
+                <div class="roadmap-stack">
+                    <div class="roadmap-detail">
+                        <div class="roadmap-detail-title">灵感来源</div>
+                        <p>Guided-ReST 很吸引人的地方在于，它把“找到中间里程碑”看成比直接学习最终答案更高效的监督方式；但它严重依赖 oracle optimal solution。另一方面，MCTS 的 backpropagation 天然会为中间节点产生相对稳定的 value signal，这意味着 search tree 本身可能就是一个自动 subgoal annotator。</p>
+                    </div>
+                    <div class="roadmap-detail">
+                        <div class="roadmap-detail-title">核心问题</div>
+                        <p>难点在于，并非所有高 value 节点都值得当 subgoal。一个节点可能只是局部幸运分支，也可能不可泛化、不可复用。真正有价值的 subgoal 应满足三个条件：对最终成功概率有显著提升、能在多条后续轨迹中复用、并且在自然语言或操作层面可表达、可蒸馏。</p>
+                    </div>
+                    <div class="roadmap-detail">
+                        <div class="roadmap-detail-title">方法设计</div>
+                        <p>可以从搜索树中抽取“价值跃迁节点”：那些在 backprop 后 Q-value 明显抬升、visit count 稳定、且多个高分分支共享的中间状态。随后再做一次 subgoal canonicalization，把相似节点聚类成更抽象的 milestone 表述，例如“先定位报错根因，再改最小 patch”或“先确认网页入口，再执行表单操作”，再用于 SFT、ReST 或 jump-start 初始化。</p>
+                    </div>
+                    <div class="roadmap-detail">
+                        <div class="roadmap-detail-title">实验路径</div>
+                        <p>一个清晰的实验是比较 oracle subgoal、MCTS-mined subgoal、无 subgoal 三种设置在 reasoning 与 agent 任务上的学习速度和样本效率。还可以评估 mined subgoal 的质量，例如复用率、与最终成功的 mutual information、以及把 subgoal 蒸馏给小模型后带来的泛化收益。</p>
+                    </div>
+                    <div class="roadmap-detail">
+                        <div class="roadmap-detail-title">预期贡献</div>
+                        <p>如果能把 subgoal discovery 自动化，这将明显降低 Guided-ReST 一类方法对强监督和高质量专家轨迹的依赖。更进一步，它可能把 tree search 从“采样更多轨迹”提升为“自动制造中间监督信号”的数据引擎。</p>
+                    </div>
+                </div>
             </div>
             <div class="roadmap-card">
-                <strong>4. Entropy-Guided Negative Mining for RL Training</strong>
-                <p>
-                    <strong>动机</strong>: DeepSearch 中最有趣的发现之一是：探索中“模型最自信的错误”（熵最低的错误轨迹）反而是最具指导价值的训练负样本。<br>
-                    <strong>挑战</strong>: 该策略可否作为通用的对齐/强化学习组件？而不仅仅局限于 MCTS 搜索内部。<br>
-                    <strong>预期实验</strong>: 在标准 DAPO/GRPO 训练中，抛弃随机负例采样，改用根据 Entropy 进行动态 Negative Mining，对比算法在复杂推理环境下的方差及收敛。
-                </p>
+                <strong class="roadmap-card-title">4. Entropy-Guided Negative Mining for RL Training</strong>
+                <div class="roadmap-stack">
+                    <div class="roadmap-detail">
+                        <div class="roadmap-detail-title">灵感来源</div>
+                        <p>DeepSearch 的一个非常有意思的信号是：最值得学的错误，不一定是最离谱的错误，而往往是“模型非常确信自己是对的，但实际上错了”的轨迹。这类低熵错误说明模型内部已经形成了稳定但错误的策略偏好，因此它们对 policy correction 的价值可能远高于随机采样到的普通负例。</p>
+                    </div>
+                    <div class="roadmap-detail">
+                        <div class="roadmap-detail-title">核心问题</div>
+                        <p>要回答的是，entropy 是否只是 DeepSearch 搜索内部的经验现象，还是可以上升为更一般的 RL 数据选择原则。更细一点说，应该看 token entropy、step entropy、trajectory entropy 还是 value uncertainty；以及低熵错误是否会导致过拟合某类 easy negatives，而忽视真正困难但高熵的错误样本。</p>
+                    </div>
+                    <div class="roadmap-detail">
+                        <div class="roadmap-detail-title">方法设计</div>
+                        <p>可以把 rollout 数据划分为高价值正例、低熵错误、高熵探索失败三类，然后对不同算法分别试验不同采样权重。在 GRPO、DAPO 或 rejection-based post-training 中，让 entropy 参与 sample reweighting、pair construction 或 critic-target selection，形成一种“confidence-aware negative mining”机制。</p>
+                    </div>
+                    <div class="roadmap-detail">
+                        <div class="roadmap-detail-title">实验路径</div>
+                        <p>实验上最直接的是和 random negative selection、reward-only selection、margin-based selection 做对照。指标除了 final accuracy，还应该看训练方差、梯度稳定性、collapse rate，以及模型在 hard split 上是否更少出现“自信地犯错”。如果有条件，可以进一步分析不同 entropy bucket 对 loss reduction 的边际贡献。</p>
+                    </div>
+                    <div class="roadmap-detail">
+                        <div class="roadmap-detail-title">预期贡献</div>
+                        <p>这个方向的价值在于它可能成为一种跨算法可复用的数据 curriculum 组件。即便最终不依赖 MCTS，它也能作为一种更通用的 post-training recipe，回答“哪些失败样本最值得学”这个被长期低估的问题。</p>
+                    </div>
+                </div>
             </div>
             <div class="roadmap-card">
-                <strong>5. Unified Hierarchical MDP: Token vs Operation vs Episode</strong>
-                <p>
-                    <strong>动机</strong>: Search Adapter 表明 Operation-level MDP 比 Token-level 更高效，而复杂场景通常是分层多轮（Episode-level）的。<br>
-                    <strong>挑战</strong>: 如何在一个统一的 RL 框架下组合多层级的 Advantage Estimation？<br>
-                    <strong>预期实验</strong>: 搭建混合粒度学习模型：底层 Token-level SFT 对齐语言流，中层 Operation-level GRPO 掌控逻辑步骤，顶层 Episode-level 提供整体奖惩信号。
-                </p>
+                <strong class="roadmap-card-title">5. Unified Hierarchical MDP: Token vs Operation vs Episode</strong>
+                <div class="roadmap-stack">
+                    <div class="roadmap-detail">
+                        <div class="roadmap-detail-title">灵感来源</div>
+                        <p>Search Adapter 之所以重要，是因为它明确指出 token-level RL 并不是唯一自然的建模粒度；把若干 token 抽象为一个 operation 后，credit signal 更稳定、动作语义也更清晰。与此同时，DeepSearch 里一个 node 往往对应 step-level rollout，而真实 agent 任务又常常包含 turn-level 乃至 multi-episode 规划，因此多粒度 MDP 的统一已经变成绕不过去的问题。</p>
+                    </div>
+                    <div class="roadmap-detail">
+                        <div class="roadmap-detail-title">核心问题</div>
+                        <p>核心不是简单比较哪种粒度更好，而是如何让不同层级的动作共享一个一致的优化目标。Token-level 擅长语言流畅性和局部纠错，operation-level 更适合结构化决策，episode-level 则承担最终成败和长期约束。问题在于这三层的 advantage 既相关又可能冲突，若组合不好就会造成 credit leakage 或 learning signal 互相抵消。</p>
+                    </div>
+                    <div class="roadmap-detail">
+                        <div class="roadmap-detail-title">方法设计</div>
+                        <p>一个值得做的框架是 hierarchical advantage decomposition：底层维护 token policy 的局部优势，中层维护操作级 transition 的结构性优势，顶层再对完整 episode 给出 sparse but global 的 return。训练时可通过 gating 或 learned mixer 决定各层信号权重，并让高层 subgoal/value 约束低层生成，而不是让所有梯度直接打到 token 上。</p>
+                    </div>
+                    <div class="roadmap-detail">
+                        <div class="roadmap-detail-title">实验路径</div>
+                        <p>实验上可以构造一条清晰的对照线：纯 token-level RL、纯 operation-level RL、两层 hierarchical RL、三层 token-operation-episode 联合优化。重点观察样本效率、长轨迹稳定性、工具调用正确率，以及在 out-of-distribution 任务上是否因为更粗粒度的抽象而获得更好的组合泛化。</p>
+                    </div>
+                    <div class="roadmap-detail">
+                        <div class="roadmap-detail-title">预期贡献</div>
+                        <p>这个方向更偏“框架型贡献”。它若做出来，价值在于给 Agentic RL 提供统一的建模语言：什么时候该在 token 上学，什么时候该把动作提升为 operation，什么时候必须回到 episode 级目标，从而把现在零散的工程经验收束成可复用的方法论。</p>
+                    </div>
+                </div>
             </div>
             <div class="roadmap-card">
-                <strong>6. Self-Evolving Search Curriculum: MCTS + Adaptive Difficulty</strong>
-                <p>
-                    <strong>动机</strong>: 简单题用 Direct Rollout，难题用 Deep MCTS，应是一个随模型能力共同进化的过程（Self-Evolving Curriculum）。<br>
-                    <strong>挑战</strong>: 如何精确且自适应地分配 MCTS 的 Budget，并在训练中动态拔高环境难度？<br>
-                    <strong>预期实验</strong>: 监测 Pass@1 与 Model Confidence 动态调整搜索宽度/深度，形成一套自适应强化学习算法，以极小化的 Rollout 成本实现渐进式极限对齐。
-                </p>
+                <strong class="roadmap-card-title">6. Self-Evolving Search Curriculum: MCTS + Adaptive Difficulty</strong>
+                <div class="roadmap-stack">
+                    <div class="roadmap-detail">
+                        <div class="roadmap-detail-title">灵感来源</div>
+                        <p>DeepSearch 的 progressive filtering 和 Guided-ReST 的 staged training 都在隐含地做 curriculum learning，只是还没有把“题目难度”和“搜索预算”放进同一个闭环里。现实中最合理的训练方式本就不是所有样本一视同仁，而是让简单问题用 direct rollout，复杂问题才动用更深搜索，并随着模型变强不断提升难度上限。</p>
+                    </div>
+                    <div class="roadmap-detail">
+                        <div class="roadmap-detail-title">核心问题</div>
+                        <p>困难在于如何定义 difficulty，以及如何让 difficulty estimation 不被当前模型能力绑架。只看 reward 会太迟，只看 entropy 又可能把噪声当困难。因此需要联合 problem features、历史成功率、early-stage confidence、甚至搜索树形态统计量，来决定一条样本到底值得分配多少 MCTS budget。</p>
+                    </div>
+                    <div class="roadmap-detail">
+                        <div class="roadmap-detail-title">方法设计</div>
+                        <p>可以把 budget allocation 显式做成一个 teacher policy：输入问题特征和当前模型状态，输出 rollout mode，例如 direct、shallow search、deep search。再结合 online curriculum，把训练集按照“当前可学但尚未掌握”的区间动态重排，让模型始终待在最有信息增益的难度带内，而不是反复消耗算力在过易或过难样本上。</p>
+                    </div>
+                    <div class="roadmap-detail">
+                        <div class="roadmap-detail-title">实验路径</div>
+                        <p>最直观的实验是固定总算力预算，对比 uniform search budget、heuristic budget、learned adaptive budget 三类策略，并记录每单位算力带来的 reward gain。进一步可以画出 curriculum trajectory：随着训练进行，模型从 direct rollout 主导逐步迁移到更复杂搜索，再在能力提升后回落到更高效的浅层搜索，验证“搜索深度不是越深越好，而是要随能力共演化”。</p>
+                    </div>
+                    <div class="roadmap-detail">
+                        <div class="roadmap-detail-title">预期贡献</div>
+                        <p>这个方向的关键意义是把 search 当成可调度资源而非固定模块。它如果成立，会直接回答一个很现实的问题：在有限 GPU 预算下，如何让 agent RL 的训练数据、搜索深度与题目难度共同进化，从而把每一份 rollout 成本都花在最有价值的地方。</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
